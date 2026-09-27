@@ -9,7 +9,7 @@ export type Audience = "user" | "admin";
 
 // Extra claims carried by each audience's access token.
 type AudienceClaims = {
-    user: { role: UserRole };
+    user: { role: UserRole; verified: boolean };
     admin: {};
 };
 
@@ -20,7 +20,7 @@ export type AccessTokenPayload<A extends Audience = Audience> = {
     exp: number;
 } & AudienceClaims[A];
 
-type TokensPayload = {
+type CookiesPayload = {
     accessToken: string;
     refreshToken: string;
     expiresAt: Date;
@@ -107,7 +107,7 @@ export default class TokenService {
         };
     }
 
-    static setAuthenticationCookies = (c: Context, audience: Audience, { accessToken, refreshToken, expiresAt }: TokensPayload) => {
+    static setAuthenticationCookies = (c: Context, audience: Audience, { accessToken, refreshToken, expiresAt }: CookiesPayload) => {
         const local = config[audience];
         // Expire the cookie together with the token, read from the token itself so the lifetime is defined in one place.
         const { exp } = decode(accessToken).payload;

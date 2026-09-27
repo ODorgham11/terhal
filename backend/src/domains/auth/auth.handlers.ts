@@ -1,3 +1,4 @@
+import type { Context } from "hono";
 import { createFactory } from "hono/factory";
 import AuthService from "./auth.service.js";
 import { signInSchema, signUpSchema } from "./auth.validators.js";
@@ -52,30 +53,37 @@ export const signInHandler = factory.createHandlers(
     }
 )
 
+// Rotates the current session and sets fresh cookies with the user's latest claims (role, verification).
+// Used by the refresh route, and by any route that changes what the token should say, e.g. verifying the account.
+const reissueTokens = async (c: Context) => {
+    const refreshToken = TokenService.getRefreshToken(c, "user");
+
+    const ipAddress = c.req.header("x-forwarded-for")?.split(",")[0].trim() 
+        ?? null;
+
+    const userAgent = c.req.header("user-agent") ?? null;
+
+    try {
+        const { user, ...tokens } = await authService.refresh(refreshToken, ipAddress, userAgent);
+
+        // Tokens are only sent as http-only cookies so they can't be read by scripts on the page.
+        TokenService.setAuthenticationCookies(c, "user", tokens);
+        return user;
+    } catch (error) {
+        // Clear the cookies when the session is over, so the browser stops sending them.
+        if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+            TokenService.clearAuthenticationCookies(c, "user");
+        }
+        
+        // Other errors (like the database being down) keep them, since the session may still be valid.
+        throw error;
+    }
+}
+
 export const refreshHandler = factory.createHandlers(
     async (c) => {
-        const refreshToken = TokenService.getRefreshToken(c, "user");
-
-        const ipAddress = c.req.header("x-forwarded-for")?.split(",")[0].trim() 
-            ?? null;
-
-        const userAgent = c.req.header("user-agent") ?? null;
-
-        try {
-            const { user, ...tokens } = await authService.refresh(refreshToken, ipAddress, userAgent);
-
-            // Tokens are only sent as http-only cookies so they can't be read by scripts on the page.
-            TokenService.setAuthenticationCookies(c, "user", tokens);
-            return c.json({ success: true, data: { user } }, 200);
-        } catch (error) {
-            // Clear the cookies when the session is over, so the browser stops sending them.
-            if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
-                TokenService.clearAuthenticationCookies(c, "user");
-            }
-            
-            // Other errors (like the database being down) keep them, since the session may still be valid.
-            throw error;
-        }
+        const user = await reissueTokens(c);
+        return c.json({ success: true, data: { user } }, 200);
     }
 )
 

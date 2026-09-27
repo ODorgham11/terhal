@@ -4,11 +4,17 @@ import { ERROR_CODES, ConflictError, ForbiddenError, UnauthorizedError } from ".
 import { hash, compare } from "../../shared/utils/hash.js";
 import TokenService from "../token/token.service.js";
 import { UserStatus } from "../../../generated/prisma/enums.js";
+import type { User } from "../../../generated/prisma/client.js";
 
 export default class AuthService {
     private readonly MAXIMUM_SESSION_LIMIT = 5;
-    private readonly MAXIMUM_SESSION_LIFETIME = 30 * 24 * 60 * 60 * 1000; // 30 days, no matter how often the session is refreshed.
     private readonly INACTIVE_STATUS: UserStatus[] = [UserStatus.SUSPENDED, UserStatus.DELETED];
+
+    // Claims carried by the user's access token. A user only counts as verified when their account is active and they have completed verification.
+    private getTokenClaims = (user: User) => ({
+        role: user.role,
+        verified: user.status === UserStatus.ACTIVE && user.verifiedAt !== null,
+    });
 
     createUser = async (payload: SignUpSchemaPayload) => {
         // Start by making sure that user doesn't exist in our database first.
@@ -48,7 +54,7 @@ export default class AuthService {
         if (this.INACTIVE_STATUS.includes(user.status)) throw new ForbiddenError("User account is not active. You are not allowed to sign in.", ERROR_CODES.ACCOUNT_NOT_ACTIVE);
 
         // If the user passes the validation, generate the refresh and access tokens.
-        const { accessToken, refreshToken, refreshTokenHash, expiresAt } = await TokenService.generateTokenPair("user", user.id, { role: user.role });
+        const { accessToken, refreshToken, refreshTokenHash, expiresAt } = await TokenService.generateTokenPair("user", user.id, this.getTokenClaims(user));
 
         // Invalidate other sessions if they are above the maximum limit and store this session with the information extracted from the request.
         const activeSessions = await prisma.userSession.findMany({
@@ -101,8 +107,8 @@ export default class AuthService {
 
         if (!session) throw new UnauthorizedError("Your session is invalid or has expired. Please sign in again.", ERROR_CODES.INVALID_REFRESH_TOKEN);
 
-        // Refreshing slides the expiry forward, so also enforce an absolute lifetime counted from when the user signed in.
-        const absoluteExpiresAt = new Date(session.createdAt.getTime() + this.MAXIMUM_SESSION_LIFETIME);
+        // Refreshing slides the expiry forward, so also enforce a 30-day absolute lifetime counted from when the user signed in.
+        const absoluteExpiresAt = new Date(session.createdAt.getTime() + 30 * 24 * 60 * 60 * 1000);
         const now = new Date();
 
         if (session.revokedAt || session.expiresAt <= now || absoluteExpiresAt <= now) {
@@ -117,8 +123,8 @@ export default class AuthService {
             throw new ForbiddenError("User account is not active. You are not allowed to sign in.", ERROR_CODES.ACCOUNT_NOT_ACTIVE);
         }
 
-        // Issue new tokens with the user's current role, so role changes apply from the next refresh.
-        const { accessToken, refreshToken: newRefreshToken, refreshTokenHash, expiresAt: slidingExpiresAt } = await TokenService.generateTokenPair("user", user.id, { role: user.role });
+        // Issue new tokens with the user's current claims, so role and verification changes apply from the next refresh.
+        const { accessToken, refreshToken: newRefreshToken, refreshTokenHash, expiresAt: slidingExpiresAt } = await TokenService.generateTokenPair("user", user.id, this.getTokenClaims(user));
 
         // Never extend the session past its absolute lifetime.
         const expiresAt = slidingExpiresAt < absoluteExpiresAt ? slidingExpiresAt : absoluteExpiresAt;
