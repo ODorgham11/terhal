@@ -38,6 +38,10 @@ services:
       APP_SECRET: ${APP_SECRET}
       ADMIN_SECRET: ${ADMIN_SECRET}
 
+      # Email
+      RESEND_KEY: ${RESEND_KEY}
+      RESEND_EMAIL: ${RESEND_EMAIL}
+
       # Frontend
       FRONTEND_URL: ${FRONTEND_URL}
 
