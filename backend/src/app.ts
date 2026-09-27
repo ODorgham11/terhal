@@ -1,3 +1,10 @@
+// The Hono app itself, with no side effects (no listening, no port binding).
+// This is imported by two different entry points:
+// 1) src/index.ts serves up a local dev server, via @hono/node-server
+// 2) api/index.ts exports a Vercel serverless entry point, via @hono/vercel
+// Keeping the app definition separate from "how it's run" is what lets the
+// same route code work in both places without duplication.
+
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
@@ -10,12 +17,6 @@ import AppError from './shared/utils/error.js'
 import health from './domains/health/health.routes.js'
 import auth from './domains/auth/auth.routes.js'
 
-// The Hono app itself, with no side effects (no listening, no port binding).
-// This is imported by two different entry points:
-//   - src/index.ts   -> local dev server, via @hono/node-server
-//   - api/index.ts   -> Vercel serverless entry point, via @hono/vercel
-// Keeping the app definition separate from "how it's run" is what lets the
-// same route code work in both places without duplication.
 const app = new Hono()
   .use('*', logger())
   .use('*', secureHeaders())

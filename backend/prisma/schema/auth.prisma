@@ -126,3 +126,13 @@ model GuestSession {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// Fixed window request counters, one row per limited key, e.g. "sign-in:ip:<hash>".
+// The count goes up on every request and starts over once resetAt has passed. Expired rows are safe to delete.
+model RateLimit {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+
+  @@index([resetAt])
+}

@@ -9,16 +9,19 @@
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:status": "prisma migrate status"
+    "db:status": "prisma migrate status",
+    "db:clear": "docker exec postgres sh -c 'psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -c \"DELETE FROM \\\"RateLimit\\\"\"'"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",
     "@hono/zod-validator": "^0.9.1",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
+    "argon2": "^0.45.1",
     "dotenv": "^17.4.2",
     "hono": "^4.13.7",
     "pg": "^8.23.0",
+    "resend": "^6.30.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

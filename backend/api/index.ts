@@ -6,7 +6,6 @@ import app from '../src/app.js'
 // uses. (Don't use `hono/vercel` here: that adapter is for the Edge runtime
 // and never writes the response on Node, so requests hang until timeout.)
 export const config = {
-  // Let Hono read the raw request body itself instead of Vercel pre-parsing it.
   api: { bodyParser: false },
 }
 
