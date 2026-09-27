@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import { createFactory } from "hono/factory";
 import AuthService from "./auth.service.js";
-import { signInSchema, signUpSchema } from "./auth.validators.js";
+import { confirmVerificationSchema, signInSchema, signUpSchema } from "./auth.validators.js";
 import validate from "../../shared/middleware/validate.js";
 import TokenService from "../token/token.service.js";
 import { ForbiddenError, UnauthorizedError } from "../../shared/utils/error.js";
@@ -31,7 +31,14 @@ export const signUpHandler = factory.createHandlers(
 
         // Tokens are only sent as http-only cookies so they can't be read by scripts on the page.
         TokenService.setAuthenticationCookies(c, "user", tokens);
-        return c.json({ success: true, data: { user } }, 201);
+
+        // Send the first verification code right away. If it fails the account still exists, and the user can request a new code.
+        const verification = await authService.sendVerificationCode(user.id).catch((error) => {
+            console.error("Failed to send the verification code on sign up:", error);
+            return null;
+        });
+
+        return c.json({ success: true, data: { user, verification } }, 201);
     }
 )
 
@@ -105,11 +112,25 @@ export const sessionHandler = factory.createHandlers(
     }
 )
 
+// Unverified users have to be able to reach this, so the verified check is turned off.
 export const sendVerificationHandler = factory.createHandlers(
-    // Unverified users have to be able to reach this, so the verified check is turned off.
-    authorize([UserRole.CUSTOMER], { isActive: false }),
+    authorize([UserRole.CUSTOMER]),
     async (c) => {
         const verification = await authService.sendVerificationCode(c.var.id);
         return c.json({ success: true, data: { verification } }, 200);
+    }
+)
+
+// Unverified users have to be able to reach this, so the verified check is turned off.
+export const confirmVerificationHandler = factory.createHandlers(
+    authorize([UserRole.CUSTOMER]),
+    validate("json", confirmVerificationSchema),
+    async (c) => {
+        const { code } = c.req.valid("json");
+        await authService.confirmVerificationCode(c.var.id, code);
+
+        // Issue fresh tokens right away, so they carry verified: true without waiting for the next refresh.
+        const user = await reissueTokens(c);
+        return c.json({ success: true, data: { user } }, 200);
     }
 )

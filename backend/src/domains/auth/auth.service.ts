@@ -1,16 +1,18 @@
 import { createUserResponse, SignInSchemaPayload, SignUpSchemaPayload } from "./auth.validators.js";
 import { prisma } from "../../shared/utils/prisma.js";
-import { ERROR_CODES, ConflictError, ForbiddenError, ServiceUnavailableError, TooManyRequestsError, UnauthorizedError } from "../../shared/utils/error.js";
-import { sendEmail } from "../messaging/providers/email.js";
-import { sendWhatsApp } from "../messaging/providers/whatsapp.js";
+import { ERROR_CODES, BadRequestError, ConflictError, ForbiddenError, ServiceUnavailableError, TooManyRequestsError, UnauthorizedError } from "../../shared/utils/error.js";
+import MessagingService from "../messaging/messaging.service.js";
 import { hash, compare } from "../../shared/utils/hash.js";
-import { createHmac, randomInt } from "node:crypto";
+import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import TokenService from "../token/token.service.js";
 import { UserStatus, VerificationMethod } from "../../../generated/prisma/enums.js";
 import type { User } from "../../../generated/prisma/client.js";
 
 export default class AuthService {
+    private readonly messagingService = new MessagingService();
+
     private readonly MAXIMUM_SESSION_LIMIT = 5;
+    private readonly MAXIMUM_VERIFICATION_ATTEMPTS = 5;
     private readonly INACTIVE_STATUS: UserStatus[] = [UserStatus.SUSPENDED, UserStatus.DELETED];
 
     // Claims carried by the user's access token. A user only counts as verified when their account is active and they have completed verification.
@@ -224,11 +226,9 @@ export default class AuthService {
         }
 
         const destination = method === VerificationMethod.EMAIL ? user.email : user.phone;
-        const message = `Your Terhal verification code is ${code}. It expires in 10 minutes. Don't share this code with anyone.`;
 
         try {
-            if (method === VerificationMethod.EMAIL) await sendEmail(destination, "Your Terhal verification code", message);
-            else await sendWhatsApp(destination, message);
+            await this.messagingService.sendVerificationCode(method, destination, code);
         } catch (error) {
             // The code never reached the user, so remove it to let them retry right away instead of waiting out the cooldown.
             await prisma.user.update({
@@ -246,5 +246,65 @@ export default class AuthService {
             expiresAt,
             resendAvailableAt: new Date(now + 60 * 1000)
         };
+    }
+
+    // Checks the code the user entered and verifies their account when it matches.
+    confirmVerificationCode = async (userId: string, code: string) => {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        if (!user) throw new UnauthorizedError("You must be signed in to access this resource.", ERROR_CODES.UNAUTHENTICATED);
+        if (this.INACTIVE_STATUS.includes(user.status)) throw new ForbiddenError("User account is not active. You are not allowed to sign in.", ERROR_CODES.ACCOUNT_NOT_ACTIVE);
+        if (this.getTokenClaims(user).verified) throw new ConflictError("Your account is already verified.", ERROR_CODES.ALREADY_VERIFIED);
+
+        const now = new Date();
+        const storedHash = user.verificationHash;
+
+        if (!storedHash || !user.verificationExpiresAt || user.verificationExpiresAt <= now) {
+            throw new BadRequestError("Your verification code has expired. Please request a new code.", ERROR_CODES.VERIFICATION_CODE_EXPIRED);
+        }
+
+        if (user.verificationAttempts >= this.MAXIMUM_VERIFICATION_ATTEMPTS) {
+            throw new TooManyRequestsError("Too many incorrect attempts. Please request a new code.", ERROR_CODES.TOO_MANY_ATTEMPTS);
+        }
+
+        // Count the attempt before comparing, in a single statement, so sending many guesses at once can't get past the limit.
+        // Matching on the stored hash also means an attempt on a code that was just replaced doesn't count against the new one.
+        const { count: counted } = await prisma.user.updateMany({
+            where: {
+                id: user.id,
+                verificationHash: storedHash,
+                verificationExpiresAt: { gt: now },
+                verificationAttempts: { lt: this.MAXIMUM_VERIFICATION_ATTEMPTS }
+            },
+            data: { verificationAttempts: { increment: 1 } }
+        });
+
+        if (counted === 0) throw new TooManyRequestsError("Too many incorrect attempts. Please request a new code.", ERROR_CODES.TOO_MANY_ATTEMPTS);
+
+        // Compare in constant time, so response timing doesn't reveal how close a guess was.
+        const isValid = timingSafeEqual(Buffer.from(this.hashVerificationCode(user.id, code), "hex"), Buffer.from(storedHash, "hex"));
+
+        if (!isValid) {
+            const remaining = this.MAXIMUM_VERIFICATION_ATTEMPTS - (user.verificationAttempts + 1);
+
+            if (remaining <= 0) throw new TooManyRequestsError("Too many incorrect attempts. Please request a new code.", ERROR_CODES.TOO_MANY_ATTEMPTS);
+            throw new BadRequestError(`The code you entered is incorrect. You have ${remaining} ${remaining === 1 ? "attempt" : "attempts"} remaining.`, ERROR_CODES.VERIFICATION_CODE_INVALID);
+        }
+
+        // Only matches while this code is still the stored one and the status hasn't changed, so a code can only be used once
+        // and a user suspended in the meantime isn't activated.
+        const { count: verified } = await prisma.user.updateMany({
+            where: { id: user.id, verificationHash: storedHash, status: user.status },
+            data: {
+                status: UserStatus.ACTIVE,
+                verifiedAt: now,
+                verifiedVia: user.verificationMethod ?? VerificationMethod.EMAIL,
+                verificationHash: null,
+                verificationExpiresAt: null,
+                verificationAttempts: 0
+            }
+        });
+
+        if (verified === 0) throw new BadRequestError("Your verification code has expired. Please request a new code.", ERROR_CODES.VERIFICATION_CODE_EXPIRED);
     }
 }

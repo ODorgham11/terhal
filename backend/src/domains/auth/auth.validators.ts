@@ -69,3 +69,10 @@ export const signInSchema = z.object({
 })
 
 export type SignInSchemaPayload = z.infer<typeof signInSchema>;
+
+export const confirmVerificationSchema = z.object({
+    code: z
+        .string({ error: "Verification code is required." })
+        .trim()
+        .regex(/^\d{6}$/, "Please enter the 6-digit code."),
+})
