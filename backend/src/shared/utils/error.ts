@@ -16,6 +16,10 @@ export const ERROR_CODES = {
   ACCESS_TOKEN_EXPIRED: "ACCESS_TOKEN_EXPIRED",
   INSUFFICIENT_PERMISSIONS: "INSUFFICIENT_PERMISSIONS",
   INVALID_REFRESH_TOKEN: "INVALID_REFRESH_TOKEN",
+
+  // Verification
+  ALREADY_VERIFIED: "ALREADY_VERIFIED",
+  VERIFICATION_COOLDOWN: "VERIFICATION_COOLDOWN",
 } as const;
 
 export type ErrorCode =
@@ -71,6 +75,12 @@ export class ConflictError extends AppError {
 export class ValidationError extends AppError {
   constructor(message: string, code: ErrorCode) {
     super(422, message, code);
+  }
+};
+
+export class TooManyRequestsError extends AppError {
+  constructor(message: string, code: ErrorCode) {
+    super(429, message, code);
   }
 };
 

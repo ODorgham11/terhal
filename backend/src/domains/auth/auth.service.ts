@@ -1,9 +1,12 @@
 import { createUserResponse, SignInSchemaPayload, SignUpSchemaPayload } from "./auth.validators.js";
 import { prisma } from "../../shared/utils/prisma.js";
-import { ERROR_CODES, ConflictError, ForbiddenError, UnauthorizedError } from "../../shared/utils/error.js";
+import { ERROR_CODES, ConflictError, ForbiddenError, ServiceUnavailableError, TooManyRequestsError, UnauthorizedError } from "../../shared/utils/error.js";
+import { sendEmail } from "../messaging/providers/email.js";
+import { sendWhatsApp } from "../messaging/providers/whatsapp.js";
 import { hash, compare } from "../../shared/utils/hash.js";
+import { createHmac, randomInt } from "node:crypto";
 import TokenService from "../token/token.service.js";
-import { UserStatus } from "../../../generated/prisma/enums.js";
+import { UserStatus, VerificationMethod } from "../../../generated/prisma/enums.js";
 import type { User } from "../../../generated/prisma/client.js";
 
 export default class AuthService {
@@ -15,6 +18,24 @@ export default class AuthService {
         role: user.role,
         verified: user.status === UserStatus.ACTIVE && user.verifiedAt !== null,
     });
+
+    // Keying the hash with the app secret prevents a plain hash from being instantly reserved, and including the user id ties the code to this user only.
+    private hashVerificationCode = (userId: string, code: string) => {
+        const secret = process.env.APP_SECRET;
+        if (!secret) throw new Error("APP_SECRET is not defined. Please define it in the environment variables.");
+
+        return createHmac("sha256", secret).update(`${userId}:${code}`).digest("hex");
+    }
+
+    // Shows where the code was sent without exposing the full address, e.g. a•••@example.com or +20•••••5678.
+    private maskDestination = (method: VerificationMethod, destination: string) => {
+        if (method === VerificationMethod.EMAIL) {
+            const [name, domain] = destination.split("@");
+            return `${name[0]}•••@${domain}`;
+        }
+
+        return `${destination.slice(0, 3)}${"•".repeat(Math.max(0, destination.length - 7))}${destination.slice(-4)}`;
+    }
 
     createUser = async (payload: SignUpSchemaPayload) => {
         // Start by making sure that user doesn't exist in our database first.
@@ -164,5 +185,66 @@ export default class AuthService {
         if (this.INACTIVE_STATUS.includes(user.status)) throw new ForbiddenError("User account is not active. You are not allowed to sign in.", ERROR_CODES.ACCOUNT_NOT_ACTIVE);
 
         return createUserResponse(user);
+    }
+
+    // Generates a new verification code and sends it through the method the user picked at sign up.
+    sendVerificationCode = async (userId: string) => {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        if (!user) throw new UnauthorizedError("You must be signed in to access this resource.", ERROR_CODES.UNAUTHENTICATED);
+        if (this.INACTIVE_STATUS.includes(user.status)) throw new ForbiddenError("User account is not active. You are not allowed to sign in.", ERROR_CODES.ACCOUNT_NOT_ACTIVE);
+        if (this.getTokenClaims(user).verified) throw new ConflictError("Your account is already verified.", ERROR_CODES.ALREADY_VERIFIED);
+
+        const method = user.verificationMethod ?? VerificationMethod.EMAIL;
+        const code = randomInt(0, 1_000_000).toString().padStart(6, "0");
+
+        const now = Date.now();
+        const expiresAt = new Date(now + 10 * 60 * 1000);
+
+        // A code was sent less than a minute ago if it expires later than this, since every code gets the same lifetime.
+        const cooldownThreshold = new Date(now - (60 * 1000) + (10 * 60 * 1000));
+
+        // Only store the new code if the cooldown has passed, checked in the same statement so two requests at once can't both send a code.
+        const { count } = await prisma.user.updateMany({
+            where: {
+                id: user.id,
+                OR: [{ verificationExpiresAt: null }, { verificationExpiresAt: { lte: cooldownThreshold } }]
+            },
+            data: {
+                verificationHash: this.hashVerificationCode(user.id, code),
+                verificationExpiresAt: expiresAt,
+                verificationAttempts: 0,
+                verificationMethod: method
+            }
+        });
+
+        if (count === 0) {
+            const retryAfter = Math.ceil((user.verificationExpiresAt!.getTime() - cooldownThreshold.getTime()) / 1000);
+            throw new TooManyRequestsError(`Please wait ${retryAfter} seconds before requesting a new code.`, ERROR_CODES.VERIFICATION_COOLDOWN);
+        }
+
+        const destination = method === VerificationMethod.EMAIL ? user.email : user.phone;
+        const message = `Your Terhal verification code is ${code}. It expires in 10 minutes. Don't share this code with anyone.`;
+
+        try {
+            if (method === VerificationMethod.EMAIL) await sendEmail(destination, "Your Terhal verification code", message);
+            else await sendWhatsApp(destination, message);
+        } catch (error) {
+            // The code never reached the user, so remove it to let them retry right away instead of waiting out the cooldown.
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { verificationHash: null, verificationExpiresAt: null, verificationAttempts: 0 }
+            });
+
+            console.error("Failed to send verification code:", error);
+            throw new ServiceUnavailableError("We couldn't send your verification code. Please try again.");
+        }
+
+        return {
+            method,
+            destination: this.maskDestination(method, destination),
+            expiresAt,
+            resendAvailableAt: new Date(now + 60 * 1000)
+        };
     }
 }

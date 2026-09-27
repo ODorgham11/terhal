@@ -104,3 +104,12 @@ export const sessionHandler = factory.createHandlers(
         return c.json({ success: true, data: { user } }, 200);
     }
 )
+
+export const sendVerificationHandler = factory.createHandlers(
+    // Unverified users have to be able to reach this, so the verified check is turned off.
+    authorize([UserRole.CUSTOMER], { isActive: false }),
+    async (c) => {
+        const verification = await authService.sendVerificationCode(c.var.id);
+        return c.json({ success: true, data: { verification } }, 200);
+    }
+)
