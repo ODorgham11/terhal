@@ -7,12 +7,12 @@
 
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { logger } from 'hono/logger'
 import { secureHeaders } from 'hono/secure-headers'
 import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
 
 import AppError from './shared/utils/error.js'
+import { requestLogger } from './shared/middleware/logger.js'
 
 import health from './domains/health/health.routes.js'
 import auth from './domains/auth/auth.routes.js'
@@ -20,7 +20,7 @@ import staff from './domains/staff/staff.routes.js'
 import admin from './domains/admin/admin.routes.js'
 
 const app = new Hono()
-  .use('*', logger())
+  .use('*', requestLogger())
   .use('*', secureHeaders())
   .use('*', cors({
     origin: process.env.FRONTEND_URL ?? "http://localhost:3000",

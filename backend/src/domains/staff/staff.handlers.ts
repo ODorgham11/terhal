@@ -30,12 +30,12 @@ export const inviteStaffHandler = factory.createHandlers(
     }
 )
 
-// The token is sent in the body rather than the URL, so it never shows up in request logs.
+// The token travels in the query string. The request logger redacts it (see shared/middleware/logger.ts).
 export const lookupStaffInvitationHandler = factory.createHandlers(
     rateLimit({ limit: 30, windowMs: 15 * 60 * 1000, key: ipKey("staff:invitation:lookup") }),
-    validate("json", staffInvitationTokenSchema),
+    validate("query", staffInvitationTokenSchema),
     async (c) => {
-        const { token } = c.req.valid("json");
+        const { token } = c.req.valid("query");
         const invitation = await staffService.getInvitation(token);
 
         return c.json({ success: true, data: { invitation } }, 200);

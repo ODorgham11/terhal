@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { IconCircleCheck } from "@tabler/icons-react";
 import { api, type ApiError } from "@/lib/api";
 import { useAuth } from "@/context/auth";
+import { homePathFor } from "@/lib/routes";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import FormError from "@/components/ui/form-error";
@@ -17,7 +18,7 @@ type Verification = { destination: string; pending: boolean; resendAvailableAt: 
 // Where the code went and when it can be resent come from the backend, so a refresh or a new tab picks up the same state.
 export default function Verify() {
     const router = useRouter();
-    const { setUser } = useAuth();
+    const { user, setUser } = useAuth();
 
     const [verification, setVerification] = useState<Verification | null>(null);
     const [code, setCode] = useState("");
@@ -137,7 +138,7 @@ export default function Verify() {
                     <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">You&apos;re already verified</h1>
                     <p className="text-sm text-neutral-500">Your account has been verified, so there&apos;s nothing left to do here.</p>
                 </div>
-                <Button type="button" className="self-end" onClick={() => router.push("/")}>Continue</Button>
+                <Button type="button" className="self-end" onClick={() => router.push(homePathFor(user?.role))}>Continue</Button>
             </div>
         );
     }
@@ -178,7 +179,8 @@ export default function Verify() {
                         <Button type="button" variant="link" disabled={loading || !verification} onClick={resend}>{verification?.pending ? "Resend" : "Send code"}</Button>
                     )}
                 </p>
-                <Button type="submit" loading={loading} className="ml-auto">Verify</Button>
+                {/* Disabled until the status has loaded, since there's nothing to verify against before then. */}
+                <Button type="submit" loading={loading} disabled={!verification} className="ml-auto">Verify</Button>
             </div>
         </form>
     );

@@ -3,7 +3,7 @@ import { acceptStaffInvitationHandler, inviteStaffHandler, lookupStaffInvitation
 
 const staff = new Hono()
     .post("/invitations", ...inviteStaffHandler)
-    .post("/invitations/lookup", ...lookupStaffInvitationHandler)
+    .get("/invitations/lookup", ...lookupStaffInvitationHandler)
     .post("/invitations/accept", ...acceptStaffInvitationHandler)
 
 export default staff;

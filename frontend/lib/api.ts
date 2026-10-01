@@ -13,16 +13,29 @@ export type ApiError = {
     };
 };
 
-// Shared between concurrent requests, so a burst of expired requests only triggers one refresh.
-let refreshing: Promise<boolean> | null = null;
+// Customers and staff refresh through /auth, admins through /admin/auth, since each has its own session and cookies.
+type Audience = "user" | "admin";
 
-const refresh = () => {
-    refreshing ??= fetch(`${endpoint}/auth/refresh`, { method: "POST", credentials: "include" })
+const REFRESH_PATHS: Record<Audience, string> = {
+    user: "/auth/refresh",
+    admin: "/admin/auth/refresh",
+};
+
+const audienceOf = (input: RequestInfo | URL): Audience => {
+    const url = new URL(input instanceof Request ? input.url : input.toString(), endpoint);
+    return url.pathname.startsWith("/admin") ? "admin" : "user";
+};
+
+// Shared between concurrent requests, so a burst of expired requests only triggers one refresh per audience.
+const refreshing: Partial<Record<Audience, Promise<boolean>>> = {};
+
+const refresh = (audience: Audience) => {
+    refreshing[audience] ??= fetch(`${endpoint}${REFRESH_PATHS[audience]}`, { method: "POST", credentials: "include" })
         .then((response) => response.ok)
         .catch(() => false)
-        .finally(() => { refreshing = null; });
+        .finally(() => { delete refreshing[audience]; });
 
-    return refreshing;
+    return refreshing[audience];
 };
 
 // Tokens live in http-only cookies, so every request includes credentials.
@@ -33,7 +46,7 @@ const appFetch: typeof fetch = async (input, init) => {
 
     const body: Partial<ApiError> | null = await response.clone().json().catch(() => null);
     if (body?.error?.code !== "ACCESS_TOKEN_EXPIRED") return response;
-    if (!(await refresh())) return response;
+    if (!(await refresh(audienceOf(input)))) return response;
 
     return fetch(input, { ...init, credentials: "include" });
 };

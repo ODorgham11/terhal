@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, type Variants } from "motion/react";
 import { api, type ApiError } from "@/lib/api";
 import { useAuth } from "@/context/auth";
+import { homePathFor } from "@/lib/routes";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import PasswordInput from "@/components/ui/password";
@@ -60,7 +61,7 @@ export default function SignIn() {
                 // Accounts that haven't confirmed their code yet finish that first.
                 const { data } = await res.json();
                 setUser(data.user);
-                return router.push(data.user.status === "UNVERIFIED" ? "/auth/verify" : "/");
+                return router.push(data.user.status === "UNVERIFIED" ? "/auth/verify" : homePathFor(data.user.role));
             }
 
             const { error } = (await res.json()) as unknown as ApiError;

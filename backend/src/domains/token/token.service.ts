@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { sign, verify } from "hono/jwt";
+import { decode, sign, verify } from "hono/jwt";
 import type { UserRole } from "../../../generated/prisma/enums.js";
 
 // Who a token was issued to. Each audience has its own secret and cookies, so a token from one can never be used as the other.
@@ -125,6 +125,54 @@ export default class TokenService {
             path: local.refreshPath,
             expires: expiresAt,
         });
+    }
+
+    // The step between an admin's correct password and their two-factor code. The challenge proves the password was right
+    // and names who still owes a code, for 5 minutes. It uses its own audience, so it can never pass as an access token.
+    private static readonly CHALLENGE_AUDIENCE = "admin-challenge";
+    private static readonly CHALLENGE_COOKIE = "admin_challenge";
+    private static readonly CHALLENGE_LIFETIME = 5 * 60;
+
+    static setChallengeCookie = async (c: Context, adminId: string) => {
+        const now = Math.floor(Date.now() / 1000);
+        const token = await sign({ sub: adminId, aud: this.CHALLENGE_AUDIENCE, iat: now, exp: now + this.CHALLENGE_LIFETIME }, this.getSecret("admin"), "HS256");
+
+        // Only sent to the admin auth routes, which are the only ones that read it.
+        setCookie(c, this.CHALLENGE_COOKIE, token, {
+            ...this.baseCookieOptions,
+            path: config.admin.refreshPath,
+            maxAge: this.CHALLENGE_LIFETIME,
+        });
+    }
+
+    // The admin id behind the challenge, or null when it's missing, expired, or not genuine.
+    static verifyChallengeCookie = async (c: Context) => {
+        const token = getCookie(c, this.CHALLENGE_COOKIE);
+        if (!token) return null;
+
+        try {
+            const payload = await verify(token, this.getSecret("admin"), { alg: "HS256", aud: this.CHALLENGE_AUDIENCE });
+            return typeof payload.sub === "string" ? payload.sub : null;
+        } catch {
+            return null;
+        }
+    }
+
+    // Reads the challenge's admin id without checking the signature. Only for keying rate limits, never for access.
+    static peekChallengeCookie = (c: Context) => {
+        const token = getCookie(c, this.CHALLENGE_COOKIE);
+        if (!token) return undefined;
+
+        try {
+            const { sub } = decode(token).payload;
+            return typeof sub === "string" ? sub : undefined;
+        } catch {
+            return undefined;
+        }
+    }
+
+    static clearChallengeCookie = (c: Context) => {
+        deleteCookie(c, this.CHALLENGE_COOKIE, { ...this.baseCookieOptions, path: config.admin.refreshPath });
     }
 
     // Deleting a cookie only works with the same path and options it was set with.

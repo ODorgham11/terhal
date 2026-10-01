@@ -109,8 +109,10 @@ export const sessionHandler = factory.createHandlers(
     }
 )
 
+// Staff are allowed through too. Their accounts are created verified, so they get ALREADY_VERIFIED rather than
+// a permissions error, which lets the verify page tell them there's nothing to do.
 export const verificationStatusHandler = factory.createHandlers(
-    authorize([UserRole.CUSTOMER]),
+    authorize([UserRole.CUSTOMER, UserRole.STAFF]),
     async (c) => {
         const verification = await authService.getVerificationStatus(c.var.id);
         return c.json({ success: true, data: { verification } }, 200);
@@ -118,7 +120,7 @@ export const verificationStatusHandler = factory.createHandlers(
 )
 
 export const sendVerificationHandler = factory.createHandlers(
-    authorize([UserRole.CUSTOMER]),
+    authorize([UserRole.CUSTOMER, UserRole.STAFF]),
     rateLimit({ limit: 10, windowMs: 60 * 60 * 1000, key: ipKey("auth:verification:send") }),
     async (c) => {
         const verification = await authService.sendVerificationCode(c.var.id);
@@ -127,7 +129,7 @@ export const sendVerificationHandler = factory.createHandlers(
 )
 
 export const confirmVerificationHandler = factory.createHandlers(
-    authorize([UserRole.CUSTOMER]),
+    authorize([UserRole.CUSTOMER, UserRole.STAFF]),
     validate("json", confirmVerificationSchema),
     async (c) => {
         const { code } = c.req.valid("json");
