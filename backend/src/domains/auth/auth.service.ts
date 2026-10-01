@@ -13,6 +13,8 @@ export default class AuthService {
 
     private readonly MAXIMUM_SESSION_LIMIT = 5;
     private readonly MAXIMUM_VERIFICATION_ATTEMPTS = 5;
+    private readonly VERIFICATION_CODE_LIFETIME = 10 * 60 * 1000;
+    private readonly VERIFICATION_RESEND_COOLDOWN = 60 * 1000;
     private readonly INACTIVE_STATUS: UserStatus[] = [UserStatus.SUSPENDED, UserStatus.DELETED];
 
     // Claims carried by the user's access token. A user only counts as verified when their account is active and they have completed verification.
@@ -201,10 +203,10 @@ export default class AuthService {
         const code = randomInt(0, 1_000_000).toString().padStart(6, "0");
 
         const now = Date.now();
-        const expiresAt = new Date(now + 10 * 60 * 1000);
+        const expiresAt = new Date(now + this.VERIFICATION_CODE_LIFETIME);
 
         // A code was sent less than a minute ago if it expires later than this, since every code gets the same lifetime.
-        const cooldownThreshold = new Date(now - (60 * 1000) + (10 * 60 * 1000));
+        const cooldownThreshold = new Date(now - this.VERIFICATION_RESEND_COOLDOWN + this.VERIFICATION_CODE_LIFETIME);
 
         // Only store the new code if the cooldown has passed, checked in the same statement so two requests at once can't both send a code.
         const { count } = await prisma.user.updateMany({
@@ -244,7 +246,37 @@ export default class AuthService {
             method,
             destination: this.maskDestination(method, destination),
             expiresAt,
-            resendAvailableAt: new Date(now + 60 * 1000)
+            resendAvailableAt: new Date(now + this.VERIFICATION_RESEND_COOLDOWN)
+        };
+    }
+
+    // Describes the user's current code without sending a new one, so the client can pick up where it left off after a refresh.
+    getVerificationStatus = async (userId: string) => {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        if (!user) throw new UnauthorizedError("You must be signed in to access this resource.", ERROR_CODES.UNAUTHENTICATED);
+        if (this.INACTIVE_STATUS.includes(user.status)) throw new ForbiddenError("User account is not active. You are not allowed to sign in.", ERROR_CODES.ACCOUNT_NOT_ACTIVE);
+        if (this.getTokenClaims(user).verified) throw new ConflictError("Your account is already verified.", ERROR_CODES.ALREADY_VERIFIED);
+
+        const method = user.verificationMethod ?? VerificationMethod.EMAIL;
+        const destination = method === VerificationMethod.EMAIL ? user.email : user.phone;
+        const expiresAt = user.verificationExpiresAt;
+
+        // A code can still be entered while it's stored, unexpired, and has attempts left.
+        const pending = !!user.verificationHash && !!expiresAt && expiresAt.getTime() > Date.now()
+            && user.verificationAttempts < this.MAXIMUM_VERIFICATION_ATTEMPTS;
+
+        // Every code gets the same lifetime, so when it was sent (and when the cooldown ends) follows from when it expires.
+        const resendAvailableAt = expiresAt
+            ? new Date(expiresAt.getTime() - this.VERIFICATION_CODE_LIFETIME + this.VERIFICATION_RESEND_COOLDOWN)
+            : null;
+
+        return {
+            method,
+            destination: this.maskDestination(method, destination),
+            pending,
+            expiresAt: pending ? expiresAt : null,
+            resendAvailableAt
         };
     }
 

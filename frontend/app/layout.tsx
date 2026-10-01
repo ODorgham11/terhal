@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MotionConfig } from "motion/react";
+import { AuthProvider } from "@/context/auth";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -94,10 +96,6 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
-  },
   verification: {
     // Todo: Add these as soon as possible when we can get them available.
     // google: "YOUR_GOOGLE_SEARCH_CONSOLE_TOKEN",
@@ -111,7 +109,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {/* Turns movement off app-wide for people who ask their OS to reduce motion, keeping only the fades. */}
+        <MotionConfig reducedMotion="user">
+          <AuthProvider>{children}</AuthProvider>
+        </MotionConfig>
+      </body>
     </html>
   );
 }

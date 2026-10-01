@@ -109,6 +109,14 @@ export const sessionHandler = factory.createHandlers(
     }
 )
 
+export const verificationStatusHandler = factory.createHandlers(
+    authorize([UserRole.CUSTOMER]),
+    async (c) => {
+        const verification = await authService.getVerificationStatus(c.var.id);
+        return c.json({ success: true, data: { verification } }, 200);
+    }
+)
+
 export const sendVerificationHandler = factory.createHandlers(
     authorize([UserRole.CUSTOMER]),
     rateLimit({ limit: 10, windowMs: 60 * 60 * 1000, key: ipKey("auth:verification:send") }),

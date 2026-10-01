@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Matches the logo in components/ui/logo.tsx. The colors flip in dark mode so it stays visible on dark tab bars. -->
+  <style>
+    .tile { fill: #171717; }
+    .letter { fill: #ffffff; }
+    @media (prefers-color-scheme: dark) {
+      .tile { fill: #ffffff; }
+      .letter { fill: #171717; }
+    }
+  </style>
+  <rect class="tile" width="32" height="32" rx="7" />
+  <rect class="letter" x="9" y="8.5" width="14" height="3.5" rx="0.5" />
+  <rect class="letter" x="14.25" y="8.5" width="3.5" height="15" rx="0.5" />
+</svg>
