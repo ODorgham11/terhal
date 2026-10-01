@@ -1,5 +1,5 @@
 import { createFactory } from "hono/factory";
-import StaffService, { FULL_ACCESS } from "./staff.service.js";
+import StaffService from "./staff.service.js";
 import AuthService from "../auth/auth.service.js";
 import TokenService from "../token/token.service.js";
 import { acceptStaffInvitationSchema, inviteStaffSchema, staffInvitationTokenSchema } from "./staff.validators.js";
@@ -23,7 +23,7 @@ export const inviteStaffHandler = factory.createHandlers(
 
         // Only staff with full access can bring in new staff, until finer permissions exist.
         const staff = await staffService.getStaff(c.var.id);
-        if (!staff.permissions.includes(FULL_ACCESS)) throw new ForbiddenError("You are not allowed to invite staff.", ERROR_CODES.INSUFFICIENT_PERMISSIONS);
+        if (!staff.permissions.includes("*")) throw new ForbiddenError("You are not allowed to invite staff.", ERROR_CODES.INSUFFICIENT_PERMISSIONS);
 
         const invitation = await staffService.inviteStaff(email, { invitorId: staff.id, permissions });
         return c.json({ success: true, data: { invitation } }, 201);
