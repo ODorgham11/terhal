@@ -13,15 +13,33 @@ model Admin {
 
   passwordHash String
 
-  totpSecret     String?
-  totpEnabledAt  DateTime?
-  lastLoginAt    DateTime?
+  totpSecret    String?
+  totpEnabledAt DateTime?
+  lastLoginAt   DateTime?
 
   sessions    AdminSession[]
   auditLogs   AuditLog[]
+  invitations AdminInvitation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model AdminInvitation {
+  id String @id @default(cuid())
+
+  email     String
+  tokenHash String @unique
+
+  // Empty for invitations sent by the seed, which runs before any admin exists.
+  invitor   Admin?  @relation(fields: [invitorId], references: [id])
+  invitorId String?
+
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  revokedAt  DateTime?
+
+  createdAt DateTime @default(now())
 }
 
 model AdminSession {

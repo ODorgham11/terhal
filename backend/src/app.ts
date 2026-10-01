@@ -16,6 +16,8 @@ import AppError from './shared/utils/error.js'
 
 import health from './domains/health/health.routes.js'
 import auth from './domains/auth/auth.routes.js'
+import staff from './domains/staff/staff.routes.js'
+import admin from './domains/admin/admin.routes.js'
 
 const app = new Hono()
   .use('*', logger())
@@ -74,6 +76,8 @@ const app = new Hono()
   })
   .route('/health', health)
   .route('/auth', auth)
+  .route('/staff', staff)
+  .route('/admin', admin)
 
 export type AppType = typeof app;
 export default app;

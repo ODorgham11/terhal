@@ -89,8 +89,9 @@ model Invitation {
   email     String
   tokenHash String @unique
 
-  invitor   Staff  @relation(fields: [invitorId], references: [id])
-  invitorId String
+  // Empty for invitations sent by the seed, which runs before any staff member exists.
+  invitor   Staff?  @relation(fields: [invitorId], references: [id])
+  invitorId String?
 
   permissions Json?
 

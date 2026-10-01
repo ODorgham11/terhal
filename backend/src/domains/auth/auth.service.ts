@@ -55,11 +55,13 @@ export default class AuthService {
         const passwordHash = await hash(payload.password);
         const { password, ...data } = payload;
 
-        // Create the user in the proper user response shape.
-        const user = await prisma.user.create({ 
+        // Create the user along with their customer record. Prisma writes nested creates in one transaction,
+        // so a user can never exist without the customer record, or the other way around.
+        const user = await prisma.user.create({
             data: {
                 ...data,
-                passwordHash
+                passwordHash,
+                customer: { create: {} }
             }
         });
 
