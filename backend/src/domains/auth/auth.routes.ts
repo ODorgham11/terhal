@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { confirmVerificationHandler, refreshHandler, sendVerificationHandler, sessionHandler, verificationStatusHandler, signInHandler, signOutHandler, signUpHandler } from "./auth.handlers.js";
+import { confirmVerificationHandler, refreshHandler, sendVerificationHandler, sessionHandler, verificationStatusHandler, signInHandler, signOutHandler, signUpHandler, forgotPasswordHandler, lookupPasswordResetHandler, resetPasswordHandler } from "./auth.handlers.js";
 
 const auth = new Hono()
     .post("/sign-up", ...signUpHandler)
@@ -10,5 +10,8 @@ const auth = new Hono()
     .get("/verification", ...verificationStatusHandler)
     .post("/verification/send", ...sendVerificationHandler)
     .post("/verification/confirm", ...confirmVerificationHandler)
+    .post("/password/forgot", ...forgotPasswordHandler)
+    .get("/password/reset", ...lookupPasswordResetHandler)
+    .post("/password/reset", ...resetPasswordHandler)
 
 export default auth;

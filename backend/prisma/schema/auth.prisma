@@ -38,6 +38,10 @@ model User {
   verifiedVia VerificationMethod?
   verifiedAt  DateTime?
 
+  // Hash of the single-use token in the latest password reset link. Requesting a new link replaces it, so only the newest one works.
+  passwordResetHash      String?   @unique
+  passwordResetExpiresAt DateTime?
+
   staff    Staff?
   customer Customer?
 

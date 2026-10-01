@@ -134,7 +134,6 @@ export default function SignIn() {
                             error={errors.password}
                         />
 
-                        {/* Todo: Point this at the reset flow once the backend supports it. */}
                         <AppLink href="/auth/forgot-password" className="self-start">Forgot password?</AppLink>
 
                         <FormError message={errors.form} />

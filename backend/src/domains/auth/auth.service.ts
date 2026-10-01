@@ -1,8 +1,9 @@
-import { createUserResponse, SignInSchemaPayload, SignUpSchemaPayload } from "./auth.validators.js";
+import { createUserResponse, ForgotPasswordSchemaPayload, ResetPasswordSchemaPayload, SignInSchemaPayload, SignUpSchemaPayload } from "./auth.validators.js";
 import { prisma } from "../../shared/utils/prisma.js";
 import { ERROR_CODES, BadRequestError, ConflictError, ForbiddenError, ServiceUnavailableError, TooManyRequestsError, UnauthorizedError } from "../../shared/utils/error.js";
 import MessagingService from "../messaging/messaging.service.js";
 import { hash, compare } from "../../shared/utils/hash.js";
+import { generateToken, hashToken } from "../../shared/utils/token.js";
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import TokenService from "../token/token.service.js";
 import { UserStatus, VerificationMethod } from "../../../generated/prisma/enums.js";
@@ -15,6 +16,8 @@ export default class AuthService {
     private readonly MAXIMUM_VERIFICATION_ATTEMPTS = 5;
     private readonly VERIFICATION_CODE_LIFETIME = 10 * 60 * 1000;
     private readonly VERIFICATION_RESEND_COOLDOWN = 60 * 1000;
+    private readonly PASSWORD_RESET_LIFETIME = 30 * 60 * 1000;
+    private readonly PASSWORD_RESET_COOLDOWN = 60 * 1000;
     private readonly INACTIVE_STATUS: UserStatus[] = [UserStatus.SUSPENDED, UserStatus.DELETED];
 
     // Claims carried by the user's access token. A user only counts as verified when their account is active and they have completed verification.
@@ -30,6 +33,8 @@ export default class AuthService {
 
         return createHmac("sha256", secret).update(`${userId}:${code}`).digest("hex");
     }
+
+    private getFrontendUrl = () => process.env.FRONTEND_URL ?? "http://localhost:3000";
 
     // Shows where the code was sent without exposing the full address, e.g. a•••@example.com or +20•••••5678.
     private maskDestination = (method: VerificationMethod, destination: string) => {
@@ -340,5 +345,98 @@ export default class AuthService {
         });
 
         if (verified === 0) throw new BadRequestError("Your verification code has expired. Please request a new code.", ERROR_CODES.VERIFICATION_CODE_EXPIRED);
+    }
+
+    // Sends a link to choose a new password, to the email or phone the user typed. Always resolves the same way, whether or not
+    // the account exists, so the response can't be used to find out who has an account.
+    requestPasswordReset = async ({ identifier }: ForgotPasswordSchemaPayload) => {
+        const user = await prisma.user.findUnique({ where: identifier });
+        if (!user || this.INACTIVE_STATUS.includes(user.status)) return;
+
+        const token = generateToken();
+        const tokenHash = hashToken(token);
+
+        const now = Date.now();
+        const expiresAt = new Date(now + this.PASSWORD_RESET_LIFETIME);
+
+        // A link was sent less than a minute ago if it expires later than this, since every link gets the same lifetime.
+        const cooldownThreshold = new Date(now - this.PASSWORD_RESET_COOLDOWN + this.PASSWORD_RESET_LIFETIME);
+
+        // Replaces any earlier link, checked in the same statement so two requests at once can't both send one.
+        // Within the cooldown nothing is sent, but the response stays the same so it doesn't reveal the account.
+        const { count } = await prisma.user.updateMany({
+            where: {
+                id: user.id,
+                OR: [{ passwordResetExpiresAt: null }, { passwordResetExpiresAt: { lte: cooldownThreshold } }]
+            },
+            data: { passwordResetHash: tokenHash, passwordResetExpiresAt: expiresAt }
+        });
+
+        if (count === 0) return;
+
+        const method = "email" in identifier ? VerificationMethod.EMAIL : VerificationMethod.WHATSAPP;
+        const destination = method === VerificationMethod.EMAIL ? user.email : user.phone;
+        const link = `${this.getFrontendUrl()}/auth/reset-password?token=${token}`;
+
+        try {
+            await this.messagingService.sendPasswordReset(method, destination, link);
+        } catch (error) {
+            // Nobody received this link, so remove it to let them retry right away instead of waiting out the cooldown.
+            // Not reported to the client, since an error here would only ever happen for accounts that exist.
+            await prisma.user.updateMany({
+                where: { id: user.id, passwordResetHash: tokenHash },
+                data: { passwordResetHash: null, passwordResetExpiresAt: null }
+            });
+
+            console.error("Failed to send password reset link:", error);
+        }
+    }
+
+    // Finds the user behind a reset link that can still be used, or explains why it can't.
+    private findPasswordReset = async (token: string) => {
+        const user = await prisma.user.findUnique({ where: { passwordResetHash: hashToken(token) } });
+
+        if (!user || !user.passwordResetExpiresAt) {
+            throw new BadRequestError("This reset link is invalid or has already been used.", ERROR_CODES.PASSWORD_RESET_INVALID);
+        }
+
+        if (user.passwordResetExpiresAt <= new Date()) {
+            throw new BadRequestError("This reset link has expired. Please request a new one.", ERROR_CODES.PASSWORD_RESET_EXPIRED);
+        }
+
+        if (this.INACTIVE_STATUS.includes(user.status)) throw new ForbiddenError("User account is not active. You are not allowed to sign in.", ERROR_CODES.ACCOUNT_NOT_ACTIVE);
+
+        return user;
+    }
+
+    // What the reset page shows before the new password is chosen, without using up the link.
+    getPasswordReset = async (token: string) => {
+        const { email, passwordResetExpiresAt } = await this.findPasswordReset(token);
+        return { email, expiresAt: passwordResetExpiresAt! };
+    }
+
+    // Sets the new password and signs the user out everywhere, since whoever knew the old one may still have a session.
+    resetPassword = async ({ token, password }: ResetPasswordSchemaPayload) => {
+        const user = await this.findPasswordReset(token);
+        const passwordHash = await hash(password);
+        const now = new Date();
+
+        await prisma.$transaction(async (tx) => {
+            // Only matches while this link is still the stored one, so it can only be used once, even by two requests at once.
+            // Matching on the status also keeps a user suspended in the meantime from getting back in.
+            const { count } = await tx.user.updateMany({
+                where: { id: user.id, passwordResetHash: user.passwordResetHash, passwordResetExpiresAt: { gt: now }, status: user.status },
+                data: { passwordHash, passwordResetHash: null, passwordResetExpiresAt: null }
+            });
+
+            if (count === 0) throw new BadRequestError("This reset link is invalid or has already been used.", ERROR_CODES.PASSWORD_RESET_INVALID);
+
+            await tx.userSession.updateMany({
+                where: { userId: user.id, revokedAt: null },
+                data: { revokedAt: now }
+            });
+        });
+
+        return { email: user.email };
     }
 }

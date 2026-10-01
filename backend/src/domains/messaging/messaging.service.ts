@@ -15,6 +15,23 @@ export default class MessagingService {
         }
     }
 
+    // Sends a link to choose a new password, through the channel the user signs in with. Throws when the provider fails to deliver it.
+    sendPasswordReset = async (method: VerificationMethod, destination: string, link: string) => {
+        const message = [
+            "We received a request to reset your Terhal password.",
+            "",
+            `Choose a new password here: ${link}`,
+            "",
+            "This link can only be used once and expires in 30 minutes. If you didn't ask for this, you can ignore this message and your password won't change.",
+        ].join("\n");
+
+        if (method === VerificationMethod.EMAIL) {
+            await sendEmail(destination, "Reset your Terhal password", message);
+        } else {
+            await sendWhatsApp(destination, message);
+        }
+    }
+
     // Emails a link to create a staff or admin account. Throws when the provider fails to deliver it.
     sendInvitation = async (email: string, role: "staff" | "admin", link: string, expiresAt: Date) => {
         const expires = expiresAt.toUTCString();

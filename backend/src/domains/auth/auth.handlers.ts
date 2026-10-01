@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import { createFactory } from "hono/factory";
 import AuthService from "./auth.service.js";
-import { confirmVerificationSchema, signInSchema, signUpSchema } from "./auth.validators.js";
+import { confirmVerificationSchema, forgotPasswordSchema, passwordResetLookupSchema, resetPasswordSchema, signInSchema, signUpSchema } from "./auth.validators.js";
 import validate from "../../shared/middleware/validate.js";
 import { bodyKey, ipKey, rateLimit } from "../../shared/middleware/rateLimit.js";
 import TokenService from "../token/token.service.js";
@@ -158,5 +158,51 @@ export const confirmVerificationHandler = factory.createHandlers(
             // Other errors (like the database being down) keep them, since the session may still be valid.
             throw error;
         }
+    }
+)
+
+// Responds the same way whether or not the account exists, so it can't be used to find out who has one.
+export const forgotPasswordHandler = factory.createHandlers(
+    rateLimit({ limit: 10, windowMs: 60 * 60 * 1000, key: ipKey("auth:password:forgot") }),
+    rateLimit({ limit: 5, windowMs: 60 * 60 * 1000, key: bodyKey("auth:password:forgot", "identifier", "identifier") }),
+    validate("json", forgotPasswordSchema),
+    async (c) => {
+        const payload = c.req.valid("json");
+        await authService.requestPasswordReset(payload);
+
+        return c.json({ success: true }, 200);
+    }
+)
+
+// The token travels in the query string. The request logger redacts it (see shared/middleware/logger.ts).
+export const lookupPasswordResetHandler = factory.createHandlers(
+    rateLimit({ limit: 30, windowMs: 15 * 60 * 1000, key: ipKey("auth:password:lookup") }),
+    validate("query", passwordResetLookupSchema),
+    async (c) => {
+        const { token } = c.req.valid("query");
+        const reset = await authService.getPasswordReset(token);
+
+        return c.json({ success: true, data: { reset } }, 200);
+    }
+)
+
+export const resetPasswordHandler = factory.createHandlers(
+    rateLimit({ limit: 10, windowMs: 60 * 60 * 1000, key: ipKey("auth:password:reset") }),
+    validate("json", resetPasswordSchema),
+    async (c) => {
+        const payload = c.req.valid("json");
+        const { email } = await authService.resetPassword(payload);
+
+        const ipAddress = c.req.header("x-forwarded-for")?.split(",")[0].trim()
+            ?? null;
+
+        const userAgent = c.req.header("user-agent") ?? null;
+
+        // Every other session was just revoked, so sign them in here with the new password, the same way sign up does.
+        const { user, ...tokens } = await authService.signIn({ identifier: { email }, password: payload.password }, ipAddress, userAgent);
+
+        // Tokens are only sent as http-only cookies so they can't be read by scripts on the page.
+        TokenService.setAuthenticationCookies(c, "user", tokens);
+        return c.json({ success: true, data: { user } }, 200);
     }
 )
