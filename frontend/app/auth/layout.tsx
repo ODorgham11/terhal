@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import hero from "@/assets/auth.jpg";
 import Logo from "@/components/ui/logo";
+
+// Sign in, sign up and verify aren't useful search results, so keep them out of search engines.
+export const metadata: Metadata = {
+    robots: {
+        index: false,
+        follow: false,
+    },
+};
 
 // Shared by every auth page: the form on the left, and the image on the right from lg up.
 export default function AuthLayout({ children }: LayoutProps<"/auth">) {

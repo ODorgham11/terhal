@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import { decode, sign, verify } from "hono/jwt";
+import { sign, verify } from "hono/jwt";
 import type { UserRole } from "../../../generated/prisma/enums.js";
 
 // Who a token was issued to. Each audience has its own secret and cookies, so a token from one can never be used as the other.
@@ -109,13 +109,14 @@ export default class TokenService {
 
     static setAuthenticationCookies = (c: Context, audience: Audience, { accessToken, refreshToken, expiresAt }: CookiesPayload) => {
         const local = config[audience];
-        // Expire the cookie together with the token, read from the token itself so the lifetime is defined in one place.
-        const { exp } = decode(accessToken).payload;
 
+        // The cookie outlives the token on purpose. If it expired with the token, the browser would drop it and the next
+        // request would arrive with no token at all, which reads as signed out (UNAUTHENTICATED) instead of expired
+        // (ACCESS_TOKEN_EXPIRED), so the client would never refresh. The token's own exp claim still limits it to 15 minutes.
         setCookie(c, local.accessCookie, accessToken, {
             ...this.baseCookieOptions,
             path: local.basePath,
-            expires: new Date(exp! * 1000),
+            expires: expiresAt,
         });
 
         // Only sent to the auth routes, which are the only ones that need it.
