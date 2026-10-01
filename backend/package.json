@@ -11,6 +11,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
     "db:seed": "prisma db seed",
+    "db:reset": "tsx prisma/reset.ts",
     "db:clear": "echo 'DELETE FROM \"RateLimit\";' | prisma db execute --stdin"
   },
   "dependencies": {
