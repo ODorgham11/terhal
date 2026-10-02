@@ -38,6 +38,10 @@ model User {
   verifiedVia VerificationMethod?
   verifiedAt  DateTime?
 
+  // Hash of the single-use token in the latest password reset link. Requesting a new link replaces it, so only the newest one works.
+  passwordResetHash      String?   @unique
+  passwordResetExpiresAt DateTime?
+
   staff    Staff?
   customer Customer?
 
@@ -89,8 +93,9 @@ model Invitation {
   email     String
   tokenHash String @unique
 
-  invitor   Staff  @relation(fields: [invitorId], references: [id])
-  invitorId String
+  // Empty for invitations sent by the seed, which runs before any staff member exists.
+  invitor   Staff?  @relation(fields: [invitorId], references: [id])
+  invitorId String?
 
   permissions Json?
 

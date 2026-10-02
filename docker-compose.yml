@@ -37,10 +37,15 @@ services:
       PORT: ${BACKEND_PORT}
       APP_SECRET: ${APP_SECRET}
       ADMIN_SECRET: ${ADMIN_SECRET}
+      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY}
 
       # Email
       RESEND_KEY: ${RESEND_KEY}
       RESEND_EMAIL: ${RESEND_EMAIL}
+
+      # Seeding
+      STAFF_EMAIL: ${STAFF_EMAIL}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
 
       # Frontend
       FRONTEND_URL: ${FRONTEND_URL}

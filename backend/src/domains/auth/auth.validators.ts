@@ -70,6 +70,24 @@ export const signInSchema = z.object({
 
 export type SignInSchemaPayload = z.infer<typeof signInSchema>;
 
+export const forgotPasswordSchema = signInSchema.pick({ identifier: true });
+
+export type ForgotPasswordSchemaPayload = z.infer<typeof forgotPasswordSchema>;
+
+const passwordResetTokenSchema = z.string({ error: "Reset token is required." }).min(1, "Reset token is required.");
+
+export const passwordResetLookupSchema = z.object({
+    token: passwordResetTokenSchema,
+});
+
+// The new password follows the same rules as sign up.
+export const resetPasswordSchema = z.object({
+    token: passwordResetTokenSchema,
+    password: signUpSchema.shape.password,
+});
+
+export type ResetPasswordSchemaPayload = z.infer<typeof resetPasswordSchema>;
+
 export const confirmVerificationSchema = z.object({
     code: z
         .string({ error: "Verification code is required." })

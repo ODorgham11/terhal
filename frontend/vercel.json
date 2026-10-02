@@ -1,0 +1,3 @@
+{
+  "installCommand": "cd ../backend && npm ci --ignore-scripts && DATABASE_URL=${DATABASE_URL:-postgresql://build:build@localhost:5432/build} npx prisma generate && cd ../frontend && npm ci"
+}

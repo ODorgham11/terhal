@@ -1,5 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MotionConfig } from "motion/react";
+import { AuthProvider } from "@/context/auth";
+import { openGraph, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,11 +15,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Todo: Modify this as soon as we can get the domain name up and running.
-// const siteUrl = "https://terhal.com";
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+};
 
+// Shared by every page. The share images come from app/opengraph-image.jpg and app/twitter-image.jpg, and the icons
+// from app/icon.svg, app/apple-icon.tsx and app/favicon.ico, so none of them are listed here.
 export const metadata: Metadata = {
-  // metadataBase: new URL(siteUrl),
+  // Lets the fields below use relative paths, which link previews need as absolute URLs.
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Terhal | Car Rental & Transportation in Egypt",
     template: "%s | Terhal",
@@ -45,43 +52,20 @@ export const metadata: Metadata = {
   authors: [
     {
       name: "Terhal",
-      // url: siteUrl,
+      url: siteUrl,
     },
   ],
   creator: "Terhal",
   publisher: "Terhal",
   category: "travel",
-  alternates: {
-    canonical: "/",
-    languages: {
-      en: "/en",
-      ar: "/ar",
-    },
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_EG",
-    alternateLocale: ["ar_EG"],
-    // url: siteUrl,
-    siteName: "Terhal",
-    title: "Terhal | Car Rental & Transportation in Egypt",
-    description:
-      "Reliable car rental, airport transfers, private transportation, and chauffeur services across Egypt.",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Terhal - Car Rental & Transportation in Egypt",
-      },
-    ],
-  },
+  // The canonical URL is set per page (see app/page.tsx), since one set here would be inherited by every page.
+  // Todo: Add alternates.languages once the Arabic version of the site exists.
+  openGraph,
   twitter: {
     card: "summary_large_image",
     title: "Terhal | Car Rental & Transportation in Egypt",
     description:
       "Car rental, airport transfers, and private transportation across Egypt.",
-    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,
@@ -93,10 +77,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
       "max-video-preview": -1,
     },
-  },
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
   },
   verification: {
     // Todo: Add these as soon as possible when we can get them available.
@@ -111,7 +91,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {/* Turns movement off app-wide for people who ask their OS to reduce motion, keeping only the fades. */}
+        <MotionConfig reducedMotion="user">
+          <AuthProvider>{children}</AuthProvider>
+        </MotionConfig>
+      </body>
     </html>
   );
 }
