@@ -44,15 +44,16 @@ const config = {
 } as const satisfies Record<Audience, Record<string, string>>;
 
 export default class TokenService {
-    // Lax requires the frontend and backend to be on the same site (e.g. terhal.com and api.terhal.com).
-    // On separate domains (e.g. two *.vercel.app subdomains) the browser won't send these cookies from the frontend at all.
-    // If that ever happens, switch to SameSite=None and add a middleware that rejects unsafe requests (POST, PUT, PATCH, DELETE)
-    // whose Origin header isn't FRONTEND_URL, since None sends the cookies from any site.
-    private static readonly baseCookieOptions = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Lax",
-    } as const;
+    // In production the frontend and backend are on different sites (two *.vercel.app subdomains), and browsers drop Lax
+    // cookies set by a cross-site response, so they're SameSite=None there. None sends the cookies from any site, which is
+    // why requireTrustedOrigin rejects unsafe requests from anywhere but FRONTEND_URL. Partitioned keeps them working in
+    // browsers that block third-party cookies but allow partitioned ones (e.g. Chrome), since the frontend is always the
+    // top-level page. None and Partitioned both require Secure, so local development over http keeps Lax.
+    
+    // Once both are on one site (e.g. terhal.com and api.terhal.com), go back to Lax everywhere.
+    private static readonly baseCookieOptions = process.env.NODE_ENV === "production"
+        ? { httpOnly: true, secure: true, sameSite: "None", partitioned: true } as const
+        : { httpOnly: true, secure: false, sameSite: "Lax" } as const;
 
     // Read lazily so the app can still boot without it; only token operations fail.
     private static getSecret = (audience: Audience) => {
