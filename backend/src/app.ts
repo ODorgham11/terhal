@@ -13,6 +13,7 @@ import { ZodError } from 'zod'
 
 import AppError from './shared/utils/error.js'
 import { requestLogger } from './shared/middleware/logger.js'
+import { requireOrigin } from './shared/middleware/origin.js'
 
 import health from './domains/health/health.routes.js'
 import auth from './domains/auth/auth.routes.js'
@@ -23,9 +24,10 @@ const app = new Hono()
   .use('*', requestLogger())
   .use('*', secureHeaders())
   .use('*', cors({
-    origin: process.env.FRONTEND_URL ?? "http://localhost:3000",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   }))
+  .use('*', requireOrigin(process.env.FRONTEND_URL!))
   .onError((err, c) => {
     // Handle the AppErrors we throw throughout the application's logic.
     if (err instanceof AppError) {
