@@ -66,7 +66,7 @@ jobs:
           if [[ "$ENVIRONMENT" == main ]]; then api=https://api.terhal.co; else api="https://api.$ENVIRONMENT.terhal.co"; fi
           if [[ "${{ matrix.image }}" == web ]]; then tag="$ENVIRONMENT-$SHA"; else tag="$SHA"; fi
           echo "api=$api" >> "$GITHUB_OUTPUT"
-          echo "image=$REGISTRY/terhal-${{ matrix.image }}:$tag" >> "$GITHUB_OUTPUT"
+          echo "image=${REGISTRY,,}/terhal-${{ matrix.image }}:$tag" >> "$GITHUB_OUTPUT"
 
       - uses: docker/build-push-action@v6
         with:
@@ -116,7 +116,7 @@ jobs:
 
       - name: Deploy
         run: |
-          ssh "$TARGET" bash -s -- "$ENVIRONMENT" "$REGISTRY/terhal-server:$SHA" "$REGISTRY/terhal-web:$ENVIRONMENT-$SHA" \
+          ssh "$TARGET" bash -s -- "$ENVIRONMENT" "${REGISTRY,,}/terhal-server:$SHA" "${REGISTRY,,}/terhal-web:$ENVIRONMENT-$SHA" \
             < deploy/deploy.sh
 
       - name: Log the VPS out of the registry
