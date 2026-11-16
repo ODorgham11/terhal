@@ -3,8 +3,8 @@
 > Where Terhal runs and how code reaches it. `docs/architecture.md` covers how
 > the code is organised; the README covers the commands.
 >
-> **Last updated: 2026-11-16**, after the first successful staging deploy to
-> the VPS. This repo is public: no secret, password or key belongs in this
+> **Last updated: 2026-11-16**, after the production launch on the
+> VPS. This repo is public: no secret, password or key belongs in this
 > file.
 
 ---
@@ -17,13 +17,17 @@
 | Staging: staff dashboard | **LIVE** | `https://dashboard.staging.terhal.co` |
 | Staging: admin panel | **LIVE** (Staff, Customers, Pricing, Locations, Settings, Audit logs) | `https://admin.staging.terhal.co` |
 | Staging: API | **LIVE**, `/health/ready` reports database and cache ok | `https://api.staging.terhal.co` |
-| Production (`terhal.co`, `www`, `dashboard`, `admin`, `api`) | **NOT SET UP** (no DNS, no `app.env`). Every merge to `main` shows a failed Deploy until Section 6 is done; harmless | — |
+| Production: customer site | **LIVE** since 2026-11-16 | `https://terhal.co` (`www` redirects to it) |
+| Production: staff dashboard | **LIVE** | `https://dashboard.terhal.co` |
+| Production: admin panel | **LIVE** | `https://admin.terhal.co` |
+| Production: API | **LIVE**, `/health/ready` reports database and cache ok | `https://api.terhal.co` |
 | Server | **LIVE** | Hostinger VPS KVM 2 (2 vCPU, 8 GB, 100 GB), Ubuntu 24.04, Germany – Düsseldorf, IPv4 `179.67.200.86`, hostname `srv2164412.hstgr.cloud` |
 | Database | **LIVE** | Neon project `terhal` (`floral-art-29776297`), AWS Frankfurt, branches `production` and `staging` |
 | Email | **LIVE** | Resend, domain `terhal.co` verified, sender `no-reply@terhal.co` |
-| DNS | **LIVE** for staging | Namecheap, `terhal.co` |
+| DNS | **LIVE** for staging and production | Namecheap, `terhal.co` |
 | CI and deploys | **LIVE** | GitHub Actions in `ODorgham11/terhal` |
 | First admin (staging) | **DONE** 2026-11-16, with 2FA | — |
+| First admin (production) | **DONE** 2026-11-16, with 2FA | — |
 
 **The server is temporary.** It was bought for one month (expires
 2026-12-15, auto-renew on, at a higher price) to finish the client's project.
@@ -51,13 +55,12 @@ old Neon project used with them, and the old repo layout (`frontend/`,
         │  /opt/terhal/staging  server, worker, web,         │
         │                       cache Redis, queue Redis     │
         │  /opt/terhal/main     the same, for production     │
-        │                       (not running yet)            │
         └───────────────────────┬──────────────────────────┘
                                 │ TLS
                                 ▼
                  Neon Postgres (Frankfurt)
                  branch staging     ← staging
-                 branch production  ← main (when set up)
+                 branch production  ← main
 
    GitHub (ODorgham11/terhal)
      dev ──PR──▶ staging ──PR──▶ main
@@ -120,18 +123,18 @@ Useful commands on the box, from `/opt/terhal/<env>`:
 | Type | Host | Value | For |
 |---|---|---|---|
 | A | `staging`, `dashboard.staging`, `admin.staging`, `api.staging` | `179.67.200.86` | Staging |
+| A | `@`, `www`, `dashboard`, `admin`, `api` | `179.67.200.86` | Production |
 | TXT | `resend._domainkey` | DKIM key | Resend |
 | CNAME | `rsend`, `send` | Resend hosts | Resend |
 | TXT | `_dmarc` | `v=DMARC1; p=none;` | Resend |
 
-Production records (`@`, `www`, `dashboard`, `admin`, `api`) are added at
-launch.
+`www.terhal.co` only redirects to `terhal.co` (`deploy/caddy/main.caddy`).
 
 ### 2.5 Resend
 
 Free plan (3,000 emails a month, 100 a day).
-API key `terhal-staging` (sending access). Sends admin invitations and
-other account emails.
+API key `terhal-staging` (sending access), used by both staging and
+production. Sends admin invitations and other account emails.
 
 ### 2.6 GitHub Actions
 
@@ -154,9 +157,11 @@ other account emails.
 | Secret | Where |
 |---|---|
 | Staging `app.env` (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `RESEND_KEY`, `ADMIN_SECRET`, `TOTP_ENCRYPTION_KEY`, the three URLs) | `/opt/terhal/staging/app.env` on the VPS (mode 600, owner `deploy`). One offline backup, kept by Omar |
+| Production `app.env` (the same variables, with its own values) | `/opt/terhal/main/app.env` on the VPS (mode 600, owner `deploy`). One backup, in Omar's password manager |
 | Deploy SSH key, host, known-hosts | GitHub environment secrets, `staging` and `main` |
 | VPS root password | Password manager (password login over SSH is off) |
 | Staging admin login + 2FA | Password manager + authenticator app |
+| Production admin login + 2FA | Password manager + authenticator app (a separate entry from staging's) |
 
 Rules:
 - Production gets its **own** `ADMIN_SECRET` and `TOTP_ENCRYPTION_KEY`,
@@ -190,8 +195,9 @@ its Deploy run in the Actions tab.
 2. **`deploy.sh` is piped over SSH, so nothing in it may read stdin.**
    `docker compose run --rm migrate` swallowed the rest of the script: the
    deploy went green after 16 seconds with no containers started. Fixed with
-   `-T ... < /dev/null`. On `staging`; reaches `main` with the next
-   `staging → main` PR.
+   `-T ... < /dev/null`. On `main` since PR #18 (2026-11-16). Re-running an
+   older Deploy run uses that commit's `deploy.sh`, so never re-run one from
+   before this fix; merge a new `staging → main` PR instead.
 3. **A green "Deploy" step is not proof.** Trust the final "Check the API"
    step, or `docker ps` on the box.
 4. **Windows clones need LF line endings.** With `core.autocrlf` on,
@@ -211,21 +217,38 @@ its Deploy run in the Actions tab.
    accepted revokes the earlier link.
 9. **Use Git Bash on Windows**, not PowerShell, for every command in the
    repo's README.
+10. **Check a new DNS record against Namecheap's own nameserver.** A typo in
+    a host (`dashoard`) made a public resolver cache "non-existent domain"
+    for the correct name. `nslookup <host> dns1.registrar-servers.com` skips
+    that cache. A saved record takes a minute or two to appear there.
+11. **A pasted connection string can carry a trailing space or quote.** Only
+    the `postgresql://...` URL goes in `app.env`, with nothing around it.
+12. **`gh` needs `gh auth login` once per machine.** Without it, open and
+    merge PRs in the browser (merge commit, never delete `staging`).
 
 ---
 
-## 6. To launch production
+## 6. Production launch (done 2026-11-16)
+
+What was done, in order. Repeat it for a new environment or a new server.
 
 1. Namecheap: A records for `@`, `www`, `dashboard`, `admin`, `api` →
-   the server's IP.
-2. Neon: copy the `production` branch's pooled and direct strings.
-3. Write `/opt/terhal/main/app.env` from `deploy/app.env.example`:
-   `APP_ENV=production`, URLs without `.staging`, new secrets,
-   `RESEND_EMAIL=Terhal <no-reply@terhal.co>`; `chmod 600`, owner `deploy`.
-4. Re-run the last Deploy for `main`; check
-   `https://api.terhal.co/health/ready`.
-5. Seed the first production admin; run the spoofed `X-Real-IP` rate-limit
-   test against `api.terhal.co` (expect 429 from the 11th attempt).
+   the server's IP. Each one checked with `nslookup` (gotcha 10).
+2. Neon: copied the `production` branch's pooled and direct strings, and
+   confirmed their endpoint (`ep-...`) differs from staging's.
+3. Wrote `/opt/terhal/main/app.env` from `deploy/app.env.example`:
+   `APP_ENV=production`, URLs without `.staging`,
+   `RESEND_EMAIL=Terhal <no-reply@terhal.co>`, and a new `ADMIN_SECRET` and
+   `TOTP_ENCRYPTION_KEY` generated on the server with
+   `openssl rand -base64 32`; `chmod 600`, owner `deploy`.
+4. Merged `staging → main` (PR #18). That brought the `deploy.sh` fix
+   (gotcha 2) to `main` and ran the first production deploy (Deploy #14).
+   Re-running the previous Deploy for `main` would have used the broken
+   script. Checked all five hosts and `https://api.terhal.co/health/ready`
+   from outside.
+5. Seeded the first production admin from a laptop (gotcha 8) and deleted
+   the temporary `apps/server/.env` afterwards. Ran the spoofed `X-Real-IP`
+   rate-limit test against `api.terhal.co`: 429 from the 11th attempt.
 
 ---
 
@@ -240,7 +263,9 @@ later. The database does not move.
 
 ## 8. Open items
 
-- Production setup (Section 6).
+- Production reuses the `terhal-staging` Resend key; give it its own key so
+  one can be revoked without breaking the other.
+- Keep the staging `app.env` backup the same way as production's.
 - Hostinger renewal on 2026-12-15: decide before then.
 - The repo is public; confirm that is intended for client work.
 - No uptime monitoring or alerting on the VPS yet.
