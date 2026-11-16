@@ -14,8 +14,8 @@ migration.
 | `deploy`             | Docker Compose stacks, Caddy and scripts for the VPS                                      |
 | `docs`               | Architecture and decision records                                                         |
 
-Everything except the database runs in Docker on one VPS, behind Caddy. The database is Neon (`main` and `staging`
-branches).
+Everything except the database runs in Docker on one VPS, behind Caddy. The database is Neon (one branch per
+environment: `production` for `main`, and `staging`).
 
 ## Hosts
 
@@ -152,16 +152,21 @@ From `/opt/terhal/<env>`, plain `docker compose ps`, `logs -f server` and `resta
 
 ### Setting up a VPS
 
+On Windows, run these in Git Bash, not PowerShell.
+
 1. **Create a deploy key** (on your machine): `ssh-keygen -t ed25519 -N "" -C terhal-deploy -f terhal-deploy`.
 2. **Bootstrap the box** (Docker, firewall, `deploy` user, automatic security updates, swap):
-   `ssh root@<vps> 'bash -s' -- "$(cat terhal-deploy.pub)" < deploy/bootstrap.sh`
+   `ssh root@<vps> "bash -s -- '$(cat terhal-deploy.pub)'" < deploy/bootstrap.sh`
+   The key has to reach the server as one quoted argument: ssh joins its arguments with spaces, so an unquoted key
+   arrives as three words and only `ssh-ed25519` is saved. Check it with `ssh -i terhal-deploy deploy@<vps> 'docker ps'`.
 3. **Point DNS at it.** A records (and AAAA, if the box has IPv6) to the VPS for `terhal.co`, `www`, `dashboard`, `admin`,
    `api`, `staging`, `dashboard.staging`, `admin.staging` and `api.staging`. Only add production's once it launches.
 4. **Start the edge:**
    ```sh
-   scp deploy/edge/compose.yml deploy/edge/Caddyfile deploy@<vps>:/opt/terhal/edge/
-   ssh deploy@<vps> 'cd /opt/terhal/edge && echo "ACME_EMAIL=<your email>" > .env && docker compose up -d'
+   scp -i terhal-deploy deploy/edge/compose.yml deploy/edge/Caddyfile deploy@<vps>:/opt/terhal/edge/
+   ssh -i terhal-deploy deploy@<vps> 'cd /opt/terhal/edge && echo "ACME_EMAIL=<your email>" > .env && docker compose up -d'
    ```
+   Use a real address: Let's Encrypt rejects `example.com`.
    Changes to `deploy/edge/` are copied by hand the same way, followed by
    `docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`.
 5. **Write each environment's secrets:** copy `deploy/app.env.example` to `/opt/terhal/<env>/app.env` and fill it in
@@ -171,7 +176,13 @@ From `/opt/terhal/<env>`, plain `docker compose ps`, `logs -f server` and `resta
    box, set the repository variable `VPS_PLATFORM` to `linux/arm64`. Then delete the key files from your machine.
 7. **Push to the branch** (or re-run its last Deploy run).
 
-Seed the first admin from your machine against the Neon branch, as in [The first admin](#the-first-admin).
+Seed the first admin from your machine against the Neon branch, as in [The first admin](#the-first-admin): put that
+environment's `app.env` values in `apps/server/.env`, add `ADMIN_EMAIL`, and add `CACHE_URL=redis://localhost:6379` and
+`QUEUE_URL=redis://localhost:6380` (the seed never uses Redis, but the settings are required; without a local Redis it
+logs connection errors, which are harmless, and needs Ctrl+C after `Invitation sent`). Delete the file afterwards.
+
+A green Deploy step isn't proof by itself: the run's last step, Check the API, is. `docs/infrastructure.md` records what
+is deployed where and what went wrong setting it up.
 
 **Client IPs.** Rate limits read the caller's address from the header named by `CLIENT_IP_HEADER` (`x-real-ip` on the
 VPS), which Caddy overwrites with the address that actually connected. Unset, as locally, they use the socket's address. This only holds while nothing reaches the server except through Caddy, so never publish the server's

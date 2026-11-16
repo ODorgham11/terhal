@@ -1,0 +1,2 @@
+# Shell scripts and env files run on Linux, so they keep LF even in a Windows checkout (CRLF breaks bootstrap.sh).
+* text=auto eol=lf
