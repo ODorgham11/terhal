@@ -133,8 +133,9 @@ Useful commands on the box, from `/opt/terhal/<env>`:
 ### 2.5 Resend
 
 Free plan (3,000 emails a month, 100 a day).
-API key `terhal-staging` (sending access), used by both staging and
-production. Sends admin invitations and other account emails.
+API keys `terhal-staging` and `terhal-production` (sending access, domain
+`terhal.co`), one per environment, so either can be revoked without
+breaking the other. Sends admin invitations and other account emails.
 
 ### 2.6 GitHub Actions
 
@@ -156,7 +157,7 @@ production. Sends admin invitations and other account emails.
 
 | Secret | Where |
 |---|---|
-| Staging `app.env` (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `RESEND_KEY`, `ADMIN_SECRET`, `TOTP_ENCRYPTION_KEY`, the three URLs) | `/opt/terhal/staging/app.env` on the VPS (mode 600, owner `deploy`). One offline backup, kept by Omar |
+| Staging `app.env` (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `RESEND_KEY`, `ADMIN_SECRET`, `TOTP_ENCRYPTION_KEY`, the three URLs) | `/opt/terhal/staging/app.env` on the VPS (mode 600, owner `deploy`). One backup, in Omar's password manager |
 | Production `app.env` (the same variables, with its own values) | `/opt/terhal/main/app.env` on the VPS (mode 600, owner `deploy`). One backup, in Omar's password manager |
 | Deploy SSH key, host, known-hosts | GitHub environment secrets, `staging` and `main` |
 | VPS root password | Password manager (password login over SSH is off) |
@@ -263,9 +264,6 @@ later. The database does not move.
 
 ## 8. Open items
 
-- Production reuses the `terhal-staging` Resend key; give it its own key so
-  one can be revoked without breaking the other.
-- Keep the staging `app.env` backup the same way as production's.
 - Hostinger renewal on 2026-12-15: decide before then.
 - The repo is public; confirm that is intended for client work.
 - No uptime monitoring or alerting on the VPS yet.
