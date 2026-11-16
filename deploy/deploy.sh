@@ -46,7 +46,7 @@ echo "Pulling $server_image and $web_image"
 docker compose pull --quiet
 
 echo "Running migrations"
-docker compose run --rm migrate
+docker compose run --rm -T migrate < /dev/null
 
 echo "Starting the stack"
 docker compose up -d --wait --wait-timeout 180 --remove-orphans
