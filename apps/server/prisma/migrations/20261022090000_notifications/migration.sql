@@ -60,3 +60,7 @@ ALTER TABLE "Notification" ADD CONSTRAINT "Notification_staffId_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "NotificationDelivery" ADD CONSTRAINT "NotificationDelivery_notificationId_fkey" FOREIGN KEY ("notificationId") REFERENCES "Notification"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- A notification goes to exactly one of a customer, a guest and a staff member. Prisma can't express this, so the database holds it.
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_one_recipient"
+    CHECK (num_nonnulls("customerId", "guestSessionId", "staffId") = 1);
