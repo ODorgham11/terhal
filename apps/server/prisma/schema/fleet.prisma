@@ -15,6 +15,7 @@ model Office {
 
   drivers  Driver[]
   vehicles Vehicle[]
+  trips    Trip[]
 
   notes String?
 

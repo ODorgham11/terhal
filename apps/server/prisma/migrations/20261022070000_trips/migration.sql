@@ -33,6 +33,7 @@ CREATE TABLE "Trip" (
     "staffId" TEXT,
     "driverId" TEXT,
     "vehicleId" TEXT,
+    "officeId" TEXT,
     "classId" TEXT NOT NULL,
     "classSnapshot" JSONB NOT NULL,
     "clientName" TEXT NOT NULL,
@@ -137,6 +138,9 @@ CREATE INDEX "Trip_customerId_idx" ON "Trip"("customerId");
 CREATE INDEX "Trip_driverId_idx" ON "Trip"("driverId");
 
 -- CreateIndex
+CREATE INDEX "Trip_officeId_idx" ON "Trip"("officeId");
+
+-- CreateIndex
 CREATE INDEX "TripEvent_tripId_idx" ON "TripEvent"("tripId");
 
 -- CreateIndex
@@ -168,6 +172,9 @@ ALTER TABLE "Trip" ADD CONSTRAINT "Trip_driverId_fkey" FOREIGN KEY ("driverId") 
 
 -- AddForeignKey
 ALTER TABLE "Trip" ADD CONSTRAINT "Trip_vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES "Vehicle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Trip" ADD CONSTRAINT "Trip_officeId_fkey" FOREIGN KEY ("officeId") REFERENCES "Office"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Trip" ADD CONSTRAINT "Trip_classId_fkey" FOREIGN KEY ("classId") REFERENCES "TripClass"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

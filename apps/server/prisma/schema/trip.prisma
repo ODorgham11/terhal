@@ -70,6 +70,10 @@ model Trip {
   vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
   vehicleId String?
 
+  // Set when the trip is handed off to an outside office, which supplies the driver and car.
+  office   Office? @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  officeId String?
+
   // Report optional until created and linked by the driver.
   report TripReport?
 
@@ -118,6 +122,7 @@ model Trip {
   @@index([status, pickupDate])
   @@index([customerId])
   @@index([driverId])
+  @@index([officeId])
 }
 
 model TripEvent {
