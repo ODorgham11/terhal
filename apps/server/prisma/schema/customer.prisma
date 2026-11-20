@@ -37,6 +37,7 @@ model Customer {
 
   sessions      CustomerSession[]
   trips         Trip[]
+  events        TripEvent[]
   notifications Notification[]
 
   createdAt DateTime @default(now())
@@ -81,6 +82,7 @@ model GuestSession {
   revokedAt DateTime?
 
   trips         Trip[]
+  events        TripEvent[]
   notifications Notification[]
 
   createdAt DateTime @default(now())

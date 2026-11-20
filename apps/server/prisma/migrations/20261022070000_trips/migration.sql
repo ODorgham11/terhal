@@ -63,7 +63,10 @@ CREATE TABLE "Trip" (
 -- CreateTable
 CREATE TABLE "TripEvent" (
     "id" TEXT NOT NULL,
-    "staffId" TEXT NOT NULL,
+    "staffId" TEXT,
+    "customerId" TEXT,
+    "guestSessionId" TEXT,
+    "system" TEXT,
     "tripId" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -137,6 +140,12 @@ CREATE INDEX "Trip_driverId_idx" ON "Trip"("driverId");
 CREATE INDEX "TripEvent_tripId_idx" ON "TripEvent"("tripId");
 
 -- CreateIndex
+CREATE INDEX "TripEvent_customerId_idx" ON "TripEvent"("customerId");
+
+-- CreateIndex
+CREATE INDEX "TripEvent_guestSessionId_idx" ON "TripEvent"("guestSessionId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "TripReport_tripId_key" ON "TripReport"("tripId");
 
 -- CreateIndex
@@ -176,6 +185,12 @@ ALTER TABLE "Trip" ADD CONSTRAINT "Trip_previousTripId_fkey" FOREIGN KEY ("previ
 ALTER TABLE "TripEvent" ADD CONSTRAINT "TripEvent_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "Staff"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "TripEvent" ADD CONSTRAINT "TripEvent_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TripEvent" ADD CONSTRAINT "TripEvent_guestSessionId_fkey" FOREIGN KEY ("guestSessionId") REFERENCES "GuestSession"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "TripEvent" ADD CONSTRAINT "TripEvent_tripId_fkey" FOREIGN KEY ("tripId") REFERENCES "Trip"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -190,3 +205,7 @@ ALTER TABLE "TripExpense" ADD CONSTRAINT "TripExpense_reportId_fkey" FOREIGN KEY
 -- A trip is booked by exactly one of a customer, a guest and a staff member. Prisma can't express this, so the database holds it.
 ALTER TABLE "Trip" ADD CONSTRAINT "Trip_one_booker"
     CHECK (num_nonnulls("customerId", "guestSessionId", "staffId") = 1);
+
+-- A trip event's actor is exactly one of a staff member, a customer, a guest and the system (a background job, named in "system").
+ALTER TABLE "TripEvent" ADD CONSTRAINT "TripEvent_one_actor"
+    CHECK (num_nonnulls("staffId", "customerId", "guestSessionId", "system") = 1);

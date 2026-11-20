@@ -123,8 +123,16 @@ model Trip {
 model TripEvent {
   id String @id @default(cuid())
 
-  staff   Staff  @relation(fields: [staffId], references: [id])
-  staffId String
+  // Who did it: exactly one of a staff member, a customer, a guest and the system, enforced by the TripEvent_one_actor
+  // check.
+  staff          Staff?        @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  staffId        String?
+  customer       Customer?     @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customerId     String?
+  guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: Restrict)
+  guestSessionId String?
+  // The background job or process behind a system event, e.g. "expire-pending-trips".
+  system         String?
 
   trip   Trip   @relation(fields: [tripId], references: [id])
   tripId String
@@ -134,6 +142,8 @@ model TripEvent {
   createdAt DateTime @default(now())
 
   @@index([tripId])
+  @@index([customerId])
+  @@index([guestSessionId])
 }
 
 model TripReport {
