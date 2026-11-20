@@ -6,6 +6,7 @@ CREATE TABLE "Office" (
     "phone" TEXT NOT NULL,
     "email" TEXT,
     "address" TEXT NOT NULL,
+    "locationId" TEXT,
     "notes" TEXT,
     "archivedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -64,6 +65,9 @@ CREATE UNIQUE INDEX "Office_name_key" ON "Office"("name");
 CREATE INDEX "Office_archivedAt_idx" ON "Office"("archivedAt");
 
 -- CreateIndex
+CREATE INDEX "Office_locationId_idx" ON "Office"("locationId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Driver_phone_key" ON "Driver"("phone");
 
 -- CreateIndex
@@ -74,6 +78,9 @@ CREATE UNIQUE INDEX "VehicleImage_key_key" ON "VehicleImage"("key");
 
 -- CreateIndex
 CREATE INDEX "VehicleImage_vehicleId_idx" ON "VehicleImage"("vehicleId");
+
+-- AddForeignKey
+ALTER TABLE "Office" ADD CONSTRAINT "Office_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "VehicleImage" ADD CONSTRAINT "VehicleImage_vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES "Vehicle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

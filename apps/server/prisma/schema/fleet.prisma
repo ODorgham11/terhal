@@ -9,6 +9,10 @@ model Office {
   email   String?
   address String
 
+  // Where the office is, to find offices near a pickup.
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  locationId String?
+
   notes String?
 
   archivedAt DateTime?
@@ -17,6 +21,7 @@ model Office {
   updatedAt DateTime @updatedAt
 
   @@index([archivedAt])
+  @@index([locationId])
 }
 
 model Driver {
