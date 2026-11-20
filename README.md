@@ -106,12 +106,6 @@ OpenAPI document at `/v1/openapi.json`. `apps/server/openapi.json` is the commit
 when the API changes it; after an intended change, regenerate it with `pnpm --filter @terhal/server test -u` and commit
 it with the change.
 
-### The first admin
-
-Set `ADMIN_EMAIL` in `apps/server/.env` and run `pnpm --filter @terhal/server db:seed`. With `RESEND_KEY` empty the
-invitation email, link included, is printed to the console. The seed only works while no admin exists; every admin after
-the first is invited by an admin.
-
 ## Checks
 
 ```sh
@@ -170,8 +164,6 @@ From `/opt/terhal/<env>`, plain `docker compose ps`, `logs -f server` and `resta
    `VPS_SSH_KEY` (the contents of `terhal-deploy`) and `VPS_KNOWN_HOSTS` (`ssh-keyscan -t ed25519 <vps>`). For an ARM
    box, set the repository variable `VPS_PLATFORM` to `linux/arm64`. Then delete the key files from your machine.
 7. **Push to the branch** (or re-run its last Deploy run).
-
-Seed the first admin from your machine against the Neon branch, as in [The first admin](#the-first-admin).
 
 **Client IPs.** Rate limits read the caller's address from the header named by `CLIENT_IP_HEADER` (`x-real-ip` on the
 VPS), which Caddy overwrites with the address that actually connected. Unset, as locally, they use the socket's address. This only holds while nothing reaches the server except through Caddy, so never publish the server's
