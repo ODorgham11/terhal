@@ -24,27 +24,10 @@ describe("errors", () => {
     });
   });
 
-  it("lists every invalid field", async () => {
-    const response = await routes.request("/v1/admin/auth/sign-in", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "not an email" }),
-    });
-    expect(response.status).toBe(400);
-    expect(await response.json()).toMatchObject({
-      code: "VALIDATION_FAILED",
-      errors: [
-        { in: "json", path: "email", message: "Please enter a valid email address." },
-        { in: "json", path: "password", message: "Password is required." },
-      ],
-    });
-  });
-
   it("refuses admin requests sent from another origin", async () => {
-    const response = await routes.request("/v1/admin/auth/sign-in", {
+    const response = await routes.request("/v1/admin/anything", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Origin: "https://terhal.co" },
-      body: JSON.stringify({ email: "admin@terhal.co", password: "x" }),
+      headers: { Origin: "https://terhal.co" },
     });
     expect(response.status).toBe(403);
     expect(await response.json()).toMatchObject({ code: "UNTRUSTED_ORIGIN" });

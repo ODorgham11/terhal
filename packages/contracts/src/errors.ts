@@ -14,19 +14,6 @@ export const errorCodes = [
   // Auth
   "UNAUTHENTICATED",
   "ACCESS_TOKEN_EXPIRED",
-  "INVALID_CREDENTIALS",
-  "ACCOUNT_NOT_ACTIVE",
-  "INVALID_REFRESH_TOKEN",
-
-  // Invitations
-  "ACCOUNT_ALREADY_EXISTS",
-  "INVITATION_INVALID",
-  "INVITATION_EXPIRED",
-
-  // Two-factor
-  "TOTP_SETUP_REQUIRED",
-  "TOTP_CODE_INVALID",
-  "TOTP_CHALLENGE_INVALID",
 ] as const;
 
 export type ErrorCode = (typeof errorCodes)[number];

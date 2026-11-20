@@ -8,7 +8,7 @@ migration.
 - **Correctness first.** No lost bookings, no double-sold seats, no session that outlives its rules. Postgres handles a
   single company's load easily, so the risk is in query shape and concurrency, not traffic.
 - **Postgres is the source of truth.** Every invariant the database can hold is enforced there (CHECKs, unique and
-  partial indexes, foreign keys, triggers such as the append-only audit log). Redis holds nothing that can't be rebuilt.
+  partial indexes, foreign keys, triggers). Redis holds nothing that can't be rebuilt.
 - **Assume every dependency fails.** Redis, the email provider, the network, a deploy halfway through. Each failure must
   be detected, contained and recoverable without losing data.
 - **Write decisions down.** Significant decisions get a short ADR in [`docs/adr/`](adr/): the context, the decision, and
@@ -44,9 +44,7 @@ docs/           this file and the ADRs
 ```
 apps/server/src/
   modules/
-    identity/       admin invitations, sign in with two-factor, sessions (staff and customers join here)
-    audit/          the append-only audit log and the admin panel's view of it
-    ...             fleet, trips, pricing, locations, notifications, as they're ported
+    <module>/       one folder per domain (none yet), see "Adding a module"
   platform/         config, db, redis, crypto, email, errors, http, rate limits, logging, jobs, lifecycle
   http/             composition root: global middleware, health, mounts each module's routes under /v1
   app.ts worker.ts  process entry points
@@ -57,7 +55,7 @@ apps/server/src/
   - `http` declares its routes (`createRoute` from `@hono/zod-openapi`), validates input against
     `@terhal/contracts` schemas and serializes output.
   - `application` holds the use cases. They own transactions.
-  - `domain` holds pure functions and rules, e.g. session lifetimes. No IO, so they're tested on their own.
+  - `domain` holds pure functions and rules. No IO, so they're tested on their own.
 - Modules talk through each other's public `index.ts`, never through each other's tables or internals.
 - `eslint-plugin-boundaries` enforces this in `pnpm lint` (`apps/server/eslint.config.js`):
   - another module is reachable only through its `index.ts`, and a module's own layers never import that `index.ts`;
@@ -80,7 +78,7 @@ apps/server/src/
   - `apps/server/openapi.json` is the committed copy. The contract test fails when the API changes it; after an intended
     change, regenerate it with `pnpm --filter @terhal/server test -u` and commit it with the change, so every API change
     shows up in review.
-  - The web app calls the API through `hc<AppType>` (`apps/web/lib/api.ts`), e.g. `api.v1.admin.auth.session.$get()`.
+  - The web app calls the API through `hc<AppType>` (`apps/web/lib/api.ts`), e.g. `api.v1.admin.session.$get()`.
     Module routers are chained (`.openapi(...).openapi(...)`) so their types carry through.
 - Single resources come back as the object itself; lists as `{ data, nextCursor }`, never a bare array, so fields can be
   added later.
@@ -101,11 +99,10 @@ apps/server/src/
   JWT secret, so a token from one can never be used as another. The API accepts each audience's routes only from its
   own origin (CORS plus an Origin check on unsafe methods), so a bug on the customer site can't act through an admin's
   session.
-- Admin cookies are httpOnly, Secure, SameSite=Lax and host-only on the API, with paths scoped so the refresh token and
-  the sign in challenge only reach `/v1/admin/auth`.
-- Admins sign in with a password and then a TOTP code; the access token lives 15 minutes, a session at most 12 hours,
-  and every request re-checks the admin is still active.
-- Everything security relevant is written to the audit log, in the same transaction as the change it records.
+- Auth cookies are httpOnly, Secure, SameSite=Lax and host-only on the API, with paths scoped to the routes that read
+  them.
+- Access tokens live 15 minutes (`platform/crypto/jwt.ts`); admins will sign in with a password and then a TOTP code
+  (`platform/crypto/totp.ts`).
 
 ## Failure handling
 
