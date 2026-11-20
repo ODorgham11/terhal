@@ -25,53 +25,8 @@ export const readError = async (res: Response): Promise<ApiError> => {
   };
 };
 
-// Each audience has its own session, cookies and refresh route. Staff join here once their auth is built.
-type Audience = "admin";
-
-const refreshPaths: Record<Audience, string> = {
-  admin: "/v1/admin/auth/refresh",
-};
-
-const audienceOf = (input: RequestInfo | URL): Audience | null => {
-  const url = new URL(input instanceof Request ? input.url : input.toString(), endpoint);
-  return url.pathname.startsWith("/v1/admin") ? "admin" : null;
-};
-
-// Shared between concurrent requests, so a burst of expired requests only triggers one refresh per audience.
-const refreshing: Partial<Record<Audience, Promise<boolean>>> = {};
-
-const refresh = (audience: Audience) => {
-  refreshing[audience] ??= fetch(`${endpoint}${refreshPaths[audience]}`, {
-    method: "POST",
-    credentials: "include",
-  })
-    .then((response) => response.ok)
-    .catch(() => false)
-    .finally(() => {
-      delete refreshing[audience];
-    });
-
-  return refreshing[audience];
-};
-
 // Tokens live in http-only cookies, so every request includes credentials.
-// When the access token has expired, refresh it once and replay the request.
-const appFetch: typeof fetch = async (input, init) => {
-  const response = await fetch(input, { ...init, credentials: "include" });
-  if (response.status !== 401) return response;
+const appFetch: typeof fetch = (input, init) => fetch(input, { ...init, credentials: "include" });
 
-  const audience = audienceOf(input);
-  if (!audience) return response;
-
-  const body: Partial<Problem> | null = await response
-    .clone()
-    .json()
-    .catch(() => null);
-  if (body?.code !== "ACCESS_TOKEN_EXPIRED") return response;
-  if (!(await refresh(audience))) return response;
-
-  return fetch(input, { ...init, credentials: "include" });
-};
-
-// Typed against the backend's routes, e.g. api.v1.admin.auth["sign-in"].$post({ json: { email, password } }).
+// Typed against the backend's routes, e.g. api.v1.admin.session.$get().
 export const api = hc<AppType>(endpoint, { fetch: appFetch });
