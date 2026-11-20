@@ -20,11 +20,11 @@ model Location {
 
   // Coverage: the area the platform serves around this place. Exactly one shape per locality (the Location_shape check):
   // a governorate has an outline (optional, (longitude, latitude) points), a district or an area has a center and a
-  // radius in meters. The application defaults the radius to 10 km.
-  boundary     Unsupported("polygon")?
-  latitude     Decimal?                @db.Decimal(9, 6)
-  longitude    Decimal?                @db.Decimal(9, 6)
-  radiusMeters Int?
+  // radius, in meters. The application defaults the radius to 10 km.
+  boundary  Unsupported("polygon")?
+  latitude  Decimal?                @db.Decimal(9, 6)
+  longitude Decimal?                @db.Decimal(9, 6)
+  radius    Int?
 
   departures Pricing[] @relation("PricingFrom")
   arrivals   Pricing[] @relation("PricingTo")
