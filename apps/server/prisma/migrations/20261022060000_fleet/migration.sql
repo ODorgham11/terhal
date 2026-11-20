@@ -23,7 +23,7 @@ CREATE TABLE "Driver" (
     "phone" TEXT NOT NULL,
     "amountOwed" DECIMAL(12,2) NOT NULL,
     "isExternal" BOOLEAN NOT NULL DEFAULT false,
-    "company" TEXT,
+    "officeId" TEXT,
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE "Vehicle" (
     "plateNumber" TEXT NOT NULL,
     "color" TEXT NOT NULL,
     "isExternal" BOOLEAN NOT NULL DEFAULT false,
-    "office" TEXT,
+    "officeId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -71,7 +71,13 @@ CREATE INDEX "Office_locationId_idx" ON "Office"("locationId");
 CREATE UNIQUE INDEX "Driver_phone_key" ON "Driver"("phone");
 
 -- CreateIndex
+CREATE INDEX "Driver_officeId_idx" ON "Driver"("officeId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Vehicle_plateNumber_key" ON "Vehicle"("plateNumber");
+
+-- CreateIndex
+CREATE INDEX "Vehicle_officeId_idx" ON "Vehicle"("officeId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "VehicleImage_key_key" ON "VehicleImage"("key");
@@ -83,4 +89,17 @@ CREATE INDEX "VehicleImage_vehicleId_idx" ON "VehicleImage"("vehicleId");
 ALTER TABLE "Office" ADD CONSTRAINT "Office_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Driver" ADD CONSTRAINT "Driver_officeId_fkey" FOREIGN KEY ("officeId") REFERENCES "Office"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Vehicle" ADD CONSTRAINT "Vehicle_officeId_fkey" FOREIGN KEY ("officeId") REFERENCES "Office"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "VehicleImage" ADD CONSTRAINT "VehicleImage_vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES "Vehicle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- Only an external driver or vehicle can come through an office. Prisma can't express this, so the database holds it.
+ALTER TABLE "Driver" ADD CONSTRAINT "Driver_office_is_external"
+    CHECK ("officeId" IS NULL OR "isExternal");
+
+ALTER TABLE "Vehicle" ADD CONSTRAINT "Vehicle_office_is_external"
+    CHECK ("officeId" IS NULL OR "isExternal");

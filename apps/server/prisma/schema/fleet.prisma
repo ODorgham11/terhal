@@ -13,6 +13,9 @@ model Office {
   location   Location? @relation(fields: [locationId], references: [id], onDelete: Restrict)
   locationId String?
 
+  drivers  Driver[]
+  vehicles Vehicle[]
+
   notes String?
 
   archivedAt DateTime?
@@ -32,8 +35,10 @@ model Driver {
   phone     String @unique
 
   amountOwed Decimal @db.Decimal(12, 2)
+  // An external driver may work through an office. Only external drivers can (the Driver_office_is_external check).
   isExternal Boolean @default(false)
-  company    String?
+  office     Office? @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  officeId   String?
 
   trips Trip[]
 
@@ -41,6 +46,8 @@ model Driver {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([officeId])
 }
 
 model Vehicle {
@@ -54,13 +61,17 @@ model Vehicle {
   plateNumber String @unique
   color       String
 
+  // An external vehicle may come from an office. Only external vehicles can (the Vehicle_office_is_external check).
   isExternal Boolean @default(false)
-  office     String?
+  office     Office? @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  officeId   String?
 
   trips Trip[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([officeId])
 }
 
 model VehicleImage {
