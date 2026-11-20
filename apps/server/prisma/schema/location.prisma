@@ -1,0 +1,32 @@
+// How broad a location is, broadest first. A location's children are usually one level narrower.
+enum Locality {
+  GOVERNORATE
+  DISTRICT
+  AREA
+}
+
+// Places, managed by admins. A tree: a governorate holds districts, a
+// district holds areas and so on, as deep as needed. Soft deleted: pricing and past trips keep pointing at them.
+model Location {
+  id String @id @default(cuid())
+
+  parent   Location?  @relation("LocationTree", fields: [parentId], references: [id], onDelete: Restrict)
+  parentId String?
+  children Location[] @relation("LocationTree")
+
+  locality Locality
+  nameEn   String
+  nameAr   String
+
+  departures Pricing[] @relation("PricingFrom")
+  arrivals   Pricing[] @relation("PricingTo")
+  pickups    Trip[]    @relation("TripPickup")
+  dropoffs   Trip[]    @relation("TripDropoff")
+
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+}

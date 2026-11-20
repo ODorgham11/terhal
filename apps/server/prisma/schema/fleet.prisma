@@ -1,0 +1,52 @@
+model Driver {
+  id String @id @default(cuid())
+
+  firstName String
+  lastName  String
+  phone     String @unique
+
+  amountOwed Decimal @db.Decimal(12, 2)
+  isExternal Boolean @default(false)
+  company    String?
+
+  trips Trip[]
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Vehicle {
+  id String @id @default(cuid())
+
+  make   String
+  model  String
+  year   Int?
+  images VehicleImage[]
+
+  plateNumber String @unique
+  color       String
+
+  isExternal Boolean @default(false)
+  office     String?
+
+  trips Trip[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VehicleImage {
+  id String @id @default(cuid())
+
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  vehicleId String
+
+  bucket String
+  key    String @unique
+
+  createdAt DateTime @default(now())
+
+  @@index([vehicleId])
+}

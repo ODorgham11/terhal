@@ -1,0 +1,90 @@
+enum CustomerStatus {
+  UNVERIFIED
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum VerificationMethod {
+  WHATSAPP
+  EMAIL
+}
+
+// Someone booking through the customer site on terhal.co.
+model Customer {
+  id String @id @default(cuid())
+
+  firstName String
+  lastName  String
+  phone     String         @unique
+  email     String         @unique
+  status    CustomerStatus @default(UNVERIFIED)
+
+  passwordHash String
+
+  // Method tells you which channel it was sent to.
+  verificationHash      String?
+  verificationExpiresAt DateTime?
+  verificationAttempts  Int                 @default(0)
+  verificationMethod    VerificationMethod?
+
+  verifiedVia VerificationMethod?
+  verifiedAt  DateTime?
+
+  // Hash of the single-use token in the latest password reset link. Requesting a new link replaces it, so only the newest one works.
+  passwordResetHash      String?   @unique
+  passwordResetExpiresAt DateTime?
+
+  sessions      CustomerSession[]
+  trips         Trip[]
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CustomerSession {
+  id String @id @default(cuid())
+
+  customer   Customer @relation(fields: [customerId], references: [id])
+  customerId String
+
+  refreshToken String @unique
+
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  ipAddress String?
+  userAgent String?
+
+  @@index([customerId])
+}
+
+// Booking without an account. Verified by phone OTP only, guests have no email verification path.
+model GuestSession {
+  id String @id @default(cuid())
+
+  firstName String
+  lastName  String
+  phone     String
+  email     String
+
+  tokenHash String @unique
+
+  verificationHash      String?
+  verificationExpiresAt DateTime?
+  verificationAttempts  Int       @default(0)
+  verifiedAt            DateTime?
+
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  trips         Trip[]
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([phone])
+}

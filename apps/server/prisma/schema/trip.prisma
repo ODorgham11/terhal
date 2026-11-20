@@ -1,0 +1,193 @@
+enum TripSource {
+  CUSTOMER
+  STAFF
+}
+
+enum TripStatus {
+  PENDING
+  CANCELLED
+  CONFIRMED
+  IN_PROGRESS
+  AWAITING_REPORT
+  COMPLETED
+}
+
+// Fixed in code. Trip classes are editable, car bodies aren't.
+enum CarBody {
+  SEDAN
+  SUV
+  MINIVAN
+  VAN
+}
+
+enum ExpenseType {
+  INTERCITY_TOLL
+  FUEL
+  CAR_MAINTENANCE
+  DRIVER_FEE
+  OTHER
+}
+
+// Trip classes, e.g. "Economy" / "VIP". Pricing is set per class.
+model TripClass {
+  id String @id @default(cuid())
+
+  nameEn String
+  nameAr String
+
+  archivedAt DateTime?
+
+  trips   Trip[]
+  pricing Pricing[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([archivedAt])
+}
+
+model Trip {
+  id String @id @default(cuid())
+
+  // Human-facing booking reference.
+  code   String     @unique
+  source TripSource
+  status TripStatus @default(PENDING)
+
+  // One of these relationships must always be available. Added the Staff model relationship in case they need to add a Trip.
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customerId String?
+
+  guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: Restrict)
+  guestSessionId String?
+
+  staff   Staff?  @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  staffId String?
+
+  // Created as optional initially until they are assigned by staff.
+  driver    Driver?  @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  driverId  String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  vehicleId String?
+
+  // Report optional until created and linked by the driver.
+  report TripReport?
+
+  // Keep a log of all of the events that occur per the trip.
+  events TripEvent[]
+
+  // The class as it was named at booking time, so renaming a class later doesn't rewrite past trips.
+  class         TripClass @relation(fields: [classId], references: [id])
+  classId       String
+  classSnapshot Json
+
+  clientName    String
+  clientPhone   String
+  pickupDate    DateTime
+  smallLuggage  Int
+  mediumLuggage Int
+  largeLuggage  Int
+  passengers    Int
+  car           CarBody
+  totalPrice    Decimal  @db.Decimal(12, 2)
+
+  notes String?
+
+  // The location picked at booking, its name at the time, and the exact point within it.
+  pickup          Location @relation("TripPickup", fields: [pickupId], references: [id])
+  pickupId        String
+  pickupSnapshot  String
+  pickupLatitude  Decimal  @db.Decimal(9, 6)
+  pickupLongitude Decimal  @db.Decimal(9, 6)
+
+  dropoff          Location @relation("TripDropoff", fields: [dropoffId], references: [id])
+  dropoffId        String
+  dropoffSnapshot  String
+  dropoffLatitude  Decimal  @db.Decimal(9, 6)
+  dropoffLongitude Decimal  @db.Decimal(9, 6)
+
+  // Link a trip to another trip such that we can keep track of round-about trips.
+  previousTrip   Trip?   @relation("TripChain", fields: [previousTripId], references: [id], onDelete: Restrict)
+  previousTripId String? @unique
+
+  subsequentTrip Trip? @relation("TripChain")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, pickupDate])
+  @@index([customerId])
+  @@index([driverId])
+}
+
+model TripEvent {
+  id String @id @default(cuid())
+
+  staff   Staff  @relation(fields: [staffId], references: [id])
+  staffId String
+
+  trip   Trip   @relation(fields: [tripId], references: [id])
+  tripId String
+
+  action String
+
+  createdAt DateTime @default(now())
+
+  @@index([tripId])
+}
+
+model TripReport {
+  id String @id @default(cuid())
+
+  trip   Trip   @relation(fields: [tripId], references: [id])
+  tripId String @unique
+
+  startedAt     DateTime
+  vehiclePickup String
+  startMileage  Int
+
+  pickupAt  DateTime
+  dropoffAt DateTime
+
+  vehicleDropoff String
+  endedAt        DateTime
+  endMileage     Int
+
+  stops    TripStop[]
+  expenses TripExpense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TripStop {
+  id String @id @default(cuid())
+
+  report   TripReport @relation(fields: [reportId], references: [id])
+  reportId String
+
+  locationId String?
+  address    String
+  latitude   Decimal @db.Decimal(9, 6)
+  longitude  Decimal @db.Decimal(9, 6)
+
+  startedAt DateTime
+  endedAt   DateTime
+
+  notes String?
+
+  @@index([reportId])
+}
+
+model TripExpense {
+  id String @id @default(cuid())
+
+  report   TripReport @relation(fields: [reportId], references: [id])
+  reportId String
+
+  amount Decimal     @db.Decimal(12, 2)
+  type   ExpenseType
+  notes  String?
+
+  @@index([reportId])
+}
