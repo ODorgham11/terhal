@@ -20,7 +20,7 @@ migration.
 | ------------------ | ------------------------------------------------------------------------------------------------ |
 | Microservices      | One team, one database. They'd turn function calls into network failures and take away transactions. |
 | Multi-tenancy      | Terhal serves one company. Rehletak was the multi-tenant version. |
-| Kubernetes         | One VPS running Docker Compose is enough until it isn't ([ADR 0001](adr/0001-one-vps.md)).        |
+| Kubernetes         | One VPS running Docker Compose is enough until it isn't ([why one VPS](infrastructure.md#why-one-vps-decided-2026-11-02)). |
 | A generated client | The web app is the only client and ships with the API, so Hono RPC types it ([ADR 0002](adr/0002-rpc-and-openapi.md)). |
 
 ## Layout
