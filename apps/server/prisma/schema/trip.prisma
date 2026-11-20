@@ -54,7 +54,7 @@ model Trip {
   source TripSource
   status TripStatus @default(PENDING)
 
-  // One of these relationships must always be available. Added the Staff model relationship in case they need to add a Trip.
+  // Who booked it: exactly one of customer, guest and staff, enforced by the Trip_one_booker check.
   customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
   customerId String?
 

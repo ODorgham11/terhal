@@ -186,3 +186,7 @@ ALTER TABLE "TripStop" ADD CONSTRAINT "TripStop_reportId_fkey" FOREIGN KEY ("rep
 
 -- AddForeignKey
 ALTER TABLE "TripExpense" ADD CONSTRAINT "TripExpense_reportId_fkey" FOREIGN KEY ("reportId") REFERENCES "TripReport"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- A trip is booked by exactly one of a customer, a guest and a staff member. Prisma can't express this, so the database holds it.
+ALTER TABLE "Trip" ADD CONSTRAINT "Trip_one_booker"
+    CHECK (num_nonnulls("customerId", "guestSessionId", "staffId") = 1);
