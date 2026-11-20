@@ -1,3 +1,24 @@
+// An outside company the business works with, e.g. a car rental office or another transport operator. Archived
+// instead of deleted, so anything that pointed at it keeps doing so.
+model Office {
+  id String @id @default(cuid())
+
+  name        String  @unique
+  contactName String?
+  phone       String?
+  email       String?
+  address     String?
+
+  notes String?
+
+  archivedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([archivedAt])
+}
+
 model Driver {
   id String @id @default(cuid())
 

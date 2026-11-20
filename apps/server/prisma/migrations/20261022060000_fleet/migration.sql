@@ -1,4 +1,20 @@
 -- CreateTable
+CREATE TABLE "Office" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "contactName" TEXT,
+    "phone" TEXT,
+    "email" TEXT,
+    "address" TEXT,
+    "notes" TEXT,
+    "archivedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Office_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Driver" (
     "id" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
@@ -40,6 +56,12 @@ CREATE TABLE "VehicleImage" (
 
     CONSTRAINT "VehicleImage_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Office_name_key" ON "Office"("name");
+
+-- CreateIndex
+CREATE INDEX "Office_archivedAt_idx" ON "Office"("archivedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Driver_phone_key" ON "Driver"("phone");
