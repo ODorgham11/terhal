@@ -21,7 +21,7 @@ migration.
 | Microservices      | One team, one database. They'd turn function calls into network failures and take away transactions. |
 | Multi-tenancy      | Terhal serves one company. Rehletak was the multi-tenant version. |
 | Kubernetes         | One VPS running Docker Compose is enough until it isn't ([why one VPS](infrastructure.md#why-one-vps-decided-2026-11-02)). |
-| A generated client | The web app is the only client and ships with the API, so Hono RPC types it ([ADR 0002](adr/0002-rpc-and-openapi.md)). |
+| A generated client | The web app is the only client and ships with the API, so Hono RPC types it ([why](#why-rpc-and-not-a-generated-client-decided-2026-11-02)). |
 
 ## Layout
 
@@ -82,6 +82,19 @@ apps/server/src/
     Module routers are chained (`.openapi(...).openapi(...)`) so their types carry through.
 - Single resources come back as the object itself; lists as `{ data, nextCursor }`, never a bare array, so fields can be
   added later.
+
+### Why RPC and not a generated client (decided 2026-11-02)
+
+A common way to type an API's clients is to generate them from a committed OpenAPI document, which pays off when clients
+such as mobile apps stay on old versions in the wild. Terhal's only client is its own web app, deployed with the API, and
+it was already typed through Hono RPC. We still wanted API documentation and a reviewable contract, which
+`@hono/zod-openapi` gives from the same route declarations, so there is no generated client package.
+
+What we gave up:
+
+- The web app type checks against the server's source, so server imports can't use an `@/` path alias.
+- Module routers must stay chained for their types to carry through, which constrains how routes are written.
+- Should a second client appear (a mobile app, say), it would need a client generated from the committed document.
 
 ## Errors
 
