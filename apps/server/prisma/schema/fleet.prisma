@@ -3,11 +3,11 @@
 model Office {
   id String @id @default(cuid())
 
-  name        String  @unique
-  contactName String?
-  phone       String?
-  email       String?
-  address     String?
+  name    String  @unique
+  contact String
+  phone   String
+  email   String?
+  address String
 
   notes String?
 

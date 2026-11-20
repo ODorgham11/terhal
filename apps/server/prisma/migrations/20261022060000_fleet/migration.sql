@@ -2,10 +2,10 @@
 CREATE TABLE "Office" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "contactName" TEXT,
-    "phone" TEXT,
+    "contact" TEXT NOT NULL,
+    "phone" TEXT NOT NULL,
     "email" TEXT,
-    "address" TEXT,
+    "address" TEXT NOT NULL,
     "notes" TEXT,
     "archivedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
