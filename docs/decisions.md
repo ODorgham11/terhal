@@ -282,6 +282,43 @@ What the business pays an office for a handed-off trip is an expense of type `OF
 counts towards the trip's costs in analytics but never towards the driver's ledger. There's no separate `officeCost`
 column.
 
+### Fleet and office routes: the details the spec left open (2026-11-21)
+
+How the fleet and office routes ([domain-api.md](domain-api.md), F and O) settle what the answers didn't:
+
+- **"Upcoming live trip" is any pending, confirmed or in-progress trip**, whatever its pickup time: one past its pickup is
+  still unresolved until the background jobs move it on. Awaiting a report doesn't block archiving. A blocked archive is
+  `409 HAS_UPCOMING_TRIPS` listing up to 10 of the trips. The row is locked first, so an archive and an assignment can't
+  cross (assignment must lock the same rows).
+- **Archiving an archived row, or restoring a live one, changes nothing** and returns it, without an audit record.
+- **The ledger:** staff post only `PAYOUT` (the amount paid, positive, stored negative; note optional) and `ADJUSTMENT`
+  (signed, never zero, note required). Reading the ledger needs `fleet`, as the route table says, not `trips`. Archived
+  drivers can still be paid. The response carries the new balance read back after the trigger ran.
+- **Licences:** `licenseExpiresSoon` is true for a licence that has expired or expires within 30 days, by Cairo's date;
+  `licenseExpiring=true` filters on the same. The columns stay nullable in the database (rows from before); the API
+  requires both on create and never clears them.
+- **Search:** drivers, vehicles and offices have no search column, so what's typed is normalized (`normalizeSearch`)
+  and each word must be contained, case-insensitively, in one of the fields. Typing "احمد" finds "احمد" and so does
+  "أحمد", but "احمد" doesn't find a stored "أحمد"; add search columns if that matters.
+- **Links:** a new link to an office needs a live one, and an existing link to an office archived since can stay. Only
+  external drivers and vehicles can have an office: the database checks it and the API answers
+  `422 OFFICE_REQUIRES_EXTERNAL`. An office's location must be live when it's set or changed.
+- **Images:** keys are `vehicles/<vehicle id>/<random uuid>`; the type is sniffed from the bytes and stored with the file.
+  The 5-image limit is the database's position check (0–4) plus a lock on the vehicle while counting; a unique
+  `(vehicleId, position)` index was left out because reordering would need a deferrable constraint Prisma can't
+  express. The file is uploaded before the row is written and deleted if the row isn't; a deleted image's file is
+  removed after the commit, so a failure can only orphan a file, never break a row. Every vehicle response (lists too)
+  carries a 15-minute signed link per image. Archived vehicles keep and can change their images. The 100 KB JSON body
+  limit lets the upload route through with room for 5 MB.
+- **An office's detail** lists its live drivers and vehicles and the trips handed to it that are still live (soonest
+  first, at most 100), not its history.
+- **Nearby offices** aren't paged and return `{ location, data }`: the place the pin resolved to, then the offices placed
+  in it, its ancestors or its live descendants, by distance from the pin to the office location's center; offices placed
+  at a governorate (no center) come last. A pin outside coverage gets an empty list, not an error. The pin is resolved
+  by a small query in the fleet module until the locations module's coverage is merged.
+- **Tables of modules that don't exist yet:** the fleet module reads `Trip` and `Location` directly, marked with TODOs to
+  go through the trips and locations modules once they exist.
+
 ### Accounts carry a locale (2026-11-21)
 
 `Customer`, `GuestSession` and `Staff` have a `locale` (`ar` by default, or `en`), taken from the site's locale cookie
