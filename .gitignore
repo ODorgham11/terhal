@@ -147,6 +147,8 @@ next-env.d.ts
 
 # Backend
 generated/
+# The local storage driver's files (STORAGE_LOCAL_DIR)
+apps/server/.storage/
 
 # Turbo
 .turbo
@@ -159,3 +161,6 @@ generated/
 
 # Personal Claude Code settings
 .claude/settings.local.json
+
+# Claude Code: agent worktrees and local settings.
+.claude/

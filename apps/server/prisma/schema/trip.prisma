@@ -12,12 +12,24 @@ enum TripStatus {
   COMPLETED
 }
 
-// Fixed in code. Trip classes are editable, car bodies aren't.
-enum CarBody {
-  SEDAN
-  SUV
-  MINIVAN
-  VAN
+// Where a trip's price stands. A route without a price can still be booked; staff then propose one and the booker
+// accepts it before the trip can be confirmed (Trip_price_state, Trip_priced_before_confirmed).
+enum TripPriceState {
+  // Priced from the price list at booking, or set by staff on a trip they booked.
+  QUOTED
+  // No price yet.
+  REQUESTED
+  // Staff proposed a price; the booker hasn't answered.
+  PROPOSED
+  // The booker accepted the proposed price.
+  ACCEPTED
+}
+
+enum PaymentMethod {
+  CASH_TO_DRIVER
+  CASH_AT_OFFICE
+  TRANSFER
+  CARD
 }
 
 enum ExpenseType {
@@ -25,6 +37,8 @@ enum ExpenseType {
   FUEL
   CAR_MAINTENANCE
   DRIVER_FEE
+  // What an outside office is paid for a handed-off trip. Never reimbursed to the driver.
+  OFFICE_FEE
   OTHER
 }
 
@@ -34,6 +48,11 @@ model TripClass {
 
   nameEn String
   nameAr String
+
+  // What's included, for the booking page.
+  descriptionEn String?
+  descriptionAr String?
+  sortOrder     Int     @default(0)
 
   archivedAt DateTime?
 
@@ -54,7 +73,7 @@ model Trip {
   source TripSource
   status TripStatus @default(PENDING)
 
-  // One of these relationships must always be available. Added the Staff model relationship in case they need to add a Trip.
+  // Who booked it: exactly one of customer, guest and staff, enforced by the Trip_one_booker check.
   customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
   customerId String?
 
@@ -69,6 +88,10 @@ model Trip {
   driverId  String?
   vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
   vehicleId String?
+
+  // Set when the trip is handed off to an outside office, which supplies the driver and car.
+  office   Office? @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  officeId String?
 
   // Report optional until created and linked by the driver.
   report TripReport?
@@ -89,22 +112,41 @@ model Trip {
   largeLuggage  Int
   passengers    Int
   car           CarBody
-  totalPrice    Decimal  @db.Decimal(12, 2)
+
+  // What's charged. Empty only while a price is requested (Trip_price_state).
+  totalPrice Decimal?       @db.Decimal(12, 2)
+  priceState TripPriceState @default(QUOTED)
+
+  paymentMethod PaymentMethod?
+  paidAt        DateTime?
+
+  // The booking request's Idempotency-Key, hashed together with the booker, so a retried request returns this trip.
+  idempotencyKey String? @unique
+
+  // The driver's report link, replaced when the driver changes. The token is an HMAC of the trip, its driver and this
+  // random salt under a server key, so staff can show the link again; the database alone holds only its hash, which
+  // finds the trip, and the salt, which is useless without the key (Trip_report_token: all three or none).
+  reportTokenHash      String?   @unique
+  reportTokenSalt      String?
+  reportTokenExpiresAt DateTime?
 
   notes String?
 
-  // The location picked at booking, its name at the time, and the exact point within it.
-  pickup          Location @relation("TripPickup", fields: [pickupId], references: [id])
-  pickupId        String
-  pickupSnapshot  String
-  pickupLatitude  Decimal  @db.Decimal(9, 6)
-  pickupLongitude Decimal  @db.Decimal(9, 6)
+  // The location the pin resolved to at booking, its names at the time (pickupSnapshot in English, pickupSnapshotAr in
+  // Arabic), and the exact point within it.
+  pickup           Location @relation("TripPickup", fields: [pickupId], references: [id])
+  pickupId         String
+  pickupSnapshot   String
+  pickupSnapshotAr String
+  pickupLatitude   Decimal  @db.Decimal(9, 6)
+  pickupLongitude  Decimal  @db.Decimal(9, 6)
 
-  dropoff          Location @relation("TripDropoff", fields: [dropoffId], references: [id])
-  dropoffId        String
-  dropoffSnapshot  String
-  dropoffLatitude  Decimal  @db.Decimal(9, 6)
-  dropoffLongitude Decimal  @db.Decimal(9, 6)
+  dropoff           Location @relation("TripDropoff", fields: [dropoffId], references: [id])
+  dropoffId         String
+  dropoffSnapshot   String
+  dropoffSnapshotAr String
+  dropoffLatitude   Decimal  @db.Decimal(9, 6)
+  dropoffLongitude  Decimal  @db.Decimal(9, 6)
 
   // Link a trip to another trip such that we can keep track of round-about trips.
   previousTrip   Trip?   @relation("TripChain", fields: [previousTripId], references: [id], onDelete: Restrict)
@@ -112,28 +154,51 @@ model Trip {
 
   subsequentTrip Trip? @relation("TripChain")
 
+  driverTransactions DriverTransaction[]
+  notifications      Notification[]
+  reminders          NotificationReminder[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([status, pickupDate])
   @@index([customerId])
+  @@index([guestSessionId])
   @@index([driverId])
+  @@index([vehicleId])
+  @@index([officeId])
 }
 
 model TripEvent {
   id String @id @default(cuid())
 
-  staff   Staff  @relation(fields: [staffId], references: [id])
-  staffId String
+  // Who did it: exactly one of a staff member, a customer, a guest, the driver (through the report link) and the system,
+  // enforced by the TripEvent_one_actor check.
+  staff          Staff?        @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  staffId        String?
+  customer       Customer?     @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customerId     String?
+  guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: Restrict)
+  guestSessionId String?
+  driver         Driver?       @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  driverId       String?
+  // The background job or process behind a system event, e.g. "expire-pending-trips".
+  system         String?
 
   trip   Trip   @relation(fields: [tripId], references: [id])
   tripId String
 
+  // One of tripEventActions in @terhal/contracts.
   action String
+  // What the event needs to be read on its own: statuses moved between, a reason, changed fields with before and after.
+  data   Json?
 
   createdAt DateTime @default(now())
 
   @@index([tripId])
+  @@index([customerId])
+  @@index([guestSessionId])
+  @@index([driverId])
 }
 
 model TripReport {
@@ -153,6 +218,10 @@ model TripReport {
   endedAt        DateTime
   endMileage     Int
 
+  // Cash the driver collected from the customer for the company; zero when none. Enters the driver's ledger on
+  // completion (CASH_COLLECTED).
+  cashCollected Decimal @default(0) @db.Decimal(12, 2)
+
   stops    TripStop[]
   expenses TripExpense[]
 
@@ -166,10 +235,11 @@ model TripStop {
   report   TripReport @relation(fields: [reportId], references: [id])
   reportId String
 
+  // A stop is either an address or a pin, never both (TripStop_address_or_pin).
   locationId String?
-  address    String
-  latitude   Decimal @db.Decimal(9, 6)
-  longitude  Decimal @db.Decimal(9, 6)
+  address    String?
+  latitude   Decimal? @db.Decimal(9, 6)
+  longitude  Decimal? @db.Decimal(9, 6)
 
   startedAt DateTime
   endedAt   DateTime

@@ -13,6 +13,11 @@ CREATE TABLE "Admin" (
     "totpEnabledAt" TIMESTAMP(3),
     "totpLastUsedStep" INTEGER,
     "lastLoginAt" TIMESTAMP(3),
+    "passwordResetHash" TEXT,
+    "passwordResetExpiresAt" TIMESTAMP(3),
+    "twoFactorResetHash" TEXT,
+    "twoFactorResetExpiresAt" TIMESTAMP(3),
+    "pendingTotpSecret" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -52,6 +57,7 @@ CREATE TABLE "AdminSession" (
 CREATE TABLE "AuditLog" (
     "id" TEXT NOT NULL,
     "adminId" TEXT,
+    "staffId" TEXT,
     "action" TEXT NOT NULL,
     "entityType" TEXT NOT NULL,
     "entityId" TEXT NOT NULL,
@@ -67,6 +73,12 @@ CREATE TABLE "AuditLog" (
 CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Admin_passwordResetHash_key" ON "Admin"("passwordResetHash");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Admin_twoFactorResetHash_key" ON "Admin"("twoFactorResetHash");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "AdminInvitation_tokenHash_key" ON "AdminInvitation"("tokenHash");
 
 -- CreateIndex
@@ -77,6 +89,9 @@ CREATE INDEX "AuditLog_createdAt_id_idx" ON "AuditLog"("createdAt", "id");
 
 -- CreateIndex
 CREATE INDEX "AuditLog_adminId_createdAt_idx" ON "AuditLog"("adminId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_staffId_createdAt_idx" ON "AuditLog"("staffId", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "AuditLog_action_createdAt_idx" ON "AuditLog"("action", "createdAt");
@@ -92,3 +107,23 @@ ALTER TABLE "AdminSession" ADD CONSTRAINT "AdminSession_adminId_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "Admin"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- The audit log is append-only: rows can be added, never changed or removed, whatever the application code does.
+CREATE FUNCTION "audit_log_append_only"() RETURNS trigger AS $$
+BEGIN
+    RAISE EXCEPTION 'AuditLog is append-only: % is not allowed.', TG_OP;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "AuditLog_append_only_rows"
+    BEFORE UPDATE OR DELETE ON "AuditLog"
+    FOR EACH ROW EXECUTE FUNCTION "audit_log_append_only"();
+
+CREATE TRIGGER "AuditLog_append_only_truncate"
+    BEFORE TRUNCATE ON "AuditLog"
+    FOR EACH STATEMENT EXECUTE FUNCTION "audit_log_append_only"();
+
+-- An entry names at most one actor: an admin or a staff member, or neither for the system. Prisma can't express this, so
+-- the database holds it.
+ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_one_actor"
+    CHECK (num_nonnulls("adminId", "staffId") <= 1);

@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   // A self-contained server for the Docker image (see web/Dockerfile). Traced from the repo root, since the app pulls in
@@ -13,4 +14,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["local.terhal.co", "*.local.terhal.co"],
 };
 
-export default nextConfig;
+// Points next-intl at i18n/request.ts, which picks the locale from the NEXT_LOCALE cookie.
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
+export default withNextIntl(nextConfig);

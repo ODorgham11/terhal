@@ -15,6 +15,67 @@ export const auditActions = {
   SIGN_IN_SUCCEEDED: "admin.sign_in.succeeded",
   SESSION_REVOKED: "admin.session.revoked",
   SIGN_OUT: "admin.sign_out",
+  STAFF_INVITED: "admin.staff.invited",
+  // A wrong or reused authenticator code (or a wrong current password) where an action asks for one again. `after`
+  // says which action (`purpose`) and why (`reason`).
+  STEP_UP_FAILED: "admin.step_up.failed",
+  PASSWORD_RESET_REQUESTED: "admin.password.reset_requested",
+  PASSWORD_RESET: "admin.password.reset",
+  PASSWORD_CHANGED: "admin.password.changed",
+  ACCOUNT_DEACTIVATED: "admin.account.deactivated",
+  ACCOUNT_REACTIVATED: "admin.account.reactivated",
+  // Another admin cleared an admin's authenticator and emailed them a link to set up a new one.
+  TOTP_RESET: "admin.totp.reset",
+  TOTP_RESET_ISSUED: "admin.totp.reset_issued",
+  TOTP_RESET_CONFIRM_FAILED: "admin.totp.reset_confirm_failed",
+
+  // Fleet and offices, changed by staff in the dashboard.
+  DRIVER_CREATED: "fleet.driver.created",
+  DRIVER_UPDATED: "fleet.driver.updated",
+  DRIVER_ARCHIVED: "fleet.driver.archived",
+  DRIVER_RESTORED: "fleet.driver.restored",
+  // A payout or a manual adjustment on the driver's ledger.
+  DRIVER_TRANSACTION_RECORDED: "fleet.driver.transaction_recorded",
+  VEHICLE_CREATED: "fleet.vehicle.created",
+  VEHICLE_UPDATED: "fleet.vehicle.updated",
+  VEHICLE_ARCHIVED: "fleet.vehicle.archived",
+  VEHICLE_RESTORED: "fleet.vehicle.restored",
+  VEHICLE_IMAGE_ADDED: "fleet.vehicle.image_added",
+  VEHICLE_IMAGE_DELETED: "fleet.vehicle.image_deleted",
+  VEHICLE_IMAGES_REORDERED: "fleet.vehicle.images_reordered",
+  OFFICE_CREATED: "fleet.office.created",
+  OFFICE_UPDATED: "fleet.office.updated",
+  OFFICE_ARCHIVED: "fleet.office.archived",
+  OFFICE_RESTORED: "fleet.office.restored",
+
+  // Managing staff, by an admin or by a staff member with the team permission (the actor says which). STAFF_INVITED
+  // above covers invitations from both.
+  STAFF_INVITATION_REVOKED: "staff.invitation.revoked",
+  STAFF_INVITATION_RESENT: "staff.invitation.resent",
+  STAFF_PERMISSIONS_CHANGED: "staff.permissions_changed",
+  STAFF_SUSPENDED: "staff.suspended",
+  STAFF_REACTIVATED: "staff.reactivated",
+  STAFF_DELETED: "staff.deleted",
+  // A staff member changing their own password while signed in.
+  STAFF_PASSWORD_CHANGED: "staff.password.changed",
+
+  // An admin suspending or reactivating a customer; `after` carries the reason.
+  CUSTOMER_SUSPENDED: "customer.suspended",
+  CUSTOMER_REACTIVATED: "customer.reactivated",
+
+  // Locations, changed from the admin panel or the dashboard. A delete's `after` lists every location it removed.
+  LOCATION_CREATED: "location.created",
+  LOCATION_UPDATED: "location.updated",
+  LOCATION_DELETED: "location.deleted",
+  LOCATION_RESTORED: "location.restored",
+  TRIP_CLASS_CREATED: "trip_class.created",
+  TRIP_CLASS_UPDATED: "trip_class.updated",
+  TRIP_CLASS_ARCHIVED: "trip_class.archived",
+  TRIP_CLASS_RESTORED: "trip_class.restored",
+  // Price changes keep the price before and after (P5), one entry per row, bulk uploads included.
+  PRICING_CREATED: "pricing.created",
+  PRICING_UPDATED: "pricing.updated",
+  PRICING_DELETED: "pricing.deleted",
 } as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];
@@ -53,7 +114,8 @@ export const ListAuditLogs = z
     cursor: Id("Cursor").optional(),
     action: many(z.enum(actions), "Unknown action.").optional(),
     adminId: Id("Admin").optional(),
-    // Only the events with no admin behind them: the seed, or a failed sign in for an email that isn't an admin.
+    staffId: Id("Staff member").optional(),
+    // Only the events with nobody behind them: the seed, jobs, or a failed sign in for an email that isn't an admin.
     system: z
       .enum(["true", "false"], { error: "System must be true or false." })
       .transform((value) => value === "true")
@@ -70,8 +132,8 @@ export const ListAuditLogs = z
       .optional(),
     q: z.string().trim().max(100, "Search must contain 100 characters at most.").optional(),
   })
-  .refine((query) => !(query.adminId && query.system), {
-    message: "Filter by an admin or by system events, not both.",
+  .refine((query) => [query.adminId, query.staffId, query.system].filter(Boolean).length <= 1, {
+    message: "Filter by an admin, a staff member or system events, one at a time.",
     path: ["system"],
   })
   .refine((query) => !(query.from && query.to) || query.from <= query.to, {
@@ -96,6 +158,13 @@ export const AuditLog = z
     admin: z
       .object({ id: z.string(), firstName: z.string(), lastName: z.string(), email: z.string() })
       .nullable()
-      .meta({ description: "Null for the system and for sign in attempts on unknown emails." }),
+      .meta({ description: "The admin who did it, if an admin did." }),
+    staff: z
+      .object({ id: z.string(), firstName: z.string(), lastName: z.string(), email: z.string() })
+      .nullable()
+      .meta({
+        description:
+          "The staff member who did it, from the dashboard. Both are null for the system.",
+      }),
   })
   .meta({ id: "AuditLog" });

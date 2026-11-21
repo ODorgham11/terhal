@@ -1,3 +1,4 @@
+import { staffPermissions, type StaffPermission } from "@terhal/contracts";
 import { Secret, TOTP } from "otpauth";
 import { encrypt } from "../../src/platform/crypto/encryption";
 import { hash } from "../../src/platform/crypto/passwords";
@@ -47,3 +48,20 @@ export const createAdmin = async (email = "admin@terhal.co") => {
   });
   return { admin, secret };
 };
+
+export const STAFF_PASSWORD = "Staff-password-1";
+
+// An active staff member, as if they'd accepted an invitation.
+export const createStaff = async (
+  email = "staff@terhal.co",
+  permissions: StaffPermission[] = [...staffPermissions],
+) =>
+  prisma.staff.create({
+    data: {
+      email,
+      firstName: "Test",
+      lastName: "Staff",
+      passwordHash: await hash(STAFF_PASSWORD),
+      permissions,
+    },
+  });

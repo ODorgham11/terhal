@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "Locale" AS ENUM ('ar', 'en');
+
+-- CreateEnum
 CREATE TYPE "StaffStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'DELETED');
 
 -- CreateTable
@@ -14,6 +17,7 @@ CREATE TABLE "Staff" (
     "passwordResetHash" TEXT,
     "passwordResetExpiresAt" TIMESTAMP(3),
     "lastLoginAt" TIMESTAMP(3),
+    "locale" "Locale" NOT NULL DEFAULT 'ar',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -66,6 +70,9 @@ CREATE UNIQUE INDEX "StaffInvitation_tokenHash_key" ON "StaffInvitation"("tokenH
 
 -- CreateIndex
 CREATE INDEX "StaffInvitation_email_idx" ON "StaffInvitation"("email");
+
+-- AddForeignKey
+ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "Staff"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StaffSession" ADD CONSTRAINT "StaffSession_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "Staff"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

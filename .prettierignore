@@ -12,3 +12,6 @@ apps/server/prisma/migrations/
 
 # Written by the OpenAPI contract test (apps/server/test/http/http.test.ts).
 apps/server/openapi.json
+
+# Claude Code: agent worktrees and local settings.
+.claude/

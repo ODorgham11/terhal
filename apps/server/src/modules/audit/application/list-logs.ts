@@ -11,6 +11,7 @@ export const listLogs = async ({
   cursor,
   action,
   adminId,
+  staffId,
   system,
   entityType,
   entityId,
@@ -20,7 +21,8 @@ export const listLogs = async ({
 }: ListAuditLogs) => {
   const where: Prisma.AuditLogWhereInput = {
     action: action ? { in: action } : undefined,
-    adminId: system ? null : adminId,
+    // No actor at all for system events: AuditLog_one_actor allows an admin, a staff member, or neither.
+    ...(system ? { adminId: null, staffId: null } : { adminId, staffId }),
     entityType,
     entityId,
     createdAt: from || to ? { gte: from, lte: to } : undefined,
@@ -37,6 +39,9 @@ export const listLogs = async ({
           { admin: { firstName: { contains: word, mode: "insensitive" } } },
           { admin: { lastName: { contains: word, mode: "insensitive" } } },
           { admin: { email: { contains: word, mode: "insensitive" } } },
+          { staff: { firstName: { contains: word, mode: "insensitive" } } },
+          { staff: { lastName: { contains: word, mode: "insensitive" } } },
+          { staff: { email: { contains: word, mode: "insensitive" } } },
         ],
       })),
   };
@@ -61,6 +66,7 @@ export const listLogs = async ({
       after: true,
       createdAt: true,
       admin: { select: { id: true, firstName: true, lastName: true, email: true } },
+      staff: { select: { id: true, firstName: true, lastName: true, email: true } },
     },
   });
 

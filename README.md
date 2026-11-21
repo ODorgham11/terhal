@@ -1,7 +1,7 @@
 # Terhal
 
 pnpm workspace + Turborepo. Read [docs/architecture.md](docs/architecture.md) before adding a module, a job or a
-migration.
+migration, and [docs/decisions.md](docs/decisions.md) before changing something that looks odd.
 
 | Path                 | What                                                                                      |
 | -------------------- | ----------------------------------------------------------------------------------------- |
@@ -12,7 +12,7 @@ migration.
 | `tooling/eslint`     | Shared ESLint config (type-aware `typescript-eslint`)                                     |
 | `infra`              | Local Postgres, Redis (cache) and Redis (queue)                                           |
 | `deploy`             | Docker Compose stacks, Caddy and scripts for the VPS                                      |
-| `docs`               | Architecture and decision records                                                         |
+| `docs`               | Architecture, infrastructure and the decision log                                         |
 
 Everything except the database runs in Docker on one VPS, behind Caddy. The database is Neon (one branch per
 environment: `production` for `main`, and `staging`).
@@ -112,6 +112,13 @@ Set `ADMIN_EMAIL` in `apps/server/.env` and run `pnpm --filter @terhal/server db
 invitation email, link included, is printed to the console. The seed only works while no admin exists; every admin after
 the first is invited by an admin.
 
+### Governorates
+
+Governorates and their outlines only come from a seed: the API can rename them but never creates, moves or reshapes
+them. Download geoBoundaries' ADM1 file for Egypt (the command is at the top of `apps/server/prisma/seed-governorates.ts`)
+and run `pnpm --filter @terhal/server db:seed:governorates <path to the file>`. Running it again changes nothing unless
+the file did.
+
 ## Checks
 
 ```sh
@@ -176,10 +183,7 @@ On Windows, run these in Git Bash, not PowerShell.
    box, set the repository variable `VPS_PLATFORM` to `linux/arm64`. Then delete the key files from your machine.
 7. **Push to the branch** (or re-run its last Deploy run).
 
-Seed the first admin from your machine against the Neon branch, as in [The first admin](#the-first-admin): put that
-environment's `app.env` values in `apps/server/.env`, add `ADMIN_EMAIL`, and add `CACHE_URL=redis://localhost:6379` and
-`QUEUE_URL=redis://localhost:6380` (the seed never uses Redis, but the settings are required; without a local Redis it
-logs connection errors, which are harmless, and needs Ctrl+C after `Invitation sent`). Delete the file afterwards.
+Seed the first admin from your machine against the Neon branch, as in [The first admin](#the-first-admin).
 
 A green Deploy step isn't proof by itself: the run's last step, Check the API, is. `docs/infrastructure.md` records what
 is deployed where and what went wrong setting it up.

@@ -10,6 +10,8 @@ import { AppError } from "../../../platform/errors/app-error";
 import { logger } from "../../../platform/logger/logger";
 import { recordAudit } from "../../audit/index";
 import { INVITATION_LIFETIME_MS } from "../domain/policy";
+import { adminInvitationEmail } from "./admin-emails";
+import { requireCurrentCode } from "./step-up";
 
 const invalid = () =>
   new AppError({
@@ -72,15 +74,6 @@ export const inviteFirstAdmin = async (email: string) => {
   });
 };
 
-const invitationEmail = (link: string, expiresAt: Date) =>
-  [
-    "You've been invited to join Terhal as an admin.",
-    "",
-    `Create your account here: ${link}`,
-    "",
-    `This link can only be used once and expires on ${expiresAt.toUTCString()}. If you weren't expecting this invitation, you can ignore this email.`,
-  ].join("\n");
-
 // Emails the link and records it. Nobody received a link that failed to send, so it's revoked straight away and only a
 // delivered invitation is recorded as sent.
 const deliverInvitation = async (
@@ -93,11 +86,8 @@ const deliverInvitation = async (
   const link = `${origins.admin}/invite?token=${token}`;
 
   try {
-    await sendEmail(
-      email,
-      "You're invited to join Terhal as an admin",
-      invitationEmail(link, expiresAt),
-    );
+    const { subject, text } = adminInvitationEmail(link, expiresAt);
+    await sendEmail(email, subject, text);
   } catch (error) {
     await prisma.adminInvitation.update({
       where: { id: invitationId },
@@ -122,6 +112,120 @@ const deliverInvitation = async (
   });
 
   return { email, expiresAt };
+};
+
+// Not accepted, not revoked and not expired: the invitations whose links still work.
+const pending = (now: Date) => ({ acceptedAt: null, revokedAt: null, expiresAt: { gt: now } });
+
+// An admin inviting another, confirmed with their current authenticator code. Inviting an email again revokes its
+// earlier pending invitations, so only the newest link works.
+export const inviteAdmin = async (
+  { email, code }: { email: string; code: string },
+  invitorId: string,
+  ipAddress: string | null,
+) => {
+  await requireCurrentCode(invitorId, code, "invite_admin", ipAddress);
+
+  const token = generateToken();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + INVITATION_LIFETIME_MS);
+
+  const invitation = await prisma.$transaction(async (tx) => {
+    if (await tx.admin.findUnique({ where: { email }, select: { id: true } })) {
+      throw new AppError({
+        code: "ACCOUNT_ALREADY_EXISTS",
+        status: 409,
+        detail: "An admin account with this email already exists.",
+      });
+    }
+
+    const replaced = await tx.adminInvitation.updateManyAndReturn({
+      where: { email, ...pending(now) },
+      data: { revokedAt: now },
+      select: { id: true },
+    });
+
+    for (const { id } of replaced) {
+      await recordAudit(
+        {
+          adminId: invitorId,
+          action: auditActions.INVITATION_REVOKED,
+          entityType: "AdminInvitation",
+          entityId: id,
+          after: { email, reason: "replaced" },
+          ipAddress,
+        },
+        tx,
+      );
+    }
+
+    return tx.adminInvitation.create({
+      data: { email, tokenHash: hashToken(token), invitorId, expiresAt },
+    });
+  });
+
+  const sent = await deliverInvitation(invitation.id, email, token, expiresAt, {
+    invitorId,
+    ipAddress,
+  });
+  return { email: sent.email, expiresAt: sent.expiresAt.toISOString() };
+};
+
+// The invitations still waiting to be accepted, newest first. There are only ever a few, so they come in one page.
+export const listInvitations = async () => {
+  const invitations = await prisma.adminInvitation.findMany({
+    where: pending(new Date()),
+    orderBy: { createdAt: "desc" },
+    include: { invitor: { select: { id: true, firstName: true, lastName: true } } },
+  });
+
+  return {
+    data: invitations.map(({ id, email, invitor, createdAt, expiresAt }) => ({
+      id,
+      email,
+      invitedBy: invitor
+        ? { id: invitor.id, name: `${invitor.firstName} ${invitor.lastName}` }
+        : null,
+      createdAt: createdAt.toISOString(),
+      expiresAt: expiresAt.toISOString(),
+    })),
+    nextCursor: null,
+  };
+};
+
+// Takes back a pending invitation, so its link stops working. One that's unknown or no longer pending is a 404.
+export const revokeInvitation = async (
+  invitationId: string,
+  adminId: string,
+  ipAddress: string | null,
+) => {
+  await prisma.$transaction(async (tx) => {
+    const [revoked] = await tx.adminInvitation.updateManyAndReturn({
+      where: { id: invitationId, ...pending(new Date()) },
+      data: { revokedAt: new Date() },
+      select: { id: true, email: true },
+    });
+
+    if (!revoked) {
+      throw new AppError({
+        code: "NOT_FOUND",
+        status: 404,
+        detail: "There's no pending invitation with this id.",
+      });
+    }
+
+    await recordAudit(
+      {
+        adminId,
+        action: auditActions.INVITATION_REVOKED,
+        entityType: "AdminInvitation",
+        entityId: revoked.id,
+        after: { email: revoked.email, reason: "revoked_by_admin" },
+        ipAddress,
+      },
+      tx,
+    );
+  });
 };
 
 // Finds an invitation that can still be accepted, or explains why it can't.

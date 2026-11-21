@@ -8,6 +8,7 @@
 
 interface AdapterCause {
   originalCode?: string;
+  originalMessage?: string;
   kind?: string;
   constraint?: { index?: string };
 }
@@ -49,6 +50,18 @@ export const isRetryableConflict = (error: unknown): boolean => {
 export const violatedUniqueIndex = (error: unknown): string | undefined => {
   if (prismaCode(error) !== "P2002" && sqlState(error) !== "23505") return undefined;
   return adapterCause(error)?.constraint?.index;
+};
+
+// The CHECK constraint a 23514 violated, e.g. "Driver_office_is_external". Postgres only names it in the message. Rules
+// held by triggers raise check_violation with a message starting with their name ("Location_parent_broader: ..."), so
+// those are read too.
+export const violatedCheck = (error: unknown): string | undefined => {
+  if (sqlState(error) !== "23514") return undefined;
+  const message = adapterCause(error)?.originalMessage ?? "";
+  return (
+    /violates check constraint "([^"]+)"/.exec(message)?.[1] ??
+    /^([A-Za-z]+_\w+):/.exec(message)?.[1]
+  );
 };
 
 // Overload or an unreachable database: the request may well succeed if retried, so clients get a
