@@ -41,20 +41,14 @@ export const QuoteOption = z
     fits: z
       .boolean()
       .meta({ description: "Whether the passengers and luggage fit in this car body." }),
-    price: z
-      .string()
-      .nullable()
-      .meta({
-        example: "1250.00",
-        description: "EGP. Null when the route has no price: bookable on request.",
-      }),
-    returnPrice: z
-      .string()
-      .nullable()
-      .meta({
-        description:
-          "The return leg's price, from the reverse route. Null without a return or a price.",
-      }),
+    price: z.string().nullable().meta({
+      example: "1250.00",
+      description: "EGP. Null when the route has no price: bookable on request.",
+    }),
+    returnPrice: z.string().nullable().meta({
+      description:
+        "The return leg's price, from the reverse route. Null without a return or a price.",
+    }),
   })
   .meta({ id: "QuoteOption" });
 export type QuoteOption = z.infer<typeof QuoteOption>;
