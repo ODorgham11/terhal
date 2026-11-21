@@ -40,6 +40,18 @@ cookie with a switcher on every page, not a URL prefix, so `proxy.ts` keeps mapp
 properties (`ms-`/`me-`, `start`/`end`), never left and right, so one layout serves both directions. Places and trip
 classes carry both names (`nameEn`, `nameAr`).
 
+### Verification codes go by email, for now (2026-11-21)
+
+Customers confirm their account, and guests their contact details, with a 6-digit code. It's emailed: WhatsApp isn't
+integrated yet. The schema keeps `WHATSAPP` as a `VerificationMethod`, so codes can move there once a provider is set up,
+without a migration. A code lasts 10 minutes and dies after 5 wrong tries; only its hash is stored.
+
+### Staff permissions (2026-11-21)
+
+A staff member holds a list of coarse permissions (`trips`, `fleet`, `pricing`, `customers`, `team`, `analytics`,
+defined in `packages/contracts/src/permissions.ts`), checked by the API on every request. The first staff member is
+invited from the admin panel with every permission; after that, staff with `team` invite the rest.
+
 ### Barebones reset (2026-11-20)
 
 The repo was stripped to an empty skeleton (no modules, models, migrations or pages) to rebuild the features cleanly.
