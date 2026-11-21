@@ -992,7 +992,9 @@ Anything not listed takes the recommended option.
 - **D5 b:** every expense is assumed paid by the driver; there's no `paidBy`.
 - D6 a.
 - **D7 b:** the report locks for the driver once submitted; after that only staff can edit it.
-- **D8 a:** a ledger. Internal drivers get reimbursements and have cash collected deducted, but no trip fee.
+- **D8 a:** a ledger. ~~Internal drivers get reimbursements and have cash collected deducted, but no trip fee.~~
+  Changed 2026-11-21: every driver, internal or external, gets the `DRIVER_FEE` they enter as a trip fee, netted against
+  the cash they collected (drivers are paid per trip).
 - D9 a.
 - **As built** (decisions.md, "The driver report"): staff can show the link again and replace it; a trip with a driver
   needs its report to complete (office trips don't); the report carries the cash collected; reopening reverses the

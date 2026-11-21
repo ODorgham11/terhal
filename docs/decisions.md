@@ -272,7 +272,7 @@ submitted; staff can still correct it.
 ### The driver ledger (2026-11-21)
 
 `Driver.amountOwed` is what the company owes the driver (negative when the driver holds company cash). It's the running
-total of a `DriverTransaction` ledger, updated in the same transaction: trip fees (external drivers only), reimbursed
+total of a `DriverTransaction` ledger, updated in the same transaction: trip fees (every driver), reimbursed
 expenses (every expense on a report is assumed paid by the driver), cash collected from customers, payouts and manual
 adjustments. Completing a trip writes its entries.
 
@@ -492,7 +492,8 @@ Choices made building the report link, the report routes and the ledger on compl
   doesn't. An office trip may complete without one (D9 a). Every non-office trip that reaches awaiting report has a
   driver, since starting needs one.
 - **The ledger on completion** (D8 a, O1 b), from the report, as the completing staff member: `TRIP_FEE` = the report's
-  `DRIVER_FEE` expenses, for external drivers only (an internal driver's `DRIVER_FEE` never reaches their balance);
+  `DRIVER_FEE` expenses, for every driver: internal drivers are paid per trip too and often keep their fee out of the
+  cash they collected (changed from D8 a's "external only" at the client's request, 2026-11-21);
   `EXPENSE_REIMBURSEMENT` = every other expense except `OFFICE_FEE`, summed into one entry; `CASH_COLLECTED` = minus the
   cash collected. Zero entries are skipped. An office trip with a recorded driver follows the same rules; without a
   driver or a report it writes nothing.
