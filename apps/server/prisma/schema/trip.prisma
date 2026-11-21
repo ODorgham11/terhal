@@ -123,8 +123,11 @@ model Trip {
   // The booking request's Idempotency-Key, hashed together with the booker, so a retried request returns this trip.
   idempotencyKey String? @unique
 
-  // The driver's report link: a random token, only its hash stored, replaced when the driver changes.
+  // The driver's report link, replaced when the driver changes. The token is an HMAC of the trip, its driver and this
+  // random salt under a server key, so staff can show the link again; the database alone holds only its hash, which
+  // finds the trip, and the salt, which is useless without the key (Trip_report_token: all three or none).
   reportTokenHash      String?   @unique
+  reportTokenSalt      String?
   reportTokenExpiresAt DateTime?
 
   notes String?
@@ -167,14 +170,16 @@ model Trip {
 model TripEvent {
   id String @id @default(cuid())
 
-  // Who did it: exactly one of a staff member, a customer, a guest and the system, enforced by the TripEvent_one_actor
-  // check.
+  // Who did it: exactly one of a staff member, a customer, a guest, the driver (through the report link) and the system,
+  // enforced by the TripEvent_one_actor check.
   staff          Staff?        @relation(fields: [staffId], references: [id], onDelete: Restrict)
   staffId        String?
   customer       Customer?     @relation(fields: [customerId], references: [id], onDelete: Restrict)
   customerId     String?
   guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: Restrict)
   guestSessionId String?
+  driver         Driver?       @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  driverId       String?
   // The background job or process behind a system event, e.g. "expire-pending-trips".
   system         String?
 
@@ -191,6 +196,7 @@ model TripEvent {
   @@index([tripId])
   @@index([customerId])
   @@index([guestSessionId])
+  @@index([driverId])
 }
 
 model TripReport {
@@ -209,6 +215,10 @@ model TripReport {
   vehicleDropoff String
   endedAt        DateTime
   endMileage     Int
+
+  // Cash the driver collected from the customer for the company; zero when none. Enters the driver's ledger on
+  // completion (CASH_COLLECTED).
+  cashCollected Decimal @default(0) @db.Decimal(12, 2)
 
   stops    TripStop[]
   expenses TripExpense[]

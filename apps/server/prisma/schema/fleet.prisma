@@ -72,6 +72,7 @@ model Driver {
 
   trips        Trip[]
   transactions DriverTransaction[]
+  tripEvents   TripEvent[]
 
   notes String?
 
