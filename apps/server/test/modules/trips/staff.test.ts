@@ -208,9 +208,7 @@ describe("the trip list and detail", () => {
     const { trip, returnTrip } = await bookedTrip(site, world, {
       return: { pickupDate: pickupIn(72).toISOString(), expectedPrice: "1400" },
     });
-    const detail = await json(
-      await agent.request(`/v1/staff/trips/${trip.id}`),
-    );
+    const detail = await json(await agent.request(`/v1/staff/trips/${trip.id}`));
     expect(detail).toMatchObject({
       id: trip.id,
       booker: { type: "CUSTOMER", name: "Mona Adel" },
