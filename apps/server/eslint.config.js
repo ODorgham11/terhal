@@ -12,7 +12,7 @@ const moduleFiles = ["module", "domain", "application", "endpoints"];
 const publicApi = { element: { type: "module", fileInternalPath: "index.ts" } };
 const platform = { element: { type: "platform" } };
 
-export default defineConfig(globalIgnores(["generated/", "dist/"]), base, {
+export default defineConfig(globalIgnores(["generated/", "dist/", "tsup.config.bundled_*"]), base, {
   languageOptions: {
     parserOptions: { tsconfigRootDir: import.meta.dirname },
   },
