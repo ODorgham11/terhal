@@ -12,6 +12,40 @@ enum NotificationStatus {
   FAILED
 }
 
+// What a notification says, which picks its template (N1). The first group is emailed to a trip's booker, the second
+// shown in the staff dashboard's inbox.
+enum NotificationKind {
+  BOOKING_RECEIVED
+  BOOKED_BY_STAFF
+  TRIP_CONFIRMED
+  DRIVER_ASSIGNED
+  TRIP_REMINDER
+  PRICE_PROPOSED
+  PRICE_REMINDER
+  TRIP_CANCELLED
+  CANCELLATION_RECEIPT
+  TRIP_COMPLETED
+
+  NEW_BOOKING
+  PRICE_REQUESTED
+  PRICE_ACCEPTED
+  PRICE_DECLINED
+  CANCELLED_BY_BOOKER
+  CANCELLED_BY_SYSTEM
+  TRIP_UNASSIGNED
+  REPORT_SUBMITTED
+}
+
+// The notices sent ahead of a pickup, as delayed jobs (N4).
+enum ReminderKind {
+  // The booker, 24 hours before a confirmed trip's pickup.
+  PICKUP
+  // The booker, 24 hours before pickup while a proposed price is still unanswered.
+  PRICE
+  // Staff, 2 hours before pickup while the trip is still unassigned.
+  UNASSIGNED
+}
+
 model Notification {
   id String @id @default(cuid())
 
@@ -23,20 +57,39 @@ model Notification {
   staff          Staff?        @relation(fields: [staffId], references: [id], onDelete: Restrict)
   staffId        String?
 
+  kind   NotificationKind
+  // The recipient's language when it was written; the title, the body and the email are in it (N5).
+  locale Locale
+
+  // The trip it's about.
+  trip   Trip?   @relation(fields: [tripId], references: [id], onDelete: Restrict)
+  tripId String?
+
+  // Names what caused it (the trip event or the reminder) and who it's for, so a retried job never writes it twice.
+  dedupeKey String @unique
+
   title String
   body  String
 
-  // Keep this optionally for arbitrary data in the future, a deep link or a trip id for example.
+  // What the template was filled with (the trip's code, times, places, the driver's details, links), so the email can
+  // be rendered again when it's sent and the inbox can link to the trip.
   data Json?
+
+  // When the staff member read it in the inbox; null while unread.
+  readAt DateTime?
 
   deliveries NotificationDelivery[]
 
   createdAt DateTime @default(now())
 
   @@index([customerId])
-  @@index([staffId])
+  @@index([guestSessionId])
+  @@index([staffId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([tripId])
 }
 
+// One outbound send of a notification on one channel (email now, WhatsApp later). In-app notifications have none: the
+// Notification row is the inbox entry. It's also the outbox: the worker's sweep queues every pending row not yet queued.
 model NotificationDelivery {
   id String @id @default(cuid())
 
@@ -50,11 +103,16 @@ model NotificationDelivery {
   recipient  String?
   providerId String? // For matching delivery webhooks back to this row.
 
+  // How many sends were tried, and when the row was last handed to the queue (null until the sweep queues it).
+  attempts Int       @default(0)
+  queuedAt DateTime?
+
   sentAt      DateTime?
   deliveredAt DateTime?
   readAt      DateTime?
 
   failedAt      DateTime?
+  // The latest attempt's error, kept while retrying; final once FAILED.
   failureReason String?
 
   createdAt DateTime @default(now())
@@ -62,4 +120,25 @@ model NotificationDelivery {
 
   @@index([notificationId])
   @@index([providerId])
+}
+
+// A trip's reminder of one kind, and the source of truth for it: the queue's delayed job only wakes the worker, which
+// checks this row and the trip before sending. Rewritten on every trip event, so a changed pickup moves it and a
+// cancellation drops it.
+model NotificationReminder {
+  id String @id @default(cuid())
+
+  trip   Trip         @relation(fields: [tripId], references: [id], onDelete: Restrict)
+  tripId String
+  kind   ReminderKind
+
+  // When it should go out; null when it doesn't apply (cancelled, assigned, answered, already sent).
+  dueAt     DateTime?
+  // The dueAt the queue holds a delayed job for, null when none. The sweep syncs the queue while the two differ.
+  queuedFor DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tripId, kind])
 }

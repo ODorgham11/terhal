@@ -152,6 +152,8 @@ model Trip {
   subsequentTrip Trip? @relation("TripChain")
 
   driverTransactions DriverTransaction[]
+  notifications      Notification[]
+  reminders          NotificationReminder[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
