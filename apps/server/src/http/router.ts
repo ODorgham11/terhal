@@ -8,6 +8,7 @@ import {
   adminInvitationRoutes,
   adminManagementRoutes,
   adminStaffRoutes,
+  customerAccountRoutes,
   customerAuthRoutes,
   guestRoutes,
   staffAccountRoutes,
@@ -62,6 +63,7 @@ const v1 = createRouter()
   .route("/", teamRoutes)
   .route("/", staffAccountRoutes)
   .route("/", customerAuthRoutes)
+  .route("/", customerAccountRoutes)
   .route("/", guestRoutes);
 
 export const routes = router.route("/health", health).route("/v1", v1);

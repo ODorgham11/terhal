@@ -7,6 +7,7 @@ export { adminInvitationRoutes } from "./http/admin-invitation-routes";
 export { adminManagementRoutes } from "./http/admin-management-routes";
 export { adminAuthRoutes } from "./http/admin-routes";
 export { adminStaffRoutes } from "./http/admin-staff-routes";
+export { customerAccountRoutes } from "./http/customer-account-routes";
 export { customerAuthRoutes } from "./http/customer-routes";
 export { guestRoutes } from "./http/guest-routes";
 export { staffAccountRoutes } from "./http/staff-account-routes";
