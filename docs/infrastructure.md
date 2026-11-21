@@ -293,6 +293,13 @@ later. The database does not move.
 - **Add `STAFF_SECRET` and `CUSTOMER_SECRET` to both `app.env` files**
   (`/opt/terhal/{staging,main}/app.env`, `openssl rand -base64 32` each)
   before the next deploy: the server refuses to start without them.
+- **Create the Cloudflare R2 buckets and keys, then set them in both
+  `app.env` files before the next deploy**: outside local development the
+  server refuses to start unless `STORAGE_DRIVER=s3` and every `S3_`
+  variable is set (`deploy/app.env.example`). One private bucket per
+  environment (e.g. `terhal-staging`, `terhal-production`), each with an R2
+  API token limited to Object Read & Write on it; `S3_ENDPOINT` is
+  `https://<account id>.r2.cloudflarestorage.com`.
 - **Wipe the staging and production databases before their next deploy.**
   The domain migrations were edited after both had applied them (the schema
   rebuild of 2026-11-21, see `docs/architecture.md`, Migrations), and
@@ -302,7 +309,7 @@ later. The database does not move.
 - The repo is public; confirm that is intended for client work.
 - No uptime monitoring or alerting on the VPS yet.
 - The old Vercel projects and the old Neon project can be deleted.
-- Integrations planned and not built: Cloudflare R2,
+- Integrations planned and not built:
   Turnstile, Google Places, WhatsApp Cloud API, Cashier, Sentry. Delayed
   jobs now run on the BullMQ worker with the queue Redis (the earlier
   Upstash QStash plan is dropped). Rate limits are in Redis, not Postgres.

@@ -72,6 +72,30 @@ export const staffSessionExpiry = (now: Date, createdAt: Date) =>
 export const staffSessionsToRevoke = <T>(activeOldestFirst: T[]) =>
   activeOldestFirst.slice(0, Math.max(0, activeOldestFirst.length - STAFF_MAX_ACTIVE_SESSIONS + 1));
 
+// Managing the team. Nobody changes their own permissions, suspends or deletes themselves: someone else has to. And at
+// least one active staff member must keep the team permission, or nobody in the dashboard could manage the team again.
+
+export type TeamChangeRefusal = "self" | "last_team_manager";
+
+// Why `actorId` (a staff member, or null for an admin) can't make this change to `targetId`, or null when they can.
+// `managerIds` is every active staff member holding `team` at the time; `targetStillManages` says whether the target is
+// one of them after the change.
+export const teamChangeRefusal = (
+  actorId: string | null,
+  targetId: string,
+  managerIds: readonly string[],
+  targetStillManages: boolean,
+): TeamChangeRefusal | null => {
+  if (actorId === targetId) return "self";
+  const losesManager = managerIds.includes(targetId) && !targetStillManages;
+  if (losesManager && managerIds.every((id) => id === targetId)) return "last_team_manager";
+  return null;
+};
+
+// A deleted staff member's email is replaced by this, so the address is free to be invited again. The .invalid domain
+// can never receive mail.
+export const deletedStaffEmail = (staffId: string) => `deleted-${staffId}@deleted.invalid`;
+
 // Customer account rules. Customers stay signed in much longer than admins: a refresh keeps a session going for another
 // 30 days, up to 180 days after signing in, and they can be signed in on more devices at once.
 export const MAX_ACTIVE_CUSTOMER_SESSIONS = 10;

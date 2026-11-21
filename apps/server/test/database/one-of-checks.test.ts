@@ -64,10 +64,12 @@ const tripData = async () => {
     totalPrice: "100.00",
     pickupId: location.id,
     pickupSnapshot: "Cairo",
+    pickupSnapshotAr: "Cairo",
     pickupLatitude: "30.044420",
     pickupLongitude: "31.235712",
     dropoffId: location.id,
     dropoffSnapshot: "Cairo",
+    dropoffSnapshotAr: "Cairo",
     dropoffLatitude: "30.044420",
     dropoffLongitude: "31.235712",
   });
@@ -147,5 +149,24 @@ describe("a trip event", () => {
         },
       }),
     ).rejects.toThrow(/TripEvent_one_actor/);
+  });
+});
+
+describe("a customer", () => {
+  it("changes their email or their phone, one at a time", async () => {
+    const { customer } = await people();
+
+    await expect(
+      prisma.customer.update({
+        where: { id: customer.id },
+        data: { pendingEmail: "new@terhal.co" },
+      }),
+    ).resolves.toBeDefined();
+    await expect(
+      prisma.customer.update({
+        where: { id: customer.id },
+        data: { pendingPhone: "+201000000009" },
+      }),
+    ).rejects.toThrow(/Customer_one_pending_change/);
   });
 });

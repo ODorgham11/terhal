@@ -29,6 +29,26 @@ const verify = (agent: Agent, code: string) =>
 const wrongCodeFor = (code: string) => (code === "000000" ? "111111" : "000000");
 
 describe("guests", () => {
+  it("get their emails in the language they started in", async () => {
+    const agent = createAgent(SITE_ORIGIN);
+    const started = await agent.request("/v1/site/guest", {
+      method: "POST",
+      json: {
+        firstName: "Karim",
+        lastName: "Fathy",
+        phone: "01112345678",
+        email: EMAIL,
+        locale: "en",
+      },
+    });
+    expect(await started.json()).toMatchObject({ locale: "en" });
+
+    const [email] = emailsTo(EMAIL);
+    expect(email?.subject).toBe("Your Terhal verification code");
+    expect(email?.text).not.toMatch(/[\u0600-\u06FF]/);
+    expect((await prisma.guestSession.findFirstOrThrow()).locale).toBe("en");
+  });
+
   it("start a session, verify it with the emailed code and see their details", async () => {
     const agent = createAgent(SITE_ORIGIN);
 

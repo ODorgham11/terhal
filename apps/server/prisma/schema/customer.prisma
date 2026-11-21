@@ -19,6 +19,11 @@ model Customer {
   phone     String         @unique
   email     String         @unique
   status    CustomerStatus @default(UNVERIFIED)
+  locale    Locale         @default(ar)
+
+  // Name, phone and email normalized for search (search_normalize), kept up to date by a trigger. Never written by the
+  // app.
+  search String @default("")
 
   passwordHash String
 
@@ -27,6 +32,11 @@ model Customer {
   verificationExpiresAt DateTime?
   verificationAttempts  Int                 @default(0)
   verificationMethod    VerificationMethod?
+
+  // A new email or phone the customer asked to change to, waiting for the code above. It replaces the current one only
+  // once the code is confirmed. At most one at a time (Customer_one_pending_change).
+  pendingEmail String?
+  pendingPhone String?
 
   verifiedVia VerificationMethod?
   verifiedAt  DateTime?
@@ -71,6 +81,7 @@ model GuestSession {
   lastName  String
   phone     String
   email     String
+  locale    Locale @default(ar)
 
   tokenHash String @unique
 

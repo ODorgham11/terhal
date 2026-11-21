@@ -1,4 +1,5 @@
 import { randomInt } from "node:crypto";
+import type { Locale } from "@terhal/contracts";
 import { sendEmail } from "../../../platform/email/email";
 import { AppError } from "../../../platform/errors/app-error";
 import { hashToken } from "../../../platform/crypto/tokens";
@@ -62,28 +63,32 @@ export const checkCode = async (
 
 const minutes = VERIFICATION_CODE_LIFETIME_MS / 60_000;
 
-const verificationEmail = (code: string) =>
-  [
-    `رمز التحقق الخاص بك في ترحال هو: ${code}`,
-    "",
-    `الرمز صالح لمدة ${minutes} دقائق. إذا لم تطلب هذا الرمز، يمكنك تجاهل هذه الرسالة.`,
-    "",
-    "---",
-    "",
-    `Your Terhal verification code is: ${code}`,
-    "",
-    `It expires in ${minutes} minutes. If you didn't ask for it, you can ignore this email.`,
-  ].join("\n");
+// In the recipient's language only: the customer or guest chose it on the site.
+const verificationEmail = (code: string, locale: Locale) =>
+  locale === "ar"
+    ? {
+        subject: "رمز التحقق من ترحال",
+        text: [
+          `رمز التحقق الخاص بك في ترحال هو: ${code}`,
+          "",
+          `الرمز صالح لمدة ${minutes} دقائق. إذا لم تطلب هذا الرمز، يمكنك تجاهل هذه الرسالة.`,
+        ].join("\n"),
+      }
+    : {
+        subject: "Your Terhal verification code",
+        text: [
+          `Your Terhal verification code is: ${code}`,
+          "",
+          `It expires in ${minutes} minutes. If you didn't ask for it, you can ignore this email.`,
+        ].join("\n"),
+      };
 
 // Never throws: the caller has already saved the code, and the person can always ask for a new one. Failing the request
 // instead would, for a resend, reveal that the email belongs to someone.
-export const deliverVerificationCode = async (email: string, code: string) => {
+export const deliverVerificationCode = async (email: string, code: string, locale: Locale) => {
+  const { subject, text } = verificationEmail(code, locale);
   try {
-    await sendEmail(
-      email,
-      "رمز التحقق من ترحال | Your Terhal verification code",
-      verificationEmail(code),
-    );
+    await sendEmail(email, subject, text);
   } catch (error) {
     logger.error({ err: error }, "failed to send a verification code");
   }

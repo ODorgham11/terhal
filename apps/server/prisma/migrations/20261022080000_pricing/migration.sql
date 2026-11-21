@@ -23,3 +23,6 @@ ALTER TABLE "Pricing" ADD CONSTRAINT "Pricing_toId_fkey" FOREIGN KEY ("toId") RE
 
 -- AddForeignKey
 ALTER TABLE "Pricing" ADD CONSTRAINT "Pricing_classId_fkey" FOREIGN KEY ("classId") REFERENCES "TripClass"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- Prices are Egyptian pounds, positive and below a sanity cap.
+ALTER TABLE "Pricing" ADD CONSTRAINT "Pricing_price_positive" CHECK ("price" > 0 AND "price" <= 1000000);

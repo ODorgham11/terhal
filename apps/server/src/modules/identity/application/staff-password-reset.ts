@@ -22,18 +22,20 @@ const invalid = () =>
 export const requestStaffPasswordReset = async (email: string) => {
   const token = generateToken();
 
-  const { count } = await prisma.staff.updateMany({
+  const [staff] = await prisma.staff.updateManyAndReturn({
     where: { email, status: "ACTIVE" },
     data: {
       passwordResetHash: hashToken(token),
       passwordResetExpiresAt: new Date(Date.now() + STAFF_PASSWORD_RESET_LIFETIME_MS),
     },
+    select: { locale: true },
   });
 
-  if (count === 0) return;
+  if (!staff) return;
 
   const { subject, text } = staffPasswordResetEmail(
     `${origins.staff}/reset-password?token=${token}`,
+    staff.locale,
   );
 
   sendEmail(email, subject, text).catch((error: unknown) => {

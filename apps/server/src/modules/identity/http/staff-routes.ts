@@ -285,5 +285,10 @@ export const staffAuthRoutes = createRouter()
     return c.json(staff, 201);
   })
   .openapi(sendInvitation, async (c) => {
-    return c.json(await inviteStaff(c.req.valid("json"), currentStaff(c).staffId), 201);
+    const sent = await inviteStaff(
+      c.req.valid("json"),
+      currentStaff(c).staffId,
+      requestInfo(c).ipAddress,
+    );
+    return c.json(sent, 201);
   });
