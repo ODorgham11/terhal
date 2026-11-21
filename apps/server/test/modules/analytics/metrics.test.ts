@@ -130,7 +130,7 @@ describe("the analytics figures", () => {
     expect(result.costs.total).toBe("450.50");
   });
 
-  it("buckets the trend by Cairo day and by Saturday weeks, empty buckets included", async () => {
+  it("buckets the trend by Cairo day and by Sunday weeks, empty buckets included", async () => {
     const { agent } = await signedInStaff(["analytics"]);
     await november();
 
@@ -147,14 +147,14 @@ describe("the analytics figures", () => {
     expect(daily.trend[1]).toMatchObject({ period: "2026-11-02", trips: 0, revenue: "0.00" });
     expect(daily.trend[29]).toMatchObject({ period: "2026-11-30", trips: 1, revenue: "500.00" });
 
-    // 1 November 2026 is a Sunday, so its week starts on Saturday 31 October.
+    // 1 November 2026 is a Sunday, so its week starts that day.
     const weekly = await figures(agent, "from=2026-11-01&to=2026-11-30&groupBy=week");
     expect(weekly.trend.map((bucket) => bucket.period)).toEqual([
-      "2026-10-31",
-      "2026-11-07",
-      "2026-11-14",
-      "2026-11-21",
-      "2026-11-28",
+      "2026-11-01",
+      "2026-11-08",
+      "2026-11-15",
+      "2026-11-22",
+      "2026-11-29",
     ]);
     expect(weekly.trend[0]).toMatchObject({ trips: 1, revenue: "1000.00" });
     // 15 November (cancelled) and 20 November (confirmed).
@@ -257,8 +257,8 @@ describe("the analytics figures", () => {
     });
     expect(result.byClass).toEqual([]);
     expect(result.topRoutes).toEqual([]);
-    // 1 January 2020 was a Wednesday: its week starts on Saturday 28 December.
-    expect(result.trend[0]?.period).toBe("2019-12-28");
+    // 1 January 2020 was a Wednesday: its week starts on Sunday 29 December.
+    expect(result.trend[0]?.period).toBe("2019-12-29");
   });
 
   it("checks the range", async () => {

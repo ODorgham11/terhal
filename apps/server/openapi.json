@@ -21834,10 +21834,10 @@
                 "month"
               ],
               "default": "day",
-              "description": "The trend's buckets. Weeks start on Saturday."
+              "description": "The trend's buckets. Weeks start on Sunday."
             },
             "required": false,
-            "description": "The trend's buckets. Weeks start on Saturday.",
+            "description": "The trend's buckets. Weeks start on Sunday.",
             "name": "groupBy",
             "in": "query"
           }

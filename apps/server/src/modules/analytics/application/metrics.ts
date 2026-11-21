@@ -29,11 +29,11 @@ const money = (expression: Prisma.Sql) =>
 // The Cairo wall clock of a trip's pickup (stored as UTC without a zone).
 const local = Prisma.sql`((t."pickupDate" AT TIME ZONE 'UTC') AT TIME ZONE ${CAIRO})`;
 
-// The first day of the bucket a Cairo timestamp falls in. Weeks start on Saturday, as Egyptian calendars do: Postgres
-// weeks start on Monday, two days after.
+// The first day of the bucket a Cairo timestamp falls in. Weeks start on Sunday, the first day of Egypt's working
+// week: Postgres weeks start on Monday, a day after.
 const bucket = (groupBy: AnalyticsQuery["groupBy"], timestamp: Prisma.Sql) => {
   if (groupBy === "week") {
-    return Prisma.sql`(date_trunc('week', ${timestamp} + interval '2 days') - interval '2 days')::date`;
+    return Prisma.sql`(date_trunc('week', ${timestamp} + interval '1 day') - interval '1 day')::date`;
   }
   return groupBy === "month"
     ? Prisma.sql`date_trunc('month', ${timestamp})::date`

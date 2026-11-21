@@ -46,7 +46,7 @@ export const AnalyticsQuery = z
     groupBy: z
       .enum(analyticsGroupings, { error: "Group by must be day, week or month." })
       .default("day")
-      .meta({ description: "The trend's buckets. Weeks start on Saturday." }),
+      .meta({ description: "The trend's buckets. Weeks start on Sunday." }),
   })
   .refine((query) => query.from <= query.to, {
     message: "From must not be after to.",
