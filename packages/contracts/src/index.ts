@@ -5,4 +5,5 @@ export * from "./audit";
 export * from "./errors";
 export * from "./fields";
 export * from "./lists";
+export * from "./permissions";
 export * from "./problem";
