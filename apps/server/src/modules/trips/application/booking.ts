@@ -337,6 +337,7 @@ export const bookOnline = async (
   }
 
   if (!fitsCar(input.car, input)) throw loadDoesNotFit();
+  await assertClassActive(input.classId);
   const { outbound, back } = await routes(input, input.return !== undefined);
 
   // Q4 a: the price is recomputed and must be the one the booker saw; an option without one is booked on request.
@@ -444,6 +445,7 @@ export const bookByStaff = async (
   }
 
   if (!fitsCar(input.car, input)) throw loadDoesNotFit();
+  await assertClassActive(input.classId);
   const { outbound, back } = await routes(input, input.return !== undefined);
 
   const priceOf = async (
