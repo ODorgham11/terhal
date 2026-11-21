@@ -2,6 +2,7 @@ import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { auditRoutes } from "../modules/audit/index";
+import { driverRoutes, officeRoutes, vehicleRoutes } from "../modules/fleet/index";
 import {
   adminAccountRoutes,
   adminAuthRoutes,
@@ -71,7 +72,10 @@ const v1 = createRouter()
   .route("/", auditRoutes)
   .route("/", staffAuthRoutes)
   .route("/", customerAuthRoutes)
-  .route("/", guestRoutes);
+  .route("/", guestRoutes)
+  .route("/", driverRoutes)
+  .route("/", vehicleRoutes)
+  .route("/", officeRoutes);
 
 export const routes = router.route("/health", health).route("/v1", v1);
 
