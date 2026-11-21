@@ -6,6 +6,7 @@ export * from "./cars";
 export * from "./customer";
 export * from "./errors";
 export * from "./fields";
+export * from "./fleet";
 export * from "./lists";
 export * from "./locale";
 export * from "./permissions";

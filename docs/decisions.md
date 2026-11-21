@@ -153,6 +153,19 @@ Vehicle images and the monthly analytics workbooks go in a private R2 bucket. Up
 the type from the bytes and the size; reads use short-lived signed URLs. Nothing is stored on the VPS, so moving servers
 stays a redeploy.
 
+### A local folder for files in development (2026-11-21)
+
+The storage provider (`apps/server/src/platform/storage`) has two drivers, picked by `STORAGE_DRIVER`. `s3` talks to any
+S3-compatible bucket (R2 in staging and production) with the AWS SDK, and its read links are presigned. `local` writes to
+a git-ignored folder (`apps/server/.storage`), and its read links point at the API's own `GET /v1/files`, signed with
+HMAC-SHA256 (`STORAGE_SIGNING_SECRET`) and expiring like a presigned link, so code and tests behave the same with either.
+Switching is the flag plus the `S3_` keys. Outside local development the server refuses to start unless the driver is
+`s3` with every key, as it does without `RESEND_KEY`, so files can never land on the VPS's disk.
+
+What we gave up: development doesn't exercise R2 itself (only the s3 driver's configuration and presigning are tested,
+offline), and a developer needs one more secret in `.env`. MinIO in `infra/` was the alternative; it's another container
+for something a folder does.
+
 ---
 
 ## Data model
@@ -268,6 +281,43 @@ adjustments. Completing a trip writes its entries.
 What the business pays an office for a handed-off trip is an expense of type `OFFICE_FEE` on that trip's report. It
 counts towards the trip's costs in analytics but never towards the driver's ledger. There's no separate `officeCost`
 column.
+
+### Fleet and office routes: the details the spec left open (2026-11-21)
+
+How the fleet and office routes ([domain-api.md](domain-api.md), F and O) settle what the answers didn't:
+
+- **"Upcoming live trip" is any pending, confirmed or in-progress trip**, whatever its pickup time: one past its pickup is
+  still unresolved until the background jobs move it on. Awaiting a report doesn't block archiving. A blocked archive is
+  `409 HAS_UPCOMING_TRIPS` listing up to 10 of the trips. The row is locked first, so an archive and an assignment can't
+  cross (assignment must lock the same rows).
+- **Archiving an archived row, or restoring a live one, changes nothing** and returns it, without an audit record.
+- **The ledger:** staff post only `PAYOUT` (the amount paid, positive, stored negative; note optional) and `ADJUSTMENT`
+  (signed, never zero, note required). Reading the ledger needs `fleet`, as the route table says, not `trips`. Archived
+  drivers can still be paid. The response carries the new balance read back after the trigger ran.
+- **Licences:** `licenseExpiresSoon` is true for a licence that has expired or expires within 30 days, by Cairo's date;
+  `licenseExpiring=true` filters on the same. The columns stay nullable in the database (rows from before); the API
+  requires both on create and never clears them.
+- **Search:** drivers, vehicles and offices have no search column, so what's typed is normalized (`normalizeSearch`)
+  and each word must be contained, case-insensitively, in one of the fields. Typing "احمد" finds "احمد" and so does
+  "أحمد", but "احمد" doesn't find a stored "أحمد"; add search columns if that matters.
+- **Links:** a new link to an office needs a live one, and an existing link to an office archived since can stay. Only
+  external drivers and vehicles can have an office: the database checks it and the API answers
+  `422 OFFICE_REQUIRES_EXTERNAL`. An office's location must be live when it's set or changed.
+- **Images:** keys are `vehicles/<vehicle id>/<random uuid>`; the type is sniffed from the bytes and stored with the file.
+  The 5-image limit is the database's position check (0–4) plus a lock on the vehicle while counting; a unique
+  `(vehicleId, position)` index was left out because reordering would need a deferrable constraint Prisma can't
+  express. The file is uploaded before the row is written and deleted if the row isn't; a deleted image's file is
+  removed after the commit, so a failure can only orphan a file, never break a row. Every vehicle response (lists too)
+  carries a 15-minute signed link per image. Archived vehicles keep and can change their images. The 100 KB JSON body
+  limit lets the upload route through with room for 5 MB.
+- **An office's detail** lists its live drivers and vehicles and the trips handed to it that are still live (soonest
+  first, at most 100), not its history.
+- **Nearby offices** aren't paged and return `{ location, data }`: the place the pin resolved to, then the offices placed
+  in it, its ancestors or its live descendants, by distance from the pin to the office location's center; offices placed
+  at a governorate (no center) come last. A pin outside coverage gets an empty list, not an error. The pin is resolved
+  by a small query in the fleet module until the locations module's coverage is merged.
+- **Tables of modules that don't exist yet:** the fleet module reads `Trip` and `Location` directly, marked with TODOs to
+  go through the trips and locations modules once they exist.
 
 ### Accounts carry a locale (2026-11-21)
 

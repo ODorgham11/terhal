@@ -1,3 +1,4 @@
+import { VEHICLE_IMAGE_MAX_BYTES } from "@terhal/contracts";
 import { bodyLimit as honoBodyLimit } from "hono/body-limit";
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
@@ -41,10 +42,26 @@ export const timeout = honoTimeout(
   new HTTPException(503, { message: "Request timed out." }),
 );
 
-// JSON only. Files will go straight to object storage through presigned URLs, never through the API.
-export const bodyLimit = honoBodyLimit({
+// JSON bodies stay small. The only uploads are vehicle images (5 MB each, checked again by their route, which answers
+// with its own message); their routes get room for the file plus the multipart framing.
+const jsonLimit = honoBodyLimit({
   maxSize: 100 * 1024,
   onError: () => {
     throw new HTTPException(413, { message: "Request body is larger than 100 KB." });
   },
 });
+
+const uploadLimit = honoBodyLimit({
+  maxSize: VEHICLE_IMAGE_MAX_BYTES + 64 * 1024,
+  onError: () => {
+    throw new HTTPException(413, { message: "An image can be 5 MB at most." });
+  },
+});
+
+const uploadRoutes = [/^\/v1\/staff\/vehicles\/[^/]+\/images$/];
+
+export const bodyLimit = createMiddleware((c, next) =>
+  c.req.method === "POST" && uploadRoutes.some((route) => route.test(c.req.path))
+    ? uploadLimit(c, next)
+    : jsonLimit(c, next),
+);

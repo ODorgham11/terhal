@@ -48,6 +48,24 @@ export const errorCodes = [
   "LAST_ACTIVE_ADMIN",
   // The admin being acted on isn't active. Not ACCOUNT_NOT_ACTIVE, which means the signed in account itself.
   "ADMIN_NOT_ACTIVE",
+
+  // Fleet and offices
+  // Archiving a driver, a vehicle or an office while it's on a live trip (pending, confirmed or in progress).
+  "HAS_UPCOMING_TRIPS",
+  // Another driver has this phone, another vehicle this plate, another office this name.
+  "DRIVER_PHONE_TAKEN",
+  "PLATE_NUMBER_TAKEN",
+  "OFFICE_NAME_TAKEN",
+  // Only an external driver or vehicle can come through an office.
+  "OFFICE_REQUIRES_EXTERNAL",
+  // The office named in the request doesn't exist or is archived.
+  "OFFICE_NOT_AVAILABLE",
+  // The location named in the request doesn't exist or is deleted.
+  "LOCATION_NOT_AVAILABLE",
+  // A vehicle image that isn't a JPEG, PNG or WebP (judged from its bytes, not its name).
+  "IMAGE_TYPE_NOT_ALLOWED",
+  // A vehicle already has the most images it can have.
+  "IMAGE_LIMIT_REACHED",
 ] as const;
 
 export type ErrorCode = (typeof errorCodes)[number];

@@ -1,0 +1,95 @@
+import {
+  auditActions,
+  type DriverTransaction,
+  type ListDriverTransactions,
+  type RecordDriverTransaction,
+} from "@terhal/contracts";
+import type { Prisma } from "../../../../generated/prisma/client";
+import { prisma } from "../../../platform/db/prisma";
+import { recordAudit } from "../../audit/index";
+import { lockRow, notFound, pageArgs, toPage, type StaffActor } from "./shared";
+
+// The driver's ledger (docs/decisions.md, "The driver ledger"). Rows are append-only and Driver.amountOwed is their
+// running total, both kept by the database (the fleet migration's triggers): the app only ever inserts.
+
+const transactionSelect = {
+  id: true,
+  type: true,
+  amount: true,
+  trip: { select: { id: true, code: true } },
+  staff: { select: { id: true, firstName: true, lastName: true } },
+  note: true,
+  createdAt: true,
+} as const satisfies Prisma.DriverTransactionSelect;
+
+type TransactionRow = Prisma.DriverTransactionGetPayload<{ select: typeof transactionSelect }>;
+
+const toTransaction = (row: TransactionRow): DriverTransaction => ({
+  ...row,
+  amount: row.amount.toFixed(2),
+  createdAt: row.createdAt.toISOString(),
+});
+
+// Newest first.
+export const listDriverTransactions = async (
+  driverId: string,
+  { limit, cursor }: ListDriverTransactions,
+) => {
+  const driver = await prisma.driver.findUnique({ where: { id: driverId }, select: { id: true } });
+  if (!driver) throw notFound("driver");
+
+  const rows = await prisma.driverTransaction.findMany({
+    where: { driverId },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    ...pageArgs(limit, cursor),
+    select: transactionSelect,
+  });
+  return toPage(rows, limit, toTransaction);
+};
+
+// A payout lowers what the company owes the driver by what was paid; an adjustment moves it by its signed amount.
+// Archived drivers can still be paid what they're owed.
+export const recordDriverTransaction = async (
+  driverId: string,
+  input: RecordDriverTransaction,
+  actor: StaffActor,
+) =>
+  prisma.$transaction(async (tx) => {
+    if (!(await lockRow(tx, "Driver", driverId))) throw notFound("driver");
+
+    const amount = input.type === "PAYOUT" ? `-${input.amount}` : input.amount;
+    const transaction = await tx.driverTransaction.create({
+      data: {
+        driverId,
+        type: input.type,
+        amount,
+        staffId: actor.staffId,
+        note: input.note ?? null,
+      },
+      select: transactionSelect,
+    });
+    const { amountOwed } = await tx.driver.findUniqueOrThrow({
+      where: { id: driverId },
+      select: { amountOwed: true },
+    });
+
+    await recordAudit(
+      {
+        staffId: actor.staffId,
+        ipAddress: actor.ipAddress,
+        action: auditActions.DRIVER_TRANSACTION_RECORDED,
+        entityType: "Driver",
+        entityId: driverId,
+        after: {
+          transactionId: transaction.id,
+          type: input.type,
+          amount: transaction.amount.toFixed(2),
+          note: transaction.note,
+          amountOwed: amountOwed.toFixed(2),
+        },
+      },
+      tx,
+    );
+
+    return { transaction: toTransaction(transaction), amountOwed: amountOwed.toFixed(2) };
+  });

@@ -147,6 +147,8 @@ next-env.d.ts
 
 # Backend
 generated/
+# The local storage driver's files (STORAGE_LOCAL_DIR)
+apps/server/.storage/
 
 # Turbo
 .turbo

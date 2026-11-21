@@ -93,7 +93,16 @@
               "TWO_FACTOR_RESET_EXPIRED",
               "CANNOT_TARGET_SELF",
               "LAST_ACTIVE_ADMIN",
-              "ADMIN_NOT_ACTIVE"
+              "ADMIN_NOT_ACTIVE",
+              "HAS_UPCOMING_TRIPS",
+              "DRIVER_PHONE_TAKEN",
+              "PLATE_NUMBER_TAKEN",
+              "OFFICE_NAME_TAKEN",
+              "OFFICE_REQUIRES_EXTERNAL",
+              "OFFICE_NOT_AVAILABLE",
+              "LOCATION_NOT_AVAILABLE",
+              "IMAGE_TYPE_NOT_ALLOWED",
+              "IMAGE_LIMIT_REACHED"
             ],
             "example": "VALIDATION_FAILED"
           },
@@ -635,7 +644,23 @@
               "admin.account.reactivated",
               "admin.totp.reset",
               "admin.totp.reset_issued",
-              "admin.totp.reset_confirm_failed"
+              "admin.totp.reset_confirm_failed",
+              "fleet.driver.created",
+              "fleet.driver.updated",
+              "fleet.driver.archived",
+              "fleet.driver.restored",
+              "fleet.driver.transaction_recorded",
+              "fleet.vehicle.created",
+              "fleet.vehicle.updated",
+              "fleet.vehicle.archived",
+              "fleet.vehicle.restored",
+              "fleet.vehicle.image_added",
+              "fleet.vehicle.image_deleted",
+              "fleet.vehicle.images_reordered",
+              "fleet.office.created",
+              "fleet.office.updated",
+              "fleet.office.archived",
+              "fleet.office.restored"
             ]
           },
           "entityType": {
@@ -1088,6 +1113,1110 @@
         "required": [
           "code"
         ]
+      },
+      "Driver": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "licenseNumber": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "licenseExpiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "licenseExpiresSoon": {
+            "type": "boolean",
+            "description": "The licence has expired or expires within 30 days (Cairo time)."
+          },
+          "nationalId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isExternal": {
+            "type": "boolean"
+          },
+          "office": {
+            "$ref": "#/components/schemas/OfficeSummary"
+          },
+          "amountOwed": {
+            "type": "string",
+            "description": "What the company owes the driver in EGP; negative when the driver holds company cash. Kept by the ledger.",
+            "example": "250.00"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "archivedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Set while archived."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "phone",
+          "licenseNumber",
+          "licenseExpiresAt",
+          "licenseExpiresSoon",
+          "nationalId",
+          "isExternal",
+          "office",
+          "amountOwed",
+          "notes",
+          "archivedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "OfficeSummary": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "archived": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "archived"
+        ]
+      },
+      "CreateDriver": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "phone": {
+            "type": "string",
+            "example": "+201001234567"
+          },
+          "licenseNumber": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "licenseExpiresAt": {
+            "type": "string",
+            "format": "date"
+          },
+          "nationalId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 30
+          },
+          "isExternal": {
+            "type": "boolean",
+            "default": false
+          },
+          "officeId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone",
+          "licenseNumber",
+          "licenseExpiresAt"
+        ]
+      },
+      "UpdateDriver": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "phone": {
+            "type": "string",
+            "example": "+201001234567"
+          },
+          "licenseNumber": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "licenseExpiresAt": {
+            "type": "string",
+            "format": "date"
+          },
+          "nationalId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 30
+          },
+          "isExternal": {
+            "type": "boolean"
+          },
+          "officeId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          }
+        }
+      },
+      "FleetTrip": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "CANCELLED",
+              "CONFIRMED",
+              "IN_PROGRESS",
+              "AWAITING_REPORT",
+              "COMPLETED"
+            ]
+          },
+          "pickupDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pickup": {
+            "type": "string",
+            "description": "The pickup's name at booking."
+          },
+          "dropoff": {
+            "type": "string",
+            "description": "The drop-off's name at booking."
+          },
+          "car": {
+            "$ref": "#/components/schemas/CarBody"
+          },
+          "driver": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "firstName",
+              "lastName"
+            ]
+          },
+          "vehicle": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "plateNumber": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "plateNumber"
+            ]
+          },
+          "office": {
+            "$ref": "#/components/schemas/OfficeSummary"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "status",
+          "pickupDate",
+          "pickup",
+          "dropoff",
+          "car",
+          "driver",
+          "vehicle",
+          "office"
+        ]
+      },
+      "CarBody": {
+        "type": "string",
+        "enum": [
+          "SEDAN",
+          "SUV",
+          "MINIVAN",
+          "VAN"
+        ]
+      },
+      "DriverTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TRIP_FEE",
+              "EXPENSE_REIMBURSEMENT",
+              "CASH_COLLECTED",
+              "PAYOUT",
+              "ADJUSTMENT"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "description": "Positive when the company owes the driver more, negative when less.",
+            "example": "-500.00"
+          },
+          "trip": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "code"
+            ]
+          },
+          "staff": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "firstName",
+              "lastName"
+            ],
+            "description": "Who recorded it; null for the system."
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "amount",
+          "trip",
+          "staff",
+          "note",
+          "createdAt"
+        ]
+      },
+      "DriverTransactionRecorded": {
+        "type": "object",
+        "properties": {
+          "transaction": {
+            "$ref": "#/components/schemas/DriverTransaction"
+          },
+          "amountOwed": {
+            "type": "string",
+            "description": "The driver's balance after it."
+          }
+        },
+        "required": [
+          "transaction",
+          "amountOwed"
+        ]
+      },
+      "RecordDriverTransaction": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "PAYOUT"
+                ]
+              },
+              "amount": {
+                "type": "string",
+                "pattern": "^-?\\d{1,9}(\\.\\d{1,2})?$",
+                "example": "500.00"
+              },
+              "note": {
+                "type": "string",
+                "maxLength": 500
+              }
+            },
+            "required": [
+              "type",
+              "amount"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "ADJUSTMENT"
+                ]
+              },
+              "amount": {
+                "type": "string",
+                "pattern": "^-?\\d{1,9}(\\.\\d{1,2})?$",
+                "example": "500.00"
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "description": "Why the balance is being corrected."
+              }
+            },
+            "required": [
+              "type",
+              "amount",
+              "note"
+            ]
+          }
+        ]
+      },
+      "Vehicle": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "make": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "year": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "plateNumber": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "body": {
+            "$ref": "#/components/schemas/CarBody"
+          },
+          "isExternal": {
+            "type": "boolean"
+          },
+          "office": {
+            "$ref": "#/components/schemas/OfficeSummary"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VehicleImage"
+            },
+            "description": "In order; the first is the cover."
+          },
+          "archivedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Set while archived."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "make",
+          "model",
+          "year",
+          "plateNumber",
+          "color",
+          "body",
+          "isExternal",
+          "office",
+          "images",
+          "archivedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "VehicleImage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer",
+            "description": "0 is the cover."
+          },
+          "url": {
+            "type": "string",
+            "description": "A signed link to the image, valid for 15 minutes."
+          }
+        },
+        "required": [
+          "id",
+          "position",
+          "url"
+        ]
+      },
+      "CreateVehicle": {
+        "type": "object",
+        "properties": {
+          "make": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "year": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1980,
+            "maximum": 2100
+          },
+          "plateNumber": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "example": "ABC 1234"
+          },
+          "color": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 30
+          },
+          "body": {
+            "$ref": "#/components/schemas/CarBody"
+          },
+          "isExternal": {
+            "type": "boolean",
+            "default": false
+          },
+          "officeId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "make",
+          "model",
+          "plateNumber",
+          "color",
+          "body"
+        ]
+      },
+      "UpdateVehicle": {
+        "type": "object",
+        "properties": {
+          "make": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "year": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1980,
+            "maximum": 2100
+          },
+          "plateNumber": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "example": "ABC 1234"
+          },
+          "color": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 30
+          },
+          "body": {
+            "$ref": "#/components/schemas/CarBody"
+          },
+          "isExternal": {
+            "type": "boolean"
+          },
+          "officeId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      },
+      "ReorderVehicleImages": {
+        "type": "object",
+        "properties": {
+          "imageIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "minItems": 1,
+            "maxItems": 5
+          }
+        },
+        "required": [
+          "imageIds"
+        ]
+      },
+      "Office": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "contact": {
+            "type": "string",
+            "description": "The person to talk to."
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "address": {
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/OfficeLocation"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "archivedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Set while archived."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "contact",
+          "phone",
+          "email",
+          "address",
+          "location",
+          "notes",
+          "archivedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "OfficeLocation": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "locality": {
+            "type": "string",
+            "enum": [
+              "GOVERNORATE",
+              "DISTRICT",
+              "AREA"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "nameEn",
+          "nameAr",
+          "locality"
+        ]
+      },
+      "NearbyOffices": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "nameEn": {
+                "type": "string"
+              },
+              "nameAr": {
+                "type": "string"
+              },
+              "locality": {
+                "type": "string",
+                "enum": [
+                  "GOVERNORATE",
+                  "DISTRICT",
+                  "AREA"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "nameEn",
+              "nameAr",
+              "locality"
+            ],
+            "description": "The most specific covered location the pin falls in; null when it's outside coverage."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NearbyOffice"
+            }
+          }
+        },
+        "required": [
+          "location",
+          "data"
+        ]
+      },
+      "NearbyOffice": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "contact": {
+            "type": "string",
+            "description": "The person to talk to."
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "address": {
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/OfficeLocation"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "archivedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Set while archived."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "distanceMeters": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "From the pin to the office location's center; null for a governorate."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "contact",
+          "phone",
+          "email",
+          "address",
+          "location",
+          "notes",
+          "archivedAt",
+          "createdAt",
+          "updatedAt",
+          "distanceMeters"
+        ]
+      },
+      "CreateOffice": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "contact": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "phone": {
+            "type": "string",
+            "example": "+201001234567"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "locationId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "name",
+          "contact",
+          "phone",
+          "address"
+        ]
+      },
+      "OfficeDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "contact": {
+            "type": "string",
+            "description": "The person to talk to."
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "address": {
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/OfficeLocation"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "archivedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Set while archived."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "drivers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Driver"
+            },
+            "description": "Its live drivers."
+          },
+          "vehicles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Vehicle"
+            },
+            "description": "Its live vehicles."
+          },
+          "trips": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FleetTrip"
+            },
+            "description": "Trips handed to it that are still live, soonest first (at most 100)."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "contact",
+          "phone",
+          "email",
+          "address",
+          "location",
+          "notes",
+          "archivedAt",
+          "createdAt",
+          "updatedAt",
+          "drivers",
+          "vehicles",
+          "trips"
+        ]
+      },
+      "UpdateOffice": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "contact": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "phone": {
+            "type": "string",
+            "example": "+201001234567"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "locationId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          }
+        }
       }
     },
     "parameters": {}
@@ -2815,7 +3944,23 @@
                     "admin.account.reactivated",
                     "admin.totp.reset",
                     "admin.totp.reset_issued",
-                    "admin.totp.reset_confirm_failed"
+                    "admin.totp.reset_confirm_failed",
+                    "fleet.driver.created",
+                    "fleet.driver.updated",
+                    "fleet.driver.archived",
+                    "fleet.driver.restored",
+                    "fleet.driver.transaction_recorded",
+                    "fleet.vehicle.created",
+                    "fleet.vehicle.updated",
+                    "fleet.vehicle.archived",
+                    "fleet.vehicle.restored",
+                    "fleet.vehicle.image_added",
+                    "fleet.vehicle.image_deleted",
+                    "fleet.vehicle.images_reordered",
+                    "fleet.office.created",
+                    "fleet.office.updated",
+                    "fleet.office.archived",
+                    "fleet.office.restored"
                   ]
                 },
                 {
@@ -2845,7 +3990,23 @@
                       "admin.account.reactivated",
                       "admin.totp.reset",
                       "admin.totp.reset_issued",
-                      "admin.totp.reset_confirm_failed"
+                      "admin.totp.reset_confirm_failed",
+                      "fleet.driver.created",
+                      "fleet.driver.updated",
+                      "fleet.driver.archived",
+                      "fleet.driver.restored",
+                      "fleet.driver.transaction_recorded",
+                      "fleet.vehicle.created",
+                      "fleet.vehicle.updated",
+                      "fleet.vehicle.archived",
+                      "fleet.vehicle.restored",
+                      "fleet.vehicle.image_added",
+                      "fleet.vehicle.image_deleted",
+                      "fleet.vehicle.images_reordered",
+                      "fleet.office.created",
+                      "fleet.office.updated",
+                      "fleet.office.archived",
+                      "fleet.office.restored"
                     ]
                   }
                 }
@@ -4189,6 +5350,2336 @@
         "responses": {
           "204": {
             "description": "Signed out"
+          }
+        }
+      }
+    },
+    "/v1/staff/drivers": {
+      "get": {
+        "tags": [
+          "Drivers"
+        ],
+        "summary": "List drivers",
+        "description": "Live drivers by default, by name. `q` matches every word against the name, phone, licence number and national ID. Pass `nextCursor` back as `cursor` for the next page.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "external",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "officeId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": false
+            },
+            "required": false,
+            "name": "archived",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "licenseExpiring",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of drivers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Driver"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Drivers"
+        ],
+        "summary": "Add a driver",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDriver"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Driver"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "DRIVER_PHONE_TAKEN",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "OFFICE_NOT_AVAILABLE: the office doesn't exist or is archived. OFFICE_REQUIRES_EXTERNAL: only an external driver can come through an office.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/drivers/{id}": {
+      "get": {
+        "tags": [
+          "Drivers"
+        ],
+        "summary": "Get a driver",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The driver",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Driver"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such driver.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Drivers"
+        ],
+        "summary": "Change a driver",
+        "description": "Only the fields sent change; null clears an optional one.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDriver"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Changed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Driver"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such driver.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "DRIVER_PHONE_TAKEN",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "OFFICE_NOT_AVAILABLE: the office doesn't exist or is archived. OFFICE_REQUIRES_EXTERNAL: only an external driver can come through an office.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/drivers/{id}/archive": {
+      "post": {
+        "tags": [
+          "Drivers"
+        ],
+        "summary": "Archive a driver",
+        "description": "Archived drivers can't be assigned. Refused while the driver is on a pending, confirmed or in-progress trip.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Archived",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Driver"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such driver.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HAS_UPCOMING_TRIPS: `trips` lists them.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/drivers/{id}/restore": {
+      "post": {
+        "tags": [
+          "Drivers"
+        ],
+        "summary": "Restore an archived driver",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Driver"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such driver.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/drivers/{id}/trips": {
+      "get": {
+        "tags": [
+          "Drivers"
+        ],
+        "summary": "List a driver's trips",
+        "description": "Newest pickup first.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "CANCELLED",
+                "CONFIRMED",
+                "IN_PROGRESS",
+                "AWAITING_REPORT",
+                "COMPLETED"
+              ]
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of trips",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FleetTrip"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such driver.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/drivers/{id}/transactions": {
+      "get": {
+        "tags": [
+          "Drivers"
+        ],
+        "summary": "List a driver's ledger",
+        "description": "Every change to what the company owes the driver, newest first. The driver's `amountOwed` is their total.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DriverTransaction"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such driver.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Drivers"
+        ],
+        "summary": "Record a payout or an adjustment",
+        "description": "A payout's `amount` is what was paid to the driver and lowers the balance by that much. An adjustment's is signed (positive when the company owes the driver more) and needs a note. Entries can't be changed or deleted: correct a mistake with another adjustment.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordDriverTransaction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverTransactionRecorded"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such driver.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/vehicles": {
+      "get": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "List vehicles",
+        "description": "Live vehicles by default, by make, model and plate. `q` matches every word against the make, model, plate number and color. Pass `nextCursor` back as `cursor` for the next page.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "$ref": "#/components/schemas/CarBody"
+            },
+            "required": false,
+            "name": "body",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "external",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "officeId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": false
+            },
+            "required": false,
+            "name": "archived",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of vehicles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Vehicle"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Add a vehicle",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVehicle"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PLATE_NUMBER_TAKEN",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "OFFICE_NOT_AVAILABLE: the office doesn't exist or is archived. OFFICE_REQUIRES_EXTERNAL: only an external vehicle can come from an office.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/vehicles/{id}": {
+      "get": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Get a vehicle",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The vehicle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such vehicle.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Change a vehicle",
+        "description": "Only the fields sent change; null clears an optional one.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVehicle"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Changed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such vehicle.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PLATE_NUMBER_TAKEN",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "OFFICE_NOT_AVAILABLE: the office doesn't exist or is archived. OFFICE_REQUIRES_EXTERNAL: only an external vehicle can come from an office.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/vehicles/{id}/archive": {
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Archive a vehicle",
+        "description": "Archived vehicles can't be assigned. Refused while the vehicle is on a pending, confirmed or in-progress trip.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Archived",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such vehicle.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HAS_UPCOMING_TRIPS: `trips` lists them.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/vehicles/{id}/restore": {
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Restore an archived vehicle",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such vehicle.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/vehicles/{id}/images": {
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Add an image",
+        "description": "A multipart upload with the image as `file`: JPEG, PNG or WebP (judged from the bytes), 5 MB at most, 5 images per vehicle. It goes after the others; the first image is the cover.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG, PNG or WebP, 5 MB at most."
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Added; the vehicle with its images",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such vehicle.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IMAGE_LIMIT_REACHED: delete an image first.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "PAYLOAD_TOO_LARGE: 5 MB at most.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "IMAGE_TYPE_NOT_ALLOWED: only JPEG, PNG or WebP.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/vehicles/{id}/images/{imageId}": {
+      "delete": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Delete an image",
+        "description": "The images after it move up; if it was the cover, the next one becomes the cover.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "imageId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted; the vehicle with its images",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such vehicle or image.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/vehicles/{id}/images/order": {
+      "put": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Reorder the images",
+        "description": "List every image of the vehicle once, in the new order; the first is the cover.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderVehicleImages"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reordered; the vehicle with its images",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED: not every image of the vehicle, once each.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such vehicle.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/offices": {
+      "get": {
+        "tags": [
+          "Offices"
+        ],
+        "summary": "List offices",
+        "description": "Live offices by default, by name. `q` matches every word against the name, contact, phone and email. Pass `nextCursor` back as `cursor` for the next page.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": false
+            },
+            "required": false,
+            "name": "archived",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of offices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Office"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Offices"
+        ],
+        "summary": "Add an office",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOffice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Office"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "OFFICE_NAME_TAKEN",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "LOCATION_NOT_AVAILABLE: the location doesn't exist or is deleted.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/offices/nearby": {
+      "get": {
+        "tags": [
+          "Offices"
+        ],
+        "summary": "Find offices near a pickup",
+        "description": "Resolves the pin to the most specific covered location, then lists the live offices placed in it, in one of the places it's part of, or in one of the places inside it, nearest first. Not paged.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": -90,
+              "maximum": 90
+            },
+            "required": false,
+            "name": "latitude",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": -180,
+              "maximum": 180
+            },
+            "required": false,
+            "name": "longitude",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The pin's location and the offices near it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NearbyOffices"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/offices/{id}": {
+      "get": {
+        "tags": [
+          "Offices"
+        ],
+        "summary": "Get an office",
+        "description": "With its live drivers and vehicles, and the trips handed to it that are still live.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The office",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfficeDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such office.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Offices"
+        ],
+        "summary": "Change an office",
+        "description": "Only the fields sent change; null clears an optional one.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOffice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Changed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Office"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such office.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "OFFICE_NAME_TAKEN",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "LOCATION_NOT_AVAILABLE: the location doesn't exist or is deleted.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/offices/{id}/archive": {
+      "post": {
+        "tags": [
+          "Offices"
+        ],
+        "summary": "Archive an office",
+        "description": "Trips can't be handed to an archived office, and its drivers and vehicles stay linked to it. Refused while trips handed to it are pending, confirmed or in progress.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Archived",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Office"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such office.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HAS_UPCOMING_TRIPS: `trips` lists them.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/offices/{id}/restore": {
+      "post": {
+        "tags": [
+          "Offices"
+        ],
+        "summary": "Restore an archived office",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Office"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such office.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         }
       }
