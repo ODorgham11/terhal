@@ -25,6 +25,14 @@ export const errorCodes = [
   "INVITATION_INVALID",
   "INVITATION_EXPIRED",
 
+  // Password resets
+  "PASSWORD_RESET_INVALID",
+  "PASSWORD_RESET_EXPIRED",
+
+  // Verification codes sent to customers and guests
+  "VERIFICATION_CODE_INVALID",
+  "VERIFICATION_CODE_EXPIRED",
+
   // Two-factor
   "TOTP_SETUP_REQUIRED",
   "TOTP_CODE_INVALID",
