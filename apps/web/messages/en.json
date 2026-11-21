@@ -17,6 +17,18 @@
       "codeDigit": "Digit {position} of {length}",
       "showPassword": "Show password",
       "hidePassword": "Hide password"
+    },
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone number",
+      "identifier": "Email or phone number",
+      "password": "Password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "code": "Code",
+      "permissions": "Permissions"
     }
   },
   "errors": {
@@ -53,6 +65,25 @@
       "ADMIN_NOT_ACTIVE": "This admin isn't active.",
       "NETWORK_ERROR": "We couldn't reach the server. Check your connection and try again.",
       "UNEXPECTED_RESPONSE": "Something went wrong. Please try again."
+    },
+    "validation": {
+      "required": "This field is required.",
+      "requiredField": "{field} is required.",
+      "tooShort": "Must contain at least {min, plural, one {# character} other {# characters}}.",
+      "tooShortField": "{field} must contain at least {min, plural, one {# character} other {# characters}}.",
+      "tooLong": "Must contain {max, plural, one {# character} other {# characters}} at most.",
+      "tooLongField": "{field} must contain {max, plural, one {# character} other {# characters}} at most.",
+      "tooFew": "Choose at least {min}.",
+      "tooMany": "Choose {max} at most.",
+      "email": "Please enter a valid email address.",
+      "phone": "Please enter a valid phone number.",
+      "code": "Please enter the 6-digit code.",
+      "passwordLowercase": "Password must contain at least one lowercase letter.",
+      "passwordUppercase": "Password must contain at least one uppercase letter.",
+      "passwordNumber": "Password must contain at least one number.",
+      "option": "Please choose one of the options.",
+      "invalid": "This value isn't valid.",
+      "invalidField": "{field} isn't valid."
     }
   },
   "site": {
