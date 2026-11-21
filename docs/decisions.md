@@ -455,6 +455,64 @@ Choices made building booking, the lifecycle, price on request, assignment and l
 - **Rate limits** (X7): booking on the site 10 an hour per IP; site trip reads 120 and changes 30 a minute per booker;
   dashboard trip reads 240 and changes 120 a minute per staff member.
 
+### Analytics reads across modules (2026-11-21)
+
+The analytics module is a read-only view of the whole business, so it queries the trip, fleet, customer and location
+tables directly (raw SQL for the figures, Prisma for the exports and the workbook) instead of asking each module for
+its rows. Going through every module's `index.ts` would mean one bespoke query per figure in five modules, or loading
+rows into memory to join them in code. It never writes another module's tables; its only table is
+`AnalyticsDocument`. The price list CSV is the exception: the pricing module already exports it, so analytics serves
+that file through pricing's `index.ts`.
+
+What we gave up: a column renamed in another module can break an analytics query without that module's code changing.
+The analytics tests cover every query, so `pnpm test` catches it.
+
+### Analytics: the details the spec left open (2026-11-21)
+
+How the analytics figures, the exports and the monthly report ([domains.md](domains.md), Y) settle what the answers
+didn't:
+
+- **The range is Cairo calendar days.** `GET /v1/staff/analytics` takes `from` and `to` as dates (`YYYY-MM-DD`, both
+  included), not instants: a trip belongs to the range when its pickup falls between Cairo midnight on `from` and Cairo
+  midnight after `to`. At most 1,100 days. The bounds are computed by Postgres (`AT TIME ZONE 'Africa/Cairo'`), so the
+  summer clock is handled by its time zone database. The trips CSV keeps the trip list's filters (instants), so the
+  list can export what it shows.
+- **Which trips each figure counts.** `totals.trips` and the trend count every trip, cancelled ones too, which is what
+  the cancellation rate divides by. Breakdowns (class, body, source, routes, fleet) count trips not cancelled, with
+  how many completed and what those earned. Revenue is completed trips' `totalPrice` (Y2); booked value is every trip
+  not cancelled that has a price. Expenses are those on completed trips' reports, office fees included (O1 b), so the
+  margin (revenue − expenses) compares like with like; an unfinished trip's costs show once it's completed.
+  `unpaid` is completed trips without `paidAt` (B8). Driver balances are the ledger's totals now, whatever the range.
+- **Buckets.** The trend lists every bucket in the range, empty ones too. Weeks start on Saturday, as Egyptian
+  calendars do; a bucket at either end holds only the range's days. Top routes are the 10 busiest governorate pairs
+  (each end's root in the location tree); the busiest drivers and vehicles are capped at 50.
+- **Money stays exact.** Postgres sums the decimals and returns text; the margin and the average are computed in
+  piastres with `bigint`, never floats.
+- **The trips CSV** counts the matching trips first and refuses more than 50,000 with `422 EXPORT_TOO_LARGE`
+  (`count`, `limit`) before sending anything; the stream also stops at 50,000. Rows are read 1,000 at a time and
+  written as they're read. Its columns are the trip's details, the Cairo pickup time, who booked it, the assignment and
+  the report's expense total. Drivers, vehicles and customers (deleted accounts left out) stream the same way, without
+  a cap. Every CSV is UTF-8 with a byte order mark, and text starting with `= + - @`, a tab or a carriage return gets a
+  leading apostrophe; a negative amount is left as a number.
+- **Permissions.** Everything needs `analytics`, except the trips CSV, which also takes `trips`. Pricing's own export
+  still needs `pricing`; `/v1/staff/exports/pricing.csv` serves the same file to `analytics`. Reads are limited to 60 a
+  minute per staff member, exports and regeneration to 10.
+- **The monthly report** is an XLSX workbook written by exceljs's streaming writer: a summary sheet (the month's
+  figures), then the month's trips (the CSV's columns, amounts as numbers), expenses, driver ledger entries made in the
+  month, and office fees. Cells hold values, never formulas. It's stored at `analytics/reports/<yyyy-mm>.xlsx` through
+  `platform/storage`, so the local folder and R2 are the same code; switching is `STORAGE_DRIVER`.
+- **Regenerating is idempotent.** A month has one key and one `AnalyticsDocument` row (now with `size` and
+  `updatedAt`), so regenerating replaces both; the file is written before the row. Only a month that's over in Cairo
+  can have a report (`422 REPORT_MONTH_NOT_OVER`): a report for a running month would stop its trips being reopened
+  (T8 a) while they can still change. It's generated in the request (a month is a few thousand rows), and returns the
+  report.
+- **The job.** BullMQ job scheduler `monthly-report` on its own `analytics` queue, cron `0 2 1 * *` in `Africa/Cairo`:
+  02:00 on the 1st, for the month before. It skips a month that already has a report, so retries (5, backing off from
+  a minute) and reruns change nothing. Each worker start also adds a one-off `monthly-report-<yyyy-mm>` job for the
+  previous month, so a 1st missed while the worker was down is caught up; its id makes adding it again a no-op.
+- **Download links** last 15 minutes (`SIGNED_URL_LIFETIME`). The link is made from the row's key with the storage in
+  use; `bucket` on the row is informational.
+
 ---
 
 ## Process
