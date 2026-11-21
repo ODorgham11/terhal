@@ -129,8 +129,23 @@ What we gave up:
 | Redis down | Rate limits on sign in fail closed: an unreachable Redis must not mean unlimited password guesses. |
 | Client IPs | Rate limits trust only the header named by `CLIENT_IP_HEADER`, which the edge Caddy overwrites. Never publish the server's port. |
 | Neon     | `DATABASE_URL` is the pooled URL (PgBouncer, transaction mode), so no session state: no session advisory locks. Migrations use the direct URL. The API and the database must be in the same region. |
-| Migrations | Expand and contract: a deploy never breaks the code that's still running. They run in their own container before the new version starts (`deploy/deploy.sh`), never at boot. |
+| Migrations | Expand and contract once the client's data is in production (see [Migrations](#migrations)): a deploy never breaks the code that's still running. They run in their own container before the new version starts (`deploy/deploy.sh`), never at boot. |
 | Rollback | Because migrations stay backward compatible, a rollback is a redeploy of the previous images (README, "Deploys"). |
+
+## Migrations
+
+- **One migration per domain**, named after it and applied in dependency order: `20261022010000_admin`,
+  `…030000_locations`, `…040000_staff`, `…050000_customers`, `…060000_fleet`, `…070000_trips`, `…080000_pricing`,
+  `…090000_notifications`, `…100000_analytics`. Models live in the matching file under `prisma/schema/`.
+- **Everything a domain's tables need lives in its migration:** tables, indexes and foreign keys as Prisma generates them,
+  then the rules Prisma can't express (CHECK constraints, triggers) at the end, each with a comment saying why. They're
+  named `<Table>_<rule>`, e.g. `Trip_one_booker` or `Location_shape`. No add-on migrations that only add a constraint.
+- **Until the client's data is in production, a schema change is folded into its domain's migration**, not added as a new
+  one. `prisma migrate deploy` never re-runs a migration it has already applied, so after editing one, staging and
+  production have to be wiped before the next deploy (track it under Open items in [infrastructure.md](infrastructure.md)).
+  Once the client's data is live this stops: every change is a new migration, expand and contract.
+- **Check for drift** after every schema change: apply the migrations to an empty database, then
+  `prisma migrate diff --from-config-datasource --to-schema prisma/schema --script` must print an empty migration.
 
 ## Tests
 
