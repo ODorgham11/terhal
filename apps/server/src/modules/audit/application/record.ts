@@ -16,6 +16,11 @@ export interface AuditEntry {
   ipAddress?: string | null;
 }
 
+// Who a change made in the admin panel or the dashboard is recorded against, with where the request came from.
+export type AuditActor = ({ adminId: string; staffId?: never } | { staffId: string; adminId?: never }) & {
+  ipAddress: string | null;
+};
+
 type Client = typeof prisma | Prisma.TransactionClient;
 
 // The log is append-only: a database trigger rejects any update or delete, so nothing here can rewrite history. Pass the
