@@ -76,6 +76,18 @@ The server follows the team's reference codebase: modules with `domain`/`applica
 
 See [architecture.md](architecture.md#why-rpc-and-not-a-generated-client-decided-2026-11-02).
 
+### Access tokens are checked against their session (2026-11-21)
+
+Each access token carries its session's id, and every signed in request loads that session with its account. This
+replaced loading the account alone, so it costs no extra query, and it means ending a session cuts its access token off
+at once instead of up to 15 minutes later. It gives up the usual point of a JWT (checking it without the database); the
+token is kept for its signature (forged cookies are rejected before any query), its expiry (the client's signal to
+refresh) and its per-audience secret.
+
+A refresh token used a second time after rotation is rejected but doesn't end the session (no reuse detection). The
+cookies can't be read by page scripts and only reach `/…/auth`, so theft needs the device itself, and detection would
+sign people out when a refresh response is lost on a bad connection. Revisit for customers' long sessions after launch.
+
 ---
 
 ## Infrastructure

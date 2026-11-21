@@ -114,13 +114,21 @@ What we gave up:
   JWT secret, so a token from one can never be used as another. The API accepts each audience's routes only from its
   own origin (CORS plus an Origin check on unsafe methods), so a bug on the customer site can't act through an admin's
   session.
-- Admin cookies are httpOnly, Secure, SameSite=Lax and host-only on the API, with paths scoped so the refresh token and
-  the sign in challenge only reach `/v1/admin/auth`.
+- Auth cookies are httpOnly, Secure, SameSite=Lax and host-only on the API. Each audience's cookies are scoped to its
+  prefix (`/v1/admin`, `/v1/staff`, `/v1/site`), and the refresh token (and the admin's sign in challenge) only reach
+  `<prefix>/auth`.
+- An access token names its session (`sid`), and every signed in request loads that session and its account in one
+  query. Signing out, revoking a session, resetting a password, a deactivation or a permission change take effect on the
+  next request, not when the token expires.
 - Admins sign in with a password and then a TOTP code; the access token lives 15 minutes, a session at most 12 hours,
   and every request re-checks the admin is still active.
 - Staff sign in with a password only. A session lasts 7 days from its last refresh and 30 days at most, on up to 5
   devices; every request re-checks the staff member is active and reloads their permissions. Resetting a password ends
   every session.
+- Customers sign up with a password and confirm their email with a 6-digit code before their first session. A session
+  lasts 30 days from its last refresh and 180 days at most, on up to 10 devices. They sign in with their email or phone.
+- Guests book without an account: a session cookie (30 days, never extended) that's only usable once they confirm the
+  code emailed to them.
 - Everything security relevant is written to the audit log, in the same transaction as the change it records.
 
 ## Failure handling
