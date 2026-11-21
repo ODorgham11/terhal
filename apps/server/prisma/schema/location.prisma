@@ -18,15 +18,33 @@ model Location {
   nameEn   String
   nameAr   String
 
+  // Coverage: the area the platform serves around this place. Exactly one shape per locality (the Location_shape check):
+  // a governorate has an outline (optional, (longitude, latitude) points), a district or an area has a center and a
+  // radius, in meters. The application defaults the radius to 10 km.
+  boundary  Unsupported("polygon")?
+  latitude  Decimal?                @db.Decimal(9, 6)
+  longitude Decimal?                @db.Decimal(9, 6)
+  radius    Int?
+
   departures Pricing[] @relation("PricingFrom")
   arrivals   Pricing[] @relation("PricingTo")
   pickups    Trip[]    @relation("TripPickup")
   dropoffs   Trip[]    @relation("TripDropoff")
+  offices    Office[]
 
-  deletedAt DateTime?
+  deletedAt     DateTime?
+  // The location whose delete removed this one (itself, for the location that was deleted), so restoring it brings back
+  // exactly that subtree. Set exactly when deletedAt is (the Location_deleted_with check).
+  deletedWith   Location?  @relation("LocationDeletion", fields: [deletedWithId], references: [id], onDelete: Restrict)
+  deletedWithId String?
+  deletedRows   Location[] @relation("LocationDeletion")
+
+  // Both names normalized for search (search_normalize), kept up to date by a trigger. Never written by the app.
+  search String @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([parentId])
+  @@index([deletedWithId])
 }

@@ -1,3 +1,9 @@
+// The language emails and notifications are sent in.
+enum Locale {
+  ar
+  en
+}
+
 enum StaffStatus {
   ACTIVE
   SUSPENDED
@@ -23,12 +29,15 @@ model Staff {
   passwordResetExpiresAt DateTime?
 
   lastLoginAt DateTime?
+  locale      Locale    @default(ar)
 
   sessions      StaffSession[]
   invitations   StaffInvitation[]
   trips         Trip[]
   events        TripEvent[]
   notifications Notification[]
+  auditLogs     AuditLog[]
+  transactions  DriverTransaction[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

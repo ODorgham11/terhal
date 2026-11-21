@@ -1,12 +1,19 @@
+// A month's report: an XLSX workbook in storage (platform/storage), written on the 1st of the next month (Cairo time)
+// and replaced in place when staff regenerate it. Once a month has one, its completed trips can't be reopened.
 model AnalyticsDocument {
   id String @id @default(cuid())
 
   bucket String
   key    String @unique
+  // A Cairo calendar month (AnalyticsDocument_month).
   month  Int
   year   Int
+  // The workbook's size in bytes.
+  size   Int
 
   createdAt DateTime @default(now())
+  // When it was last generated.
+  updatedAt DateTime @updatedAt
 
   @@unique([year, month])
 }

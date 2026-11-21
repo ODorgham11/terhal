@@ -12,8 +12,9 @@ const secret = z.string().min(32, "Expected 32+ characters, e.g. openssl rand -b
 const appEnv = z.enum(["development", "staging", "production"]).default("development");
 
 // A blank value (e.g. `RESEND_KEY=` in an env file) means unset.
-const optional = <T extends z.ZodType>(schema: T) =>
-  z.preprocess((value) => (value === "" ? undefined : value), schema.optional());
+const blankIsUnset = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((value) => (value === "" ? undefined : value), schema);
+const optional = <T extends z.ZodType>(schema: T) => blankIsUnset(schema.optional());
 
 // Each audience's frontend in this environment, e.g. https://admin.terhal.co. It is both the only browser origin allowed
 // to call that audience's routes and the base of the links emailed to it. Local development (see the README) has
@@ -60,8 +61,35 @@ const schema = z
     // No defaults for secrets: a missing or short one stops the process instead of running insecurely.
     // Signs admin access tokens. Changing it signs every admin out.
     ADMIN_SECRET: secret,
+    // Signs staff access tokens. Changing it signs every staff member out.
+    STAFF_SECRET: secret,
+    // Signs customer access tokens. Changing it signs every customer out.
+    CUSTOMER_SECRET: secret,
     // Encrypts admins' two-factor secrets. Changing it breaks every admin's authenticator setup.
     TOTP_ENCRYPTION_KEY: secret,
+    // Signs the drivers' report links. Changing it breaks every live link; staff then make new ones.
+    REPORT_LINK_SECRET: secret,
+    // Where uploaded files (vehicle images, monthly reports) are kept. `local` writes them to disk and is only allowed in
+    // local development; everywhere else they go to an S3-compatible bucket (Cloudflare R2).
+    STORAGE_DRIVER: blankIsUnset(z.enum(["local", "s3"]).default("local")),
+    // The local driver's folder, relative to where the server runs (apps/server). Git-ignored.
+    STORAGE_LOCAL_DIR: blankIsUnset(z.string().default(".storage")),
+    // The API's public address, the base of the local driver's signed file links.
+    STORAGE_LOCAL_URL: blankIsUnset(
+      z
+        .url()
+        .default("https://api.local.terhal.co:8080")
+        .transform((url) => url.replace(/\/+$/, "")),
+    ),
+    // Signs the local driver's file links. Required with the local driver.
+    STORAGE_SIGNING_SECRET: optional(secret),
+    // The s3 driver's bucket and keys. For R2 the endpoint is https://<account id>.r2.cloudflarestorage.com and the
+    // region is auto.
+    S3_ENDPOINT: optional(z.url()),
+    S3_REGION: blankIsUnset(z.string().default("auto")),
+    S3_BUCKET: optional(z.string()),
+    S3_ACCESS_KEY_ID: optional(z.string()),
+    S3_SECRET_ACCESS_KEY: optional(z.string()),
   })
   .superRefine((env, ctx) => {
     if (env.RESEND_KEY && !env.RESEND_EMAIL) {
@@ -73,6 +101,37 @@ const schema = z
         path: ["RESEND_KEY"],
         message: "Required outside local development",
       });
+    }
+    // Files on the server's disk would be lost on the next deploy, so only local development may use the local driver.
+    if (env.STORAGE_DRIVER !== "s3" && env.APP_ENV !== "development") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["STORAGE_DRIVER"],
+        message: "Must be s3 outside local development",
+      });
+    }
+    if (env.STORAGE_DRIVER === "local" && !env.STORAGE_SIGNING_SECRET) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["STORAGE_SIGNING_SECRET"],
+        message: "Required with the local storage driver",
+      });
+    }
+    if (env.STORAGE_DRIVER === "s3") {
+      for (const key of [
+        "S3_ENDPOINT",
+        "S3_BUCKET",
+        "S3_ACCESS_KEY_ID",
+        "S3_SECRET_ACCESS_KEY",
+      ] as const) {
+        if (!env[key]) {
+          ctx.addIssue({
+            code: "custom",
+            path: [key],
+            message: "Required with the s3 storage driver",
+          });
+        }
+      }
     }
   });
 

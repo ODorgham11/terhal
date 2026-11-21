@@ -1,0 +1,32 @@
+// Egypt's 27 governorates, by ISO 3166-2 code (geoBoundaries' shapeISO), with the names the seed creates them under.
+export const governorates = [
+  { iso: "EG-ALX", nameEn: "Alexandria", nameAr: "الإسكندرية" },
+  { iso: "EG-ASN", nameEn: "Aswan", nameAr: "أسوان" },
+  { iso: "EG-AST", nameEn: "Asyut", nameAr: "أسيوط" },
+  { iso: "EG-BA", nameEn: "Red Sea", nameAr: "البحر الأحمر" },
+  { iso: "EG-BH", nameEn: "Beheira", nameAr: "البحيرة" },
+  { iso: "EG-BNS", nameEn: "Beni Suef", nameAr: "بني سويف" },
+  { iso: "EG-C", nameEn: "Cairo", nameAr: "القاهرة" },
+  { iso: "EG-DK", nameEn: "Dakahlia", nameAr: "الدقهلية" },
+  { iso: "EG-DT", nameEn: "Damietta", nameAr: "دمياط" },
+  { iso: "EG-FYM", nameEn: "Faiyum", nameAr: "الفيوم" },
+  { iso: "EG-GH", nameEn: "Gharbia", nameAr: "الغربية" },
+  { iso: "EG-GZ", nameEn: "Giza", nameAr: "الجيزة" },
+  { iso: "EG-IS", nameEn: "Ismailia", nameAr: "الإسماعيلية" },
+  { iso: "EG-JS", nameEn: "South Sinai", nameAr: "جنوب سيناء" },
+  { iso: "EG-KB", nameEn: "Qalyubia", nameAr: "القليوبية" },
+  { iso: "EG-KFS", nameEn: "Kafr El Sheikh", nameAr: "كفر الشيخ" },
+  { iso: "EG-KN", nameEn: "Qena", nameAr: "قنا" },
+  { iso: "EG-LX", nameEn: "Luxor", nameAr: "الأقصر" },
+  { iso: "EG-MN", nameEn: "Minya", nameAr: "المنيا" },
+  { iso: "EG-MNF", nameEn: "Monufia", nameAr: "المنوفية" },
+  { iso: "EG-MT", nameEn: "Matrouh", nameAr: "مطروح" },
+  { iso: "EG-PTS", nameEn: "Port Said", nameAr: "بورسعيد" },
+  { iso: "EG-SHG", nameEn: "Sohag", nameAr: "سوهاج" },
+  { iso: "EG-SHR", nameEn: "Sharqia", nameAr: "الشرقية" },
+  { iso: "EG-SIN", nameEn: "North Sinai", nameAr: "شمال سيناء" },
+  { iso: "EG-SUZ", nameEn: "Suez", nameAr: "السويس" },
+  { iso: "EG-WAD", nameEn: "New Valley", nameAr: "الوادي الجديد" },
+] as const;
+
+export type Governorate = (typeof governorates)[number];

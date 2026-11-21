@@ -15,12 +15,6 @@ export function proxy(request: NextRequest) {
   const section = sectionOf(request.headers.get("host") ?? "");
   const url = request.nextUrl.clone();
 
-  // The admin side has no home page of its own, so its root (where the logo and sign in land) opens on staff.
-  if (section === "admin" && url.pathname === "/") {
-    url.pathname = "/staff";
-    return NextResponse.redirect(url);
-  }
-
   url.pathname = `/${section}${url.pathname === "/" ? "" : url.pathname}`;
 
   return NextResponse.rewrite(url);

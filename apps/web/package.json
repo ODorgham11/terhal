@@ -9,22 +9,27 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
-    "@tabler/icons-react": "^3.48.0",
-    "@tanstack/react-query": "^5.104.3",
-    "@tanstack/react-table": "^9.3.1",
+    "@hookform/resolvers": "^7.0.8",
+    "@tabler/icons-react": "^3.52.0",
+    "@tanstack/react-query": "^5.108.2",
     "@terhal/contracts": "workspace:^",
     "@terhal/server": "workspace:*",
     "hono": "catalog:",
-    "motion": "^13.5.0",
     "next": "16.3.5",
-    "qrcode.react": "^4.2.0",
+    "next-intl": "^4.15.3",
+    "qrcode": "^1.5.4",
+    "radix-ui": "^1.8.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "react-hook-form": "^7.92.0",
+    "tailwind-merge": "^3.7.1",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@terhal/tsconfig": "workspace:^",
     "@types/node": "catalog:",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

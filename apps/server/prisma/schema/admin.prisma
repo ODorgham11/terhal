@@ -20,6 +20,17 @@ model Admin {
   totpLastUsedStep Int?
   lastLoginAt      DateTime?
 
+  // A password reset link, hashed. Single use: cleared when it's used or replaced by a newer request.
+  passwordResetHash      String?   @unique
+  passwordResetExpiresAt DateTime?
+
+  // A two-factor reset another admin started: a link to set up a new authenticator, hashed and single use.
+  twoFactorResetHash      String?   @unique
+  twoFactorResetExpiresAt DateTime?
+  // The new authenticator being set up from that link, encrypted. Never accepted at sign in until it's confirmed, when it
+  // moves to totpSecret.
+  pendingTotpSecret       String?
+
   sessions    AdminSession[]
   logs        AuditLog[]
   invitations AdminInvitation[]
@@ -65,10 +76,12 @@ model AdminSession {
 model AuditLog {
   id String @id @default(cuid())
 
-  // Who did it. Empty when no admin is behind the event: the seed sending an invitation, or a failed sign in
-  // for an email that doesn't belong to any admin.
+  // Who did it: an admin, a staff member, or neither (never both, the AuditLog_one_actor check). Neither when nobody is
+  // behind the event: the seed sending an invitation, or a failed sign in for an email that doesn't belong to anyone.
   admin   Admin?  @relation(fields: [adminId], references: [id])
   adminId String?
+  staff   Staff?  @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  staffId String?
 
   action     String
   entityType String
@@ -83,6 +96,7 @@ model AuditLog {
   // The admin log lists newest first, filtered by who did it or what they did.
   @@index([createdAt, id])
   @@index([adminId, createdAt])
+  @@index([staffId, createdAt])
   @@index([action, createdAt])
   @@index([entityType, entityId])
 }

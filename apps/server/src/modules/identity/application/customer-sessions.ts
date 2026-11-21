@@ -1,0 +1,174 @@
+import type { Customer, Prisma } from "../../../../generated/prisma/client";
+import { signAccessToken } from "../../../platform/crypto/jwt";
+import { generateToken, hashToken } from "../../../platform/crypto/tokens";
+import { prisma } from "../../../platform/db/prisma";
+import { AppError } from "../../../platform/errors/app-error";
+import {
+  CUSTOMER_SESSION_ABSOLUTE_LIFETIME_MS,
+  customerSessionExpiry,
+  customerSessionsToRevoke,
+} from "../domain/policy";
+import { customerInactive, toCustomerResponse } from "./customers";
+import type { RequestInfo } from "./sessions";
+
+const sessionEnded = () =>
+  new AppError({
+    code: "INVALID_REFRESH_TOKEN",
+    status: 401,
+    detail: "Your session is invalid or has expired. Please sign in again.",
+  });
+
+// Refresh tokens are opaque random strings; the session row is what makes them valid. Only the hash is stored, so a
+// leaked database can't be used to hijack sessions.
+const issueTokens = async (customerId: string, sessionId: string) => {
+  const refreshToken = generateToken();
+  return {
+    accessToken: await signAccessToken("customer", customerId, sessionId),
+    refreshToken,
+    refreshTokenHash: hashToken(refreshToken),
+  };
+};
+
+// Starts a session for a customer who has just verified their account or signed in, keeping at most a few active.
+export const createCustomerSession = async (
+  customer: Customer,
+  { ipAddress, userAgent }: RequestInfo,
+) => {
+  const refreshToken = generateToken();
+  const refreshTokenHash = hashToken(refreshToken);
+  const now = new Date();
+  const expiresAt = customerSessionExpiry(now, now);
+
+  const sessionId = await prisma.$transaction(async (tx) => {
+    const activeSessions = await tx.customerSession.findMany({
+      where: { customerId: customer.id, revokedAt: null, expiresAt: { gt: now } },
+      orderBy: { createdAt: "asc" },
+      select: { id: true },
+    });
+
+    // Revoke the oldest sessions to make way for the new one.
+    const revoked = customerSessionsToRevoke(activeSessions);
+    if (revoked.length > 0) {
+      await tx.customerSession.updateMany({
+        where: { id: { in: revoked.map((session) => session.id) } },
+        data: { revokedAt: now },
+      });
+    }
+
+    const session = await tx.customerSession.create({
+      data: {
+        customerId: customer.id,
+        refreshToken: refreshTokenHash,
+        expiresAt,
+        ipAddress,
+        userAgent,
+      },
+    });
+
+    return session.id;
+  });
+
+  const accessToken = await signAccessToken("customer", customer.id, sessionId);
+  return {
+    customer: toCustomerResponse(customer),
+    session: { accessToken, refreshToken, expiresAt },
+  };
+};
+
+export const refreshCustomerSession = async (
+  refreshToken: string | undefined,
+  { ipAddress, userAgent }: RequestInfo,
+) => {
+  if (!refreshToken) throw sessionEnded();
+
+  // Sessions only store the hash of the refresh token, so look it up the same way.
+  const currentHash = hashToken(refreshToken);
+  const session = await prisma.customerSession.findUnique({
+    where: { refreshToken: currentHash },
+    include: { customer: { select: { id: true, status: true } } },
+  });
+
+  if (!session) throw sessionEnded();
+
+  const now = new Date();
+  const absoluteExpiresAt = new Date(
+    session.createdAt.getTime() + CUSTOMER_SESSION_ABSOLUTE_LIFETIME_MS,
+  );
+
+  if (session.revokedAt || session.expiresAt <= now || absoluteExpiresAt <= now)
+    throw sessionEnded();
+
+  // Check the customer again, since they may have been suspended since signing in.
+  if (session.customer.status !== "ACTIVE") {
+    await prisma.customerSession.update({ where: { id: session.id }, data: { revokedAt: now } });
+    throw customerInactive();
+  }
+
+  const tokens = await issueTokens(session.customer.id, session.id);
+  // Never extended past the session's absolute lifetime.
+  const expiresAt = customerSessionExpiry(now, session.createdAt);
+
+  // Rotate the refresh token in place. Matching on the old hash makes sure two requests can't both use it.
+  const { count } = await prisma.customerSession.updateMany({
+    where: { id: session.id, refreshToken: currentHash, revokedAt: null },
+    data: { refreshToken: tokens.refreshTokenHash, expiresAt, ipAddress, userAgent },
+  });
+
+  if (count === 0) throw sessionEnded();
+
+  return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, expiresAt };
+};
+
+// Revokes the session behind this refresh token. Signing out always succeeds, even when the session is already gone.
+export const signOutCustomer = async (refreshToken: string | undefined) => {
+  if (!refreshToken) return;
+
+  await prisma.customerSession.updateMany({
+    where: { refreshToken: hashToken(refreshToken), revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+};
+
+// Ends every session a customer has (or every one but `except`): after a password change, or a suspension. Pass the
+// transaction client when it's part of a change, so the change and the sign out happen together.
+export const revokeCustomerSessions = async (
+  customerId: string,
+  client: typeof prisma | Prisma.TransactionClient = prisma,
+  except?: string,
+) => {
+  await client.customerSession.updateMany({
+    where: { customerId, revokedAt: null, ...(except ? { id: { not: except } } : {}) },
+    data: { revokedAt: new Date() },
+  });
+};
+
+// The signed in customer's live sessions, newest first, marking the one making this request.
+export const listCustomerSessions = async (customerId: string, currentSessionId: string) => {
+  const sessions = await prisma.customerSession.findMany({
+    where: { customerId, revokedAt: null, expiresAt: { gt: new Date() } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: { id: true, createdAt: true, expiresAt: true, ipAddress: true, userAgent: true },
+  });
+
+  return {
+    data: sessions.map((session) => ({
+      ...session,
+      createdAt: session.createdAt.toISOString(),
+      expiresAt: session.expiresAt.toISOString(),
+      current: session.id === currentSessionId,
+    })),
+    nextCursor: null,
+  };
+};
+
+// Ends one of the signed in customer's own sessions. Someone else's, or one that's already over, is a 404, so session
+// ids can't be probed.
+export const revokeOwnCustomerSession = async (customerId: string, sessionId: string) => {
+  const { count } = await prisma.customerSession.updateMany({
+    where: { id: sessionId, customerId, revokedAt: null, expiresAt: { gt: new Date() } },
+    data: { revokedAt: new Date() },
+  });
+  if (count === 0) {
+    throw new AppError({ code: "NOT_FOUND", status: 404, detail: "There's no such session." });
+  }
+};

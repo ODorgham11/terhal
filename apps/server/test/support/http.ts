@@ -1,15 +1,18 @@
 import { routes } from "../../src/http/router";
 
 export const ADMIN_ORIGIN = "https://admin.local.terhal.co:3000";
+export const DASHBOARD_ORIGIN = "https://dashboard.local.terhal.co:3000";
+export const SITE_ORIGIN = "https://local.terhal.co:3000";
 
-// A browser in miniature: sends the admin panel's Origin and keeps the cookies the API sets, by name, like a browser
-// would for the API's host (paths aside: every admin cookie is under /v1/admin, which is all these tests call).
-export const createAgent = () => {
+// A browser in miniature: sends one frontend's Origin (the admin panel's unless told otherwise) and keeps the cookies
+// the API sets, by name, like a browser would for the API's host (paths aside: an agent only calls one audience's
+// routes, and that audience's cookies are all under its prefix).
+export const createAgent = (origin = ADMIN_ORIGIN) => {
   const jar = new Map<string, string>();
 
   const request = async (path: string, init: RequestInit & { json?: unknown } = {}) => {
     const headers = new Headers(init.headers);
-    headers.set("Origin", ADMIN_ORIGIN);
+    headers.set("Origin", origin);
     if (jar.size > 0) {
       headers.set("Cookie", [...jar].map(([name, value]) => `${name}=${value}`).join("; "));
     }

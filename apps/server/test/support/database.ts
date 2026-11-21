@@ -1,7 +1,7 @@
 import { prisma } from "../../src/platform/db/prisma";
 
-// Empties every table the migrations created. Call it in beforeEach of files that write. The audit log's append-only
-// triggers reject TRUNCATE too, so they're switched off for this one transaction (replica mode skips ordinary
+// Empties every table the migrations created. Call it in beforeEach of files that write. Triggers that reject TRUNCATE
+// (an append-only table's, say) are switched off for this one transaction (replica mode skips ordinary
 // triggers). That takes a superuser, which the test container has and the app's database role never does.
 export const resetDatabase = async () => {
   const tables = await prisma.$queryRaw<{ name: string }[]>`

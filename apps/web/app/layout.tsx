@@ -1,32 +1,33 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { MotionConfig } from "motion/react";
-import QueryProvider from "@/components/QueryProvider";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
+import { IBM_Plex_Sans_Arabic } from "next/font/google";
+import { directionOf } from "@/i18n/locales";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// One family for both languages: IBM Plex Sans Arabic draws Arabic and Latin to the same design, so a page that mixes
+// them (an English name in an Arabic sentence, a code, an email) keeps one rhythm and one x-height. Self-hosted by
+// next/font, so browsers never call Google.
+const plex = IBM_Plex_Sans_Arabic({
+  variable: "--font-plex",
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("common");
+  return { title: t("appName") };
+}
 
-export const metadata: Metadata = {
-  title: "Terhal",
-  description: "Terhal dashboard",
-};
+// The locale comes from the NEXT_LOCALE cookie (i18n/request.ts). Arabic sets dir="rtl" on <html>, which flips every
+// logical class (ms-, pe-, start-, text-end) and every rtl: variant at once.
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-white">
-        {/* Turns movement off app-wide for people who ask their OS to reduce motion, keeping only the fades. */}
-        <MotionConfig reducedMotion="user">
-          <QueryProvider>{children}</QueryProvider>
-        </MotionConfig>
+    <html lang={locale} dir={directionOf(locale)} className={`${plex.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col">
+        <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
     </html>
   );
