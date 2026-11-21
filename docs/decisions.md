@@ -455,6 +455,56 @@ Choices made building booking, the lifecycle, price on request, assignment and l
 - **Rate limits** (X7): booking on the site 10 an hour per IP; site trip reads 120 and changes 30 a minute per booker;
   dashboard trip reads 240 and changes 120 a minute per staff member.
 
+### Notifications go through an outbox (2026-11-21)
+
+The trips hook (`afterTripEvent`) runs inside the change's transaction, but a BullMQ job can only be queued once that
+transaction has committed: queued earlier, a rolled back change would still email; queued after, a crash between the
+commit and the queue would lose the email. So the hook only writes rows (the notifications, a `PENDING` email
+`NotificationDelivery` for the booker, the trip's `NotificationReminder`s), and a scheduled job,
+`sweep-notifications`, runs every 5 seconds to queue every pending delivery not yet queued and move reminder jobs to
+match their rows. Job ids are deterministic (`delivery.<id>`, `reminder.<kind>.<trip>.<due ms>`), so two sweeps, or a
+sweep after a crash, add nothing. A delivery still pending 30 minutes after it was queued (Redis was emptied) is
+queued again.
+
+What we gave up: an email goes out up to 5 seconds after the change, and the sweep is two cheap indexed queries every
+5 seconds whether or not there's anything to send.
+
+### Notifications: the details the spec left open (2026-11-21)
+
+- **Who is told what** (N1, Q3) is one pure function of the event and the trip afterwards (`notifications/domain`):
+  - The driver's details (A6 a) are emailed when a confirmed trip is assigned or reassigned, and with the confirmation
+    if it was assigned before; assigning a pending trip emails nothing. Unassigning emails nothing.
+  - Each leg of a return booking is its own trip and gets its own emails.
+  - A staff member's own booking (no customer) tells nobody. A staff booking for a customer emails them
+    `BOOKED_BY_STAFF`; booked without a price, the rest of the team gets `PRICE_REQUESTED`.
+  - Staff in-app notices go to every active staff member with `trips`, except the one who acted.
+  - A booker who declines a price gets a cancellation receipt and staff get `PRICE_DECLINED`; the return leg cancelled
+    with it adds no second staff notice.
+  - Completing a trip again after a reopen doesn't thank the booker twice (its dedupe key is the trip, not the event).
+  - "Report submitted" is keyed on the existing `trip.report_submitted` action, which the driver report will record.
+- **Dedupe keys.** Every notification has a unique `dedupeKey` naming its cause and recipient
+  (`event.<event id>.<recipient>`, `reminder.<kind>.<trip>.<due ms>.<recipient>`), so a retried job never writes it
+  twice.
+- **In-app is not a delivery.** Staff notifications are the inbox: `Notification.readAt` is their state, and
+  `NotificationDelivery` rows exist only for outbound sends (email now, WhatsApp later). The unread count is one count
+  over a partial index on unread staff rows (`Notification_staff_unread`).
+- **Reminders** are rows, one per trip and kind (`PICKUP` 24 h before a confirmed pickup, `PRICE` 24 h before pickup
+  while a proposal is unanswered, `UNASSIGNED` 2 h before pickup while there's neither an office nor a driver and a
+  vehicle). Every trip event recomputes them, so a pickup change moves them and a cancel, an assignment or an answer
+  drops them. The delayed job only wakes the worker: it sends only if the row still holds that time and the trip still
+  calls for it before its pickup, then clears the row. A booker reminder already past when scheduled (confirmed 10 hours
+  ahead) is dropped; the unassigned warning is sent at once as long as the trip hasn't picked up.
+- **Delivery:** 6 attempts with exponential backoff from 30 seconds. Each attempt counts on the row with its error, and
+  the last marks it `FAILED`. Resend gets the delivery's id as an idempotency key, so a retry after a send that went
+  through but wasn't recorded doesn't email twice.
+- **Language (N5):** the title and plain text are written at notification time in the recipient's locale and stored;
+  the HTML (right to left for Arabic, with codes, phones and links kept left to right) is rendered again from the
+  stored `data` when it's sent. Times are Cairo's. The booker's link is `SITE_URL/trips/<id>`, which the site has to
+  serve.
+- **Reads across modules.** Notifications reads trips, customers, guests, staff and fleet rows straight through Prisma,
+  read-only, instead of through their modules: the trips hook calls into notifications, so calling back into trips
+  would make a cycle.
+
 ---
 
 ## Process
