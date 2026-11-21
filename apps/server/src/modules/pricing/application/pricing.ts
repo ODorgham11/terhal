@@ -216,6 +216,43 @@ export const updatePricing = async (id: string, price: string, actor: AuditActor
     return toRow(row);
   });
 
+// Sets the price of one route, class and body, adding the row or changing it, inside the caller's transaction. For a
+// price staff propose on a trip and save to the price list (Q3 follow-ups: `saveToPricing`). Audited like any change.
+export const savePrice = async (
+  entry: EntryRefs & { price: string },
+  actor: AuditActor,
+  tx: Prisma.TransactionClient,
+) => {
+  const where = {
+    fromId_toId_classId_car: {
+      fromId: entry.fromId,
+      toId: entry.toId,
+      classId: entry.classId,
+      car: entry.car,
+    },
+  };
+  const before = await tx.pricing.findUnique({ where, select: { id: true, price: true } });
+  if (before?.price.toFixed(2) === entry.price) return;
+
+  const row = await tx.pricing.upsert({
+    where,
+    create: { ...snapshot(entry) },
+    update: { price: entry.price },
+    select: { id: true },
+  });
+  await recordAudit(
+    {
+      ...actor,
+      action: before ? auditActions.PRICING_UPDATED : auditActions.PRICING_CREATED,
+      entityType: "Pricing",
+      entityId: row.id,
+      ...(before && { before: snapshot({ ...entry, price: before.price.toFixed(2) }) }),
+      after: snapshot(entry),
+    },
+    tx,
+  );
+};
+
 export const deletePricing = async (id: string, actor: AuditActor) =>
   prisma.$transaction(async (tx) => {
     const row = await tx.pricing.findUnique({
