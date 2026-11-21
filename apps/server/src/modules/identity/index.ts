@@ -2,6 +2,7 @@
 // managing each other), staff (invitations, sign in, password resets), customers (sign up, verification, password
 // resets) and guests (a verified session without an account).
 export { inviteFirstAdmin } from "./application/admin-invitations";
+export { adminAccountRoutes } from "./http/admin-account-routes";
 export { adminInvitationRoutes } from "./http/admin-invitation-routes";
 export { adminAuthRoutes } from "./http/admin-routes";
 export { adminStaffRoutes } from "./http/admin-staff-routes";

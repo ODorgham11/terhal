@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { auditRoutes } from "../modules/audit/index";
 import {
+  adminAccountRoutes,
   adminAuthRoutes,
   adminInvitationRoutes,
   adminStaffRoutes,
@@ -49,6 +50,7 @@ router.use("/v1/site/*", ...audience("site"));
 // Every module's routes, versioned. Chained, so the type below carries every route for the web app's RPC client.
 const v1 = createRouter()
   .route("/", adminAuthRoutes)
+  .route("/", adminAccountRoutes)
   .route("/", adminInvitationRoutes)
   .route("/", adminStaffRoutes)
   .route("/", auditRoutes)
