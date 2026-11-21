@@ -2,9 +2,12 @@ import type { AuditAction } from "@terhal/contracts";
 import type { Prisma } from "../../../../generated/prisma/client";
 import { prisma } from "../../../platform/db/prisma";
 
-export interface AuditEntry {
-  // The admin who did it, or null for the system (the seed) and for sign in attempts on emails that aren't admins.
-  adminId: string | null;
+// Who did it: an admin, a staff member, or nobody (adminId null) for the system (the seed) and for sign in attempts on
+// emails that aren't admins. Never both (AuditLog_one_actor).
+type AuditActor =
+  { adminId: string | null; staffId?: never } | { staffId: string; adminId?: never };
+
+export type AuditEntry = AuditActor & {
   action: AuditAction;
   // What the event is about, e.g. an Admin, AdminSession, or AdminInvitation, and its id.
   entityType: string;
@@ -12,7 +15,7 @@ export interface AuditEntry {
   before?: Prisma.InputJsonValue;
   after?: Prisma.InputJsonValue;
   ipAddress?: string | null;
-}
+};
 
 type Client = typeof prisma | Prisma.TransactionClient;
 
