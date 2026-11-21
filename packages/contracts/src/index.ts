@@ -8,4 +8,5 @@ export * from "./fields";
 export * from "./lists";
 export * from "./permissions";
 export * from "./problem";
+export * from "./search";
 export * from "./staff";
