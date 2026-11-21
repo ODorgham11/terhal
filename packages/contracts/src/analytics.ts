@@ -20,7 +20,8 @@ export const ANALYTICS_TOP_FLEET = 50;
 export const tripSources = ["CUSTOMER", "STAFF"] as const;
 export const TripSource = z.enum(tripSources, { error: "Unknown source." }).meta({
   id: "TripSource",
-  description: "CUSTOMER: booked on the site (a customer or a guest). STAFF: booked in the dashboard.",
+  description:
+    "CUSTOMER: booked on the site (a customer or a guest). STAFF: booked in the dashboard.",
 });
 export type TripSource = z.infer<typeof TripSource>;
 
@@ -82,14 +83,17 @@ export const Analytics = z
     to: z.string(),
     groupBy: z.enum(analyticsGroupings),
     totals: z.object({
-      trips: z.int().meta({ description: "Every trip picking up in the range, cancelled ones too." }),
+      trips: z
+        .int()
+        .meta({ description: "Every trip picking up in the range, cancelled ones too." }),
       byStatus: z.record(TripStatus, z.int()),
       completed: z.int(),
       cancelled: z.int(),
       cancellationRate: z.number().meta({ description: "Cancelled trips over all trips, 0 to 1." }),
       revenue: Money.meta({ description: "The total price of completed trips (Y2)." }),
       bookedValue: Money.meta({
-        description: "The total price of every trip not cancelled, priced so far, completed ones included.",
+        description:
+          "The total price of every trip not cancelled, priced so far, completed ones included.",
       }),
       averageFare: Money.nullable().meta({ description: "Revenue per completed trip." }),
       expenses: Money.meta({
@@ -120,11 +124,9 @@ export const Analytics = z
     ),
     byCar: z.array(z.object({ car: CarBody, ...Performance })),
     bySource: z.array(z.object({ source: TripSource, ...Performance })),
-    topRoutes: z
-      .array(z.object({ from: Place, to: Place, ...Performance }))
-      .meta({
-        description: `The ${String(ANALYTICS_TOP_ROUTES)} busiest governorate pairs, by trips not cancelled.`,
-      }),
+    topRoutes: z.array(z.object({ from: Place, to: Place, ...Performance })).meta({
+      description: `The ${String(ANALYTICS_TOP_ROUTES)} busiest governorate pairs, by trips not cancelled.`,
+    }),
     fleet: z.object({
       inHouse: z.object(Performance).meta({ description: "Trips not handed to an office." }),
       office: z.object(Performance).meta({ description: "Trips handed to an office." }),

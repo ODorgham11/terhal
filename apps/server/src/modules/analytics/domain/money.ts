@@ -17,7 +17,8 @@ export const formatPiastres = (piastres: bigint) => {
   return `${negative ? "-" : ""}${pounds.toString()}.${rest}`;
 };
 
-export const subtractMoney = (a: string, b: string) => formatPiastres(toPiastres(a) - toPiastres(b));
+export const subtractMoney = (a: string, b: string) =>
+  formatPiastres(toPiastres(a) - toPiastres(b));
 
 // The amount per item, rounded half up to the piastre; null when there are no items.
 export const averageMoney = (total: string, count: number) => {

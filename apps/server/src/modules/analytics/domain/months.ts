@@ -77,12 +77,12 @@ export const monthDays = ({ year, month }: Month) => {
 // Where a month's workbook is stored. One key per month, so regenerating replaces it.
 export const reportKey = (month: Month) => `analytics/reports/${monthLabel(month)}.xlsx`;
 
-export const reportFileName = (month: Month) => `terhal-report-${monthLabel(month)}.xlsx`;
-
 // The instants a month starts and ends (exclusive), in Cairo.
 export const monthBounds = (target: Month) => {
   const next =
-    target.month === 12 ? { year: target.year + 1, month: 1 } : { ...target, month: target.month + 1 };
+    target.month === 12
+      ? { year: target.year + 1, month: 1 }
+      : { ...target, month: target.month + 1 };
   return {
     start: cairoDayStart(`${monthLabel(target)}-01`),
     end: cairoDayStart(`${monthLabel(next)}-01`),
