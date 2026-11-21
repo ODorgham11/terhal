@@ -1,4 +1,5 @@
 import type { Prisma } from "../../../../generated/prisma/client";
+import { notifyTripEvent } from "../../notifications/index";
 import type { RecordedTripEvent, TripActor } from "./events";
 import { recordCompletion, reverseCompletion } from "./ledger";
 import { issueReportLink } from "./report-link";
@@ -15,8 +16,8 @@ interface HookTrip {
 
 // Every trip event, right after it's written: the single hook for notifications (N1). The event names its action, its
 // actor and its data (statuses moved between, reason, changed fields), and the trip's id.
-export const afterTripEvent: (tx: Tx, event: RecordedTripEvent) => Promise<void> = () =>
-  Promise.resolve();
+export const afterTripEvent: (tx: Tx, event: RecordedTripEvent) => Promise<void> = (tx, event) =>
+  notifyTripEvent(tx, event);
 
 // A trip moved to COMPLETED (T4 a): the driver ledger's entries for it (D8 a: the trip fee for external drivers,
 // reimbursed expenses, cash collected) are written here.

@@ -1,5 +1,6 @@
 import { Worker, type Processor } from "bullmq";
 import { processAnalyticsJob, scheduleAnalyticsJobs } from "./modules/analytics/index";
+import { notificationJobs, processNotificationJob } from "./modules/notifications/index";
 import { processTripJob, tripJobs } from "./modules/trips/index";
 import { processors } from "./platform/jobs/processors";
 import { queues, type JobData, type QueueName } from "./platform/jobs/queues";
@@ -13,6 +14,7 @@ const all: { [K in QueueName]: Processor<JobData[K]> } = {
   ...processors,
   trips: processTripJob,
   analytics: processAnalyticsJob,
+  notifications: processNotificationJob,
 };
 
 // Each queue's payload type is checked above; the Worker itself takes any.
@@ -27,11 +29,14 @@ const workers = (Object.entries(all) as [QueueName, Processor][]).map(([name, pr
 });
 
 // Repeatable jobs. The scheduler id is the job's name, so every start replaces the schedule instead of adding one.
-await Promise.all(
-  Object.entries(tripJobs).map(([name, { every }]) =>
+await Promise.all([
+  ...Object.entries(tripJobs).map(([name, { every }]) =>
     queues.trips.upsertJobScheduler(name, { every }, { name, data: {} }),
   ),
-);
+  ...Object.entries(notificationJobs).map(([name, { every }]) =>
+    queues.notifications.upsertJobScheduler(name, { every }, { name, data: {} }),
+  ),
+]);
 // The monthly report, on a cron in Cairo time.
 await scheduleAnalyticsJobs(queues.analytics);
 

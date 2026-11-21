@@ -24,6 +24,7 @@ import {
   siteLocationRoutes,
   staffLocationRoutes,
 } from "../modules/location/index";
+import { staffNotificationRoutes } from "../modules/notifications/index";
 import { pricingRoutes, quoteRoutes, tripClassRoutes } from "../modules/pricing/index";
 import {
   driverReportRoutes,
@@ -110,7 +111,8 @@ const v1 = createRouter()
   .route("/", staffTripRoutes)
   .route("/", driverReportRoutes)
   .route("/", staffReportRoutes)
-  .route("/", analyticsRoutes);
+  .route("/", analyticsRoutes)
+  .route("/", staffNotificationRoutes);
 
 export const routes = router.route("/health", health).route("/v1", v1);
 

@@ -1012,7 +1012,9 @@ Anything not listed takes the recommended option.
 
 **M. Team:** M1 a. **M2 b:** anyone with `team` can grant any permission. M3 a.
 
-**N. Notifications:** N1 as in the table, N2 a, N3 a, N4 a, N5 a, N6 a.
+**N. Notifications:** N1 as in the table, N2 a, N3 a, N4 a, N5 a, N6 a. As built, N1 also carries Q3's price notices
+(the proposal and its reminder to the booker; requested, accepted and declined to staff). The cases the table leaves open
+are in [decisions.md](decisions.md#notifications-the-details-the-spec-left-open-2026-11-21).
 
 **Y. Analytics**
 - Y1 a, Y2 a.
