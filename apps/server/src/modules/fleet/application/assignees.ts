@@ -30,23 +30,28 @@ export const lockAssignees = async (
     vehicleId ? await lockRow(tx, "Vehicle", vehicleId) : false,
     officeId ? await lockRow(tx, "Office", officeId) : false,
   ];
-  const [driver, vehicle, office] = await Promise.all([
+  // One after the other: a transaction is one connection.
+  const driver =
     hasDriver && driverId
-      ? tx.driver.findUnique({
+      ? await tx.driver.findUnique({
           where: { id: driverId },
           select: { id: true, officeId: true, archivedAt: true },
         })
-      : null,
+      : null;
+  const vehicle =
     hasVehicle && vehicleId
-      ? tx.vehicle.findUnique({
+      ? await tx.vehicle.findUnique({
           where: { id: vehicleId },
           select: { id: true, officeId: true, body: true, archivedAt: true },
         })
-      : null,
+      : null;
+  const office =
     hasOffice && officeId
-      ? tx.office.findUnique({ where: { id: officeId }, select: { id: true, archivedAt: true } })
-      : null,
-  ]);
+      ? await tx.office.findUnique({
+          where: { id: officeId },
+          select: { id: true, archivedAt: true },
+        })
+      : null;
   return {
     driver: driver && {
       id: driver.id,
