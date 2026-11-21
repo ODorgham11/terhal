@@ -3,6 +3,20 @@
     "appName": "Terhal",
     "locale": {
       "switchTo": "Switch to {language}"
+    },
+    "ui": {
+      "loading": "Loading…",
+      "close": "Close",
+      "optional": "Optional",
+      "previous": "Previous",
+      "next": "Next",
+      "pagination": "Pagination",
+      "noResults": "Nothing to show yet.",
+      "dismiss": "Dismiss",
+      "notifications": "Notifications",
+      "codeDigit": "Digit {position} of {length}",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
     }
   },
   "errors": {},

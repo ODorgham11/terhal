@@ -3,6 +3,20 @@
     "appName": "ترحال",
     "locale": {
       "switchTo": "التبديل إلى {language}"
+    },
+    "ui": {
+      "loading": "جارٍ التحميل…",
+      "close": "إغلاق",
+      "optional": "اختياري",
+      "previous": "السابق",
+      "next": "التالي",
+      "pagination": "التنقل بين الصفحات",
+      "noResults": "لا يوجد ما يُعرض بعد.",
+      "dismiss": "إخفاء",
+      "notifications": "الإشعارات",
+      "codeDigit": "الرقم {position} من {length}",
+      "showPassword": "إظهار كلمة المرور",
+      "hidePassword": "إخفاء كلمة المرور"
     }
   },
   "errors": {},
