@@ -203,7 +203,9 @@ const reportPut = createRoute({
     400: invalid,
     ...staffProblems,
     404: notFound,
-    409: problemResponse("TRIP_STATUS_CONFLICT (`tripStatus`): the trip isn't awaiting its report."),
+    409: problemResponse(
+      "TRIP_STATUS_CONFLICT (`tripStatus`): the trip isn't awaiting its report.",
+    ),
   },
 });
 

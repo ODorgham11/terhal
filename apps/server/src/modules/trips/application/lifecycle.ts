@@ -75,37 +75,29 @@ export const confirmTrip = (id: string, staffId: string) =>
 // database (ASSIGNEE_BUSY). Staff start a trip, or the driver from the report link (T3 d), whose token `guard` checks on
 // the locked trip.
 export const startTrip = (id: string, actor: TripActor, guard?: (trip: Trip) => void) =>
-  move(
-    id,
-    actor,
-    {
-      action: tripEventActions.STARTED,
-      from: ["CONFIRMED"],
-      to: "IN_PROGRESS",
-      check: (trip) => {
-        guard?.(trip);
-        if (!isAssigned(trip)) {
-          throw new AppError({
-            code: "ASSIGNMENT_REQUIRED",
-            status: 409,
-            detail: "Assign a driver and a vehicle, or an office, before starting the trip.",
-          });
-        }
-      },
+  move(id, actor, {
+    action: tripEventActions.STARTED,
+    from: ["CONFIRMED"],
+    to: "IN_PROGRESS",
+    check: (trip) => {
+      guard?.(trip);
+      if (!isAssigned(trip)) {
+        throw new AppError({
+          code: "ASSIGNMENT_REQUIRED",
+          status: 409,
+          detail: "Assign a driver and a vehicle, or an office, before starting the trip.",
+        });
+      }
     },
-  );
+  });
 
 export const endTrip = (id: string, actor: TripActor, guard?: (trip: Trip) => void) =>
-  move(
-    id,
-    actor,
-    {
-      action: tripEventActions.ENDED,
-      from: ["IN_PROGRESS"],
-      to: "AWAITING_REPORT",
-      check: guard,
-    },
-  );
+  move(id, actor, {
+    action: tripEventActions.ENDED,
+    from: ["IN_PROGRESS"],
+    to: "AWAITING_REPORT",
+    check: guard,
+  });
 
 // T4 a: staff review the report and complete the trip; the driver ledger hooks in here (D8 a). A trip with a driver needs
 // its report first (staff can fill it in); an office trip may complete without one (D9 a).

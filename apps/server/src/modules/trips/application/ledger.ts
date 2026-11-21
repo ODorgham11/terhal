@@ -58,7 +58,9 @@ export const reverseCompletion = async (tx: Tx, trip: { id: string }, actor: Tri
       driverId: balance.driverId,
       tripId: trip.id,
       staffId: staffOf(actor),
-      entries: [{ type: "ADJUSTMENT", amount, note: "The trip was reopened: its entries are reversed." }],
+      entries: [
+        { type: "ADJUSTMENT", amount, note: "The trip was reopened: its entries are reversed." },
+      ],
     });
   }
 };

@@ -120,7 +120,10 @@ export const checkReportToken = (
   return { ...trip, driverId: trip.driverId };
 };
 
-export const tripForToken = async (client: Prisma.TransactionClient | typeof prisma, token: string) =>
+export const tripForToken = async (
+  client: Prisma.TransactionClient | typeof prisma,
+  token: string,
+) =>
   checkReportToken(
     await client.trip.findUnique({ where: { reportTokenHash: hashToken(token) } }),
     token,

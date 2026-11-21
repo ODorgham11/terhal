@@ -135,5 +135,8 @@ export const tripLedgerBalances = async (tx: Prisma.TransactionClient, tripId: s
     orderBy: { driverId: "asc" },
     _sum: { amount: true },
   });
-  return rows.map((row) => ({ driverId: row.driverId, amount: row._sum.amount?.toFixed(2) ?? "0.00" }));
+  return rows.map((row) => ({
+    driverId: row.driverId,
+    amount: row._sum.amount?.toFixed(2) ?? "0.00",
+  }));
 };
