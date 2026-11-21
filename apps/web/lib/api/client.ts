@@ -1,32 +1,93 @@
 import { hc } from "hono/client";
-import type { ErrorCode, Problem, ValidationProblem } from "@terhal/contracts";
 import type { AppType } from "@terhal/server/client";
+import { readError } from "./errors";
 
-const endpoint = process.env.NEXT_PUBLIC_API_URL ?? "https://api.local.terhal.co:8080";
+export const endpoint = process.env.NEXT_PUBLIC_API_URL ?? "https://api.local.terhal.co:8080";
 
-// A failed request, as the forms use it. The API answers every error with RFC 9457 problem details
-// (@terhal/contracts Problem); validation failures list each field's problem in `errors`.
-export type ApiError = {
-  code?: ErrorCode;
-  message: string;
-  fields: { field: string; message: string }[];
+// The audiences with refreshable sessions. Guests have one opaque session cookie and nothing to refresh.
+export type Audience = "admin" | "staff" | "customer";
+
+const refreshPaths: Record<Audience, string> = {
+  admin: "/v1/admin/auth/refresh",
+  staff: "/v1/staff/auth/refresh",
+  customer: "/v1/site/auth/refresh",
 };
 
-// Not every failure is the API's JSON (e.g. a proxy's plain text 502), so this never assumes it is.
-export const readError = async (res: Response): Promise<ApiError> => {
-  const body = (await res.json().catch(() => null)) as Partial<Problem> | null;
-  if (!body?.detail) return { message: `The server responded with ${res.status}.`, fields: [] };
+const audienceOf = (input: RequestInfo | URL): Audience | null => {
+  const url = new URL(input instanceof Request ? input.url : input.toString(), endpoint);
+  if (url.pathname.startsWith("/v1/admin/")) return "admin";
+  if (url.pathname.startsWith("/v1/staff/")) return "staff";
+  if (url.pathname.startsWith("/v1/site/")) return "customer";
+  return null;
+};
 
-  const issues = body.code === "VALIDATION_FAILED" ? (body as ValidationProblem).errors : [];
-  return {
-    code: body.code,
-    message: body.detail,
-    fields: issues.map((issue) => ({ field: issue.path, message: issue.message })),
+// "Signed out" notices: a refresh the API refused means the session is over (expired, revoked, signed out elsewhere).
+// The session providers listen and send the person to sign in.
+type SignedOutListener = () => void;
+const signedOutListeners: Record<Audience, Set<SignedOutListener>> = {
+  admin: new Set(),
+  staff: new Set(),
+  customer: new Set(),
+};
+
+export const onSignedOut = (audience: Audience, listener: SignedOutListener) => {
+  signedOutListeners[audience].add(listener);
+  return () => {
+    signedOutListeners[audience].delete(listener);
   };
 };
 
-// Tokens live in http-only cookies, so every request includes credentials.
-const appFetch: typeof fetch = (input, init) => fetch(input, { ...init, credentials: "include" });
+const reportSignedOut = (audience: Audience) => {
+  for (const listener of signedOutListeners[audience]) listener();
+};
 
-// Typed against the backend's routes, e.g. api.v1.admin.session.$get().
+type RefreshResult = "refreshed" | "signed-out" | "unreachable";
+
+// One refresh per audience at a time: when several requests expire together, they all wait on the same one. The API
+// rotates the refresh token, so two refreshes racing would have the second rejected.
+const refreshing: Partial<Record<Audience, Promise<RefreshResult>>> = {};
+
+const refresh = (audience: Audience) => {
+  refreshing[audience] ??= fetch(`${endpoint}${refreshPaths[audience]}`, {
+    method: "POST",
+    credentials: "include",
+  })
+    .then((response): RefreshResult => (response.ok ? "refreshed" : "signed-out"))
+    .catch((): RefreshResult => "unreachable")
+    .finally(() => {
+      delete refreshing[audience];
+    });
+
+  return refreshing[audience];
+};
+
+// Tokens live in httpOnly cookies on the API's host, so every request includes credentials and the page never sees
+// them. When the access token has expired (401 ACCESS_TOKEN_EXPIRED), refresh it once and replay the request.
+const appFetch: typeof fetch = async (input, init) => {
+  const send = () => fetch(input, { ...init, credentials: "include" });
+  const response = await send();
+  if (response.status !== 401) return response;
+
+  const audience = audienceOf(input);
+  if (!audience) return response;
+
+  const { code } = await readError(response);
+  if (code !== "ACCESS_TOKEN_EXPIRED") return response;
+
+  const result = await refresh(audience);
+  if (result === "signed-out") reportSignedOut(audience);
+  // Unreachable isn't signed out: hand back the 401 and let the caller retry later.
+  if (result !== "refreshed") return response;
+
+  return send();
+};
+
+// Typed against the server's routes. Each audience's routes are reachable only from its own host, so a page uses the
+// one for its host: adminApi on admin., staffApi on dashboard., siteApi on the customer site.
+//
+//   const admin = await call(adminApi.auth.session.$get());
 export const api = hc<AppType>(endpoint, { fetch: appFetch });
+
+export const adminApi = api.v1.admin;
+export const staffApi = api.v1.staff;
+export const siteApi = api.v1.site;
