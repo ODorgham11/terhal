@@ -88,7 +88,12 @@
               "VERIFICATION_CODE_EXPIRED",
               "TOTP_SETUP_REQUIRED",
               "TOTP_CODE_INVALID",
-              "TOTP_CHALLENGE_INVALID"
+              "TOTP_CHALLENGE_INVALID",
+              "TWO_FACTOR_RESET_INVALID",
+              "TWO_FACTOR_RESET_EXPIRED",
+              "CANNOT_TARGET_SELF",
+              "LAST_ACTIVE_ADMIN",
+              "ADMIN_NOT_ACTIVE"
             ],
             "example": "VALIDATION_FAILED"
           },
@@ -255,6 +260,88 @@
           "code"
         ]
       },
+      "AdminInvitationSent": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "email",
+          "expiresAt"
+        ]
+      },
+      "InviteAdmin": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913",
+            "description": "A current code from your authenticator app."
+          }
+        },
+        "required": [
+          "email",
+          "code"
+        ]
+      },
+      "AdminInvitation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "invitedBy": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "description": "Null for the first admin's invitation, sent before any admin existed."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "invitedBy",
+          "createdAt",
+          "expiresAt"
+        ],
+        "description": "A pending invitation: not accepted, revoked or expired."
+      },
       "StaffInvitationSent": {
         "type": "object",
         "properties": {
@@ -334,7 +421,16 @@
               "admin.sign_in.succeeded",
               "admin.session.revoked",
               "admin.sign_out",
-              "admin.staff.invited"
+              "admin.staff.invited",
+              "admin.step_up.failed",
+              "admin.password.reset_requested",
+              "admin.password.reset",
+              "admin.password.changed",
+              "admin.account.deactivated",
+              "admin.account.reactivated",
+              "admin.totp.reset",
+              "admin.totp.reset_issued",
+              "admin.totp.reset_confirm_failed"
             ]
           },
           "entityType": {
@@ -1237,6 +1333,244 @@
         }
       }
     },
+    "/v1/admin/invitations": {
+      "post": {
+        "tags": [
+          "Admin invitations"
+        ],
+        "summary": "Invite an admin",
+        "description": "Emails a link to the admin panel that lasts 48 hours. Inviting the same email again revokes its earlier links.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteAdmin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invitation sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminInvitationSent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "TOTP_CODE_INVALID or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE or TOTP_SETUP_REQUIRED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ACCOUNT_ALREADY_EXISTS: the email already belongs to an admin.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE: the email couldn't be sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Admin invitations"
+        ],
+        "summary": "List pending invitations",
+        "description": "The invitations not yet accepted, revoked or expired, newest first, in one page.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The pending invitations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminInvitation"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/invitations/{id}": {
+      "delete": {
+        "tags": [
+          "Admin invitations"
+        ],
+        "summary": "Revoke a pending invitation",
+        "description": "Its link stops working at once.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revoked"
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: unknown, or no longer pending.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/staff/invitations": {
       "post": {
         "tags": [
@@ -1413,7 +1747,16 @@
                     "admin.sign_in.succeeded",
                     "admin.session.revoked",
                     "admin.sign_out",
-                    "admin.staff.invited"
+                    "admin.staff.invited",
+                    "admin.step_up.failed",
+                    "admin.password.reset_requested",
+                    "admin.password.reset",
+                    "admin.password.changed",
+                    "admin.account.deactivated",
+                    "admin.account.reactivated",
+                    "admin.totp.reset",
+                    "admin.totp.reset_issued",
+                    "admin.totp.reset_confirm_failed"
                   ]
                 },
                 {
@@ -1434,7 +1777,16 @@
                       "admin.sign_in.succeeded",
                       "admin.session.revoked",
                       "admin.sign_out",
-                      "admin.staff.invited"
+                      "admin.staff.invited",
+                      "admin.step_up.failed",
+                      "admin.password.reset_requested",
+                      "admin.password.reset",
+                      "admin.password.changed",
+                      "admin.account.deactivated",
+                      "admin.account.reactivated",
+                      "admin.totp.reset",
+                      "admin.totp.reset_issued",
+                      "admin.totp.reset_confirm_failed"
                     ]
                   }
                 }
