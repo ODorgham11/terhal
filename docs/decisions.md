@@ -190,7 +190,7 @@ Prisma can't express "exactly one of these columns is set", so CHECK constraints
 | --- | --- |
 | `Trip_one_booker` | A trip is booked by exactly one of a customer, a guest and a staff member. |
 | `Notification_one_recipient` | A notification goes to exactly one of a customer, a guest and a staff member. |
-| `TripEvent_one_actor` | A trip event's actor is exactly one of a staff member, a customer, a guest and the system (`system` names the background job). |
+| `TripEvent_one_actor` | A trip event's actor is exactly one of a staff member, a customer, a guest, the driver (through the report link, added 2026-11-21) and the system (`system` names the background job). |
 
 ### A trip stop can be anywhere (2026-11-16)
 
@@ -430,7 +430,8 @@ Choices made building booking, the lifecycle, price on request, assignment and l
   cancelled. If any leg left is confirmed, nothing is cancelled (`CALL_TO_CANCEL`). The optional reason is kept as the
   event's `note`, with reason `CUSTOMER_REQUEST`. Staff cancel one leg at a time.
 - **Completing doesn't require a report yet**: the driver report isn't built, so the report work decides whether to
-  require one (office trips may complete without, D9 a).
+  require one (office trips may complete without, D9 a). **Replaced** by
+  [The driver report](#the-driver-report-the-details-the-spec-left-open-2026-11-21): a trip with a driver needs one.
 - **Editing** (B10 a): details while pending or confirmed, `totalPrice` and payment until completed. The price can't be
   edited while it's requested or proposed (`PRICE_REQUEST_OPEN`). A new pin resolves again, refreshing the place and its
   names; a new class refreshes its snapshot; a new body must fit the load and the assigned vehicle. An edit of only
@@ -454,6 +455,49 @@ Choices made building booking, the lifecycle, price on request, assignment and l
   is read directly.
 - **Rate limits** (X7): booking on the site 10 an hour per IP; site trip reads 120 and changes 30 a minute per booker;
   dashboard trip reads 240 and changes 120 a minute per staff member.
+
+### The driver report: the details the spec left open (2026-11-21)
+
+Choices made building the report link, the report routes and the ledger on completion, closest to
+[domains.md](domains.md#d-driver-report):
+
+- **Staff can show the link again.** The spec said only the token's hash is stored and the link is shown once, but the
+  dashboard also needs to show it again ("Send report link" after it was issued on assignment) without breaking the
+  link the driver already has. So the token is an HMAC of the trip, the driver and a random salt under a key derived
+  from `TOTP_ENCRYPTION_KEY` (`keyedToken`, purpose `report-link`). The trip stores the hash (to find the trip from a
+  token), the salt and the expiry (`Trip_report_token`: all three or none). A leaked database alone still opens nothing;
+  changing that key breaks every live link, like it breaks authenticators. `GET …/report-link` shows the link,
+  `POST …/report-link` replaces it (the old one stops working, `trip.report_link_issued`).
+- **Issued on assignment** (`onDriverChanged`), with no event of its own: the assignment's event says the driver
+  changed. Removing the driver removes the link. The expiry (7 days after pickup) moves when staff move the pickup.
+- **WhatsApp.** The route returns the plain link, a prefilled message in `?locale=` (Arabic by default; drivers have no
+  locale) and a `wa.me` link to the driver's phone with it.
+- **The driver is a trip event actor.** `TripEvent.driverId`, counted by `TripEvent_one_actor`, so the history says the
+  driver started, ended or reported the trip; the dashboard shows the actor as `DRIVER`.
+- **The driver's routes** are `/v1/site/driver/report` (read), `/start`, `/end` and `PUT` (submit), with the token in a
+  `Report-Token` header, limited per IP to 60 reads and 20 changes a minute. A bad or replaced token is 401
+  `REPORT_LINK_INVALID`, an expired one 401 `REPORT_LINK_EXPIRED`; the token is checked again on the locked trip, so a
+  link replaced a moment ago can't act. The view carries when the trip was started and ended, to prefill the report.
+- **Submitting** is allowed once the trip has started: a trip still in progress is ended by it (an ENDED event by the
+  driver). After that it's locked for the driver (`REPORT_ALREADY_SUBMITTED`). Drivers can't enter `OFFICE_FEE`.
+- **Staff** read the report (`GET …/report`, 404 until there is one) and fill in or correct it with
+  `PUT …/report`, replacing it whole, while the trip awaits its report (after `end`, or after reopening). The first
+  write is `trip.report_submitted`, later ones `trip.report_edited`.
+- **Cash collected is a report field** (`TripReport.cashCollected`, zero or more, `TripReport_cash_collected`), since
+  the driver is the one who knows. On an unpaid trip, cash above zero records the payment (`CASH_TO_DRIVER`, paid at
+  the report's end time) as a `trip.payment_recorded` event.
+- **Completing requires a report for a trip with a driver** (`REPORT_REQUIRED`); staff fill it in when the driver
+  doesn't. An office trip may complete without one (D9 a). Every non-office trip that reaches awaiting report has a
+  driver, since starting needs one.
+- **The ledger on completion** (D8 a, O1 b), from the report, as the completing staff member: `TRIP_FEE` = the report's
+  `DRIVER_FEE` expenses, for external drivers only (an internal driver's `DRIVER_FEE` never reaches their balance);
+  `EXPENSE_REIMBURSEMENT` = every other expense except `OFFICE_FEE`, summed into one entry; `CASH_COLLECTED` = minus the
+  cash collected. Zero entries are skipped. An office trip with a recorded driver follows the same rules; without a
+  driver or a report it writes nothing.
+- **Reopening reverses with adjustments.** The ledger is append-only and its sign check keeps `TRIP_FEE` positive, so a
+  reversal is one `ADJUSTMENT` per driver for minus what the trip's entries still add up to. Only trips write entries
+  naming a trip (staff payouts and adjustments don't), so that sum is exactly what earlier completions left standing,
+  and completing again counts the corrected report once.
 
 ---
 

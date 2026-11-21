@@ -115,6 +115,11 @@
       "TRIP_ALREADY_LINKED": "One of these trips is already linked to another. Unlink it first.",
       "TRIP_LINK_INVALID": "These trips can't be linked. The return must be another trip picking up after the outbound.",
       "TRIP_NOT_LINKED": "This trip isn't linked to another one.",
+      "REPORT_LINK_INVALID": "This report link doesn't work. It may have been replaced by a newer one: ask the office for the latest link.",
+      "REPORT_LINK_EXPIRED": "This report link has expired. Ask the office to fill in the report.",
+      "REPORT_LINK_UNAVAILABLE": "This trip has no driver yet, so it has no report link.",
+      "REPORT_ALREADY_SUBMITTED": "The report was already submitted. Ask the office if something needs changing.",
+      "REPORT_REQUIRED": "This trip needs its driver's report before it can be completed. Fill it in if the driver hasn't.",
       "NETWORK_ERROR": "We couldn't reach the server. Check your connection and try again.",
       "UNEXPECTED_RESPONSE": "Something went wrong. Please try again."
     },

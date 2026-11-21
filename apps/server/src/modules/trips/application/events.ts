@@ -10,9 +10,13 @@ import { jsonValue, lockTrip, statusConflict, tripNotFound, tripWriteError } fro
 // The background jobs that change trips, named on their events.
 export type SystemJob = "expire-pending-trips" | "advance-overdue-trips";
 
-// Who made a change: exactly one of these (TripEvent_one_actor).
+// Who made a change: exactly one of these (TripEvent_one_actor). A driver acts through the trip's report link.
 export type TripActor =
-  { staffId: string } | { customerId: string } | { guestSessionId: string } | { system: SystemJob };
+  | { staffId: string }
+  | { customerId: string }
+  | { guestSessionId: string }
+  | { driverId: string }
+  | { system: SystemJob };
 
 export type TripEventData = Record<string, Prisma.InputJsonValue | null>;
 
@@ -32,6 +36,7 @@ const actorColumns = (actor: TripActor) => ({
   staffId: "staffId" in actor ? actor.staffId : null,
   customerId: "customerId" in actor ? actor.customerId : null,
   guestSessionId: "guestSessionId" in actor ? actor.guestSessionId : null,
+  driverId: "driverId" in actor ? actor.driverId : null,
   system: "system" in actor ? actor.system : null,
 });
 
@@ -86,12 +91,13 @@ export type TripFields = Partial<
     | "paidAt"
     | "previousTripId"
     | "reportTokenHash"
+    | "reportTokenSalt"
     | "reportTokenExpiresAt"
   >
 >;
 
 // Never written to an event: secrets.
-const UNRECORDED = new Set(["reportTokenHash", "reportTokenExpiresAt"]);
+const UNRECORDED = new Set(["reportTokenHash", "reportTokenSalt", "reportTokenExpiresAt"]);
 
 export interface TripChange {
   tripId: string;

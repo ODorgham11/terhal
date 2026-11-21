@@ -314,7 +314,9 @@ export type StaffBooking = z.infer<typeof StaffBooking>;
 
 export const TripEventActor = z
   .object({
-    type: z.enum(["STAFF", "CUSTOMER", "GUEST", "SYSTEM"]),
+    type: z
+      .enum(["STAFF", "CUSTOMER", "GUEST", "DRIVER", "SYSTEM"])
+      .meta({ description: "DRIVER: the assigned driver, through the trip's report link." }),
     id: z.string().nullable(),
     name: z.string().meta({ description: "A person's name, or the job's for the system." }),
   })

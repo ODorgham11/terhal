@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decrypt, encrypt } from "../../src/platform/crypto/encryption";
+import { decrypt, encrypt, keyedToken } from "../../src/platform/crypto/encryption";
 import { signAccessToken, verifyAccessToken } from "../../src/platform/crypto/jwt";
 import { compare, compareAgainstNothing, hash } from "../../src/platform/crypto/passwords";
 import { generateToken, hashToken } from "../../src/platform/crypto/tokens";
@@ -18,6 +18,13 @@ describe("encryption", () => {
     const parts = encrypt("secret").split(".");
     parts[3] = Buffer.from("tampered").toString("base64url");
     expect(() => decrypt(parts.join("."))).toThrow();
+  });
+
+  it("makes keyed tokens again from the same message, and different ones per purpose", () => {
+    expect(keyedToken("report-link", "a")).toBe(keyedToken("report-link", "a"));
+    expect(keyedToken("report-link", "a")).not.toBe(keyedToken("report-link", "b"));
+    expect(keyedToken("report-link", "a")).not.toBe(keyedToken("other", "a"));
+    expect(keyedToken("report-link", "a")).toMatch(/^[\w-]{43}$/);
   });
 });
 

@@ -17,5 +17,6 @@ export {
   driverTrips,
   liveOfficeTrips,
 } from "./application/queries";
+export { driverReportRoutes, staffReportRoutes } from "./http/report-routes";
 export { siteTripRoutes } from "./http/site-routes";
 export { staffTripRoutes } from "./http/staff-routes";

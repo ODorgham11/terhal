@@ -1,5 +1,7 @@
 import type { Prisma } from "../../../../generated/prisma/client";
 import type { RecordedTripEvent, TripActor } from "./events";
+import { recordCompletion, reverseCompletion } from "./ledger";
+import { issueReportLink } from "./report-link";
 
 // Where the features built on trips plug in. Each runs inside the transaction of the change that triggered it, so its
 // writes (a notification row, a ledger entry) are saved with the change or not at all. Keep them fast: anything slow
@@ -18,14 +20,14 @@ export const afterTripEvent: (tx: Tx, event: RecordedTripEvent) => Promise<void>
 
 // A trip moved to COMPLETED (T4 a): the driver ledger's entries for it (D8 a: the trip fee for external drivers,
 // reimbursed expenses, cash collected) are written here.
-export const onTripCompleted: (tx: Tx, trip: HookTrip, actor: TripActor) => Promise<void> = () =>
-  Promise.resolve();
+export const onTripCompleted: (tx: Tx, trip: HookTrip, actor: TripActor) => Promise<void> =
+  recordCompletion;
 
 // A completed trip was reopened (T8 a, back to AWAITING_REPORT): whatever onTripCompleted wrote is reversed here, so
 // completing it again doesn't count twice.
-export const onTripReopened: (tx: Tx, trip: HookTrip, actor: TripActor) => Promise<void> = () =>
-  Promise.resolve();
+export const onTripReopened: (tx: Tx, trip: HookTrip, actor: TripActor) => Promise<void> =
+  reverseCompletion;
 
 // The trip's driver changed (A1, D1 b, D2 a). The old report link is already revoked by then; a new one is issued here
-// once the driver report exists.
-export const onDriverChanged: (tx: Tx, trip: HookTrip) => Promise<void> = () => Promise.resolve();
+// for the new driver, if there is one.
+export const onDriverChanged: (tx: Tx, trip: HookTrip) => Promise<void> = issueReportLink;

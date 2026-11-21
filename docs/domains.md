@@ -493,10 +493,11 @@ pins (a different hotel, say) but not the class or body. a) As stated **(Recomme
 
 | Method | Path | Audience | Permission |
 | --- | --- | --- | --- |
-| POST | `/v1/staff/trips/{id}/report-link` (issue or rotate; returns the link once) | staff | `trips` |
-| GET | `/v1/site/driver/report` (token in header) | driver link | — |
+| GET | `/v1/staff/trips/{id}/report-link?locale` (the link, its WhatsApp message and `wa.me` link; built: shown again, see decisions.md) | staff | `trips` |
+| POST | `/v1/staff/trips/{id}/report-link?locale` (replace the link) | staff | `trips` |
+| GET | `/v1/site/driver/report` (token in the `Report-Token` header) | driver link | — |
 | POST | `/v1/site/driver/report/start`, `/end` (if T3 b or d) | driver link | — |
-| PUT | `/v1/site/driver/report` (save or submit) | driver link | — |
+| PUT | `/v1/site/driver/report` (submit, once) | driver link | — |
 | GET | `/v1/staff/trips/{id}/report` | staff | `trips` |
 | PUT | `/v1/staff/trips/{id}/report` (staff fill or correct) | staff | `trips` |
 
@@ -992,6 +993,9 @@ Anything not listed takes the recommended option.
 - **D7 b:** the report locks for the driver once submitted; after that only staff can edit it.
 - **D8 a:** a ledger. Internal drivers get reimbursements and have cash collected deducted, but no trip fee.
 - D9 a.
+- **As built** (decisions.md, "The driver report"): staff can show the link again and replace it; a trip with a driver
+  needs its report to complete (office trips don't); the report carries the cash collected; reopening reverses the
+  ledger with adjustments.
 
 **F. Fleet**
 - F1 a, F2 a, F3 b.
@@ -1038,7 +1042,8 @@ Folded into the domain migrations:
   - `Trip.priceState`, a nullable `totalPrice`, `Trip_price_state` and `Trip_priced_before_confirmed` (Q3);
   - `Trip.paymentMethod` and `Trip.paidAt` (B8);
   - `Trip.idempotencyKey` (B9);
-  - the report token's hash and expiry (D1);
+  - the report token's hash and expiry (D1), and as built its salt, `TripReport.cashCollected` and
+    `TripEvent.driverId` (see decisions.md, "The driver report");
   - `ExpenseType.OFFICE_FEE` (O1);
   - a nullable stop address or pin, with `TripStop_address_or_pin` (D4);
   - CHECKs for car fit (B4), report chronology and mileage (D3) and positive amounts (X3);
