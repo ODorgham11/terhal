@@ -3,7 +3,7 @@ import { decrypt, encrypt } from "../../src/platform/crypto/encryption";
 import { compare, compareAgainstNothing, hash } from "../../src/platform/crypto/passwords";
 import { generateToken, hashToken } from "../../src/platform/crypto/tokens";
 import { createTotpSecret, verifyTotp } from "../../src/platform/crypto/totp";
-import { totpCode } from "../support/totp";
+import { totpCode } from "../support/factories";
 
 describe("encryption", () => {
   it("round trips, with a fresh IV each time", () => {
