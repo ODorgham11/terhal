@@ -13,10 +13,7 @@ import {
 export type StaffNotificationKind = Exclude<NotificationKind, BookerNotificationKind>;
 
 export type EventActor =
-  | { staffId: string }
-  | { customerId: string }
-  | { guestSessionId: string }
-  | { system: string };
+  { staffId: string } | { customerId: string } | { guestSessionId: string } | { system: string };
 
 // What the rules need to know about the trip, after the event.
 export interface TripFacts {
@@ -47,10 +44,12 @@ export interface Planned {
 const byBooker = (actor: EventActor) => "customerId" in actor || "guestSessionId" in actor;
 
 // Assigned enough to show the booker something (A6 a): a driver, a vehicle or an office.
-export const hasAssignment = (trip: TripFacts) => trip.hasDriver || trip.hasVehicle || trip.hasOffice;
+export const hasAssignment = (trip: TripFacts) =>
+  trip.hasDriver || trip.hasVehicle || trip.hasOffice;
 
 // Assigned enough to start (T2 a): an office, or a driver and a vehicle.
-export const isAssigned = (trip: TripFacts) => trip.hasOffice || (trip.hasDriver && trip.hasVehicle);
+export const isAssigned = (trip: TripFacts) =>
+  trip.hasOffice || (trip.hasDriver && trip.hasVehicle);
 
 const none: Planned = { booker: null, staff: null };
 
@@ -84,7 +83,8 @@ const forEvent = (event: EventNotice, trip: TripFacts): Planned => {
     case tripEventActions.PRICE_DECLINED:
       return { booker: "CANCELLATION_RECEIPT", staff: "PRICE_DECLINED" };
     case tripEventActions.CANCELLED: {
-      if ("system" in event.actor) return { booker: "TRIP_CANCELLED", staff: "CANCELLED_BY_SYSTEM" };
+      if ("system" in event.actor)
+        return { booker: "TRIP_CANCELLED", staff: "CANCELLED_BY_SYSTEM" };
       if ("staffId" in event.actor) return { booker: "TRIP_CANCELLED", staff: null };
       // The return leg cancelled with a declined outbound (R3 a): staff already have PRICE_DECLINED for it.
       const withDecline = event.data?.withTripId !== undefined;

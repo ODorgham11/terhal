@@ -115,7 +115,10 @@ export const sweepOutbox = async (now = new Date()) => {
   const deliveries = await sweepDeliveries(now);
   const reminders = await sweepReminders(now);
   if (deliveries + reminders > 0) {
-    logger.info({ job: "sweep-notifications", deliveries, reminders }, "swept the notifications outbox");
+    logger.info(
+      { job: "sweep-notifications", deliveries, reminders },
+      "swept the notifications outbox",
+    );
   }
   return { deliveries, reminders };
 };

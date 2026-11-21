@@ -89,8 +89,14 @@ const assignmentLines = (details: AssignmentDetails | null | undefined, locale: 
   const lines: string[] = [];
   const ar = locale === "ar";
   if (details.driverName) {
-    const phone = details.driverPhone ? (ar ? `، ${details.driverPhone}` : `, ${details.driverPhone}`) : "";
-    lines.push(ar ? `السائق: ${details.driverName}${phone}` : `Driver: ${details.driverName}${phone}`);
+    const phone = details.driverPhone
+      ? ar
+        ? `، ${details.driverPhone}`
+        : `, ${details.driverPhone}`
+      : "";
+    lines.push(
+      ar ? `السائق: ${details.driverName}${phone}` : `Driver: ${details.driverName}${phone}`,
+    );
   }
   if (details.vehicle) {
     const { make, model, color, plate } = details.vehicle;
@@ -101,7 +107,9 @@ const assignmentLines = (details: AssignmentDetails | null | undefined, locale: 
     );
   }
   if (lines.length === 0 && details.partner) {
-    lines.push(ar ? "تُشغَّل هذه الرحلة عبر أحد شركائنا." : "This trip is operated by one of our partners.");
+    lines.push(
+      ar ? "تُشغَّل هذه الرحلة عبر أحد شركائنا." : "This trip is operated by one of our partners.",
+    );
   }
   return lines;
 };
@@ -119,7 +127,13 @@ const shortRoute = (data: NoticeData, locale: Locale) =>
     : `${data.client}: ${data.pickup.en} → ${data.dropoff.en}, ${formatPickup(data.pickupAt, "en")}`;
 
 const greeting = (data: NoticeData, locale: Locale) =>
-  data.name ? (locale === "ar" ? `مرحبًا ${data.name}،` : `Hi ${data.name},`) : locale === "ar" ? "مرحبًا،" : "Hi,";
+  data.name
+    ? locale === "ar"
+      ? `مرحبًا ${data.name}،`
+      : `Hi ${data.name},`
+    : locale === "ar"
+      ? "مرحبًا،"
+      : "Hi,";
 
 const noteLine = (data: NoticeData, locale: Locale) =>
   data.note ? [locale === "ar" ? `ملاحظة: ${data.note}` : `Note: ${data.note}`] : [];
@@ -127,7 +141,8 @@ const noteLine = (data: NoticeData, locale: Locale) =>
 const linkLine = (data: NoticeData, locale: Locale) =>
   data.link ? [locale === "ar" ? `تفاصيل الرحلة: ${data.link}` : `Trip details: ${data.link}`] : [];
 
-const price = (data: NoticeData, locale: Locale) => (data.price ? formatPrice(data.price, locale) : "");
+const price = (data: NoticeData, locale: Locale) =>
+  data.price ? formatPrice(data.price, locale) : "";
 
 const templates: Record<NotificationKind, Text> = {
   BOOKING_RECEIVED: (data, locale) =>
@@ -355,7 +370,10 @@ const templates: Record<NotificationKind, Text> = {
         }
       : {
           title: `Price accepted for ${data.code}`,
-          lines: [`${price(data, locale)}. ${shortRoute(data, locale)}`, "The trip can be confirmed now."],
+          lines: [
+            `${price(data, locale)}. ${shortRoute(data, locale)}`,
+            "The trip can be confirmed now.",
+          ],
         },
   PRICE_DECLINED: (data, locale) =>
     locale === "ar"

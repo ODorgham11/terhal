@@ -96,7 +96,9 @@ const readAll = createRoute({
 const staffId = (c: Context) => currentStaff(c).staffId;
 
 export const staffNotificationRoutes = createRouter()
-  .openapi(list, async (c) => c.json(await listNotifications(staffId(c), c.req.valid("query")), 200))
+  .openapi(list, async (c) =>
+    c.json(await listNotifications(staffId(c), c.req.valid("query")), 200),
+  )
   .openapi(count, async (c) => c.json(await unreadCount(staffId(c)), 200))
   .openapi(readAll, async (c) => c.json(await markAllRead(staffId(c)), 200))
   .openapi(read, async (c) => c.json(await markRead(staffId(c), c.req.valid("param").id), 200));

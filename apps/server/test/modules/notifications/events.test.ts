@@ -209,9 +209,7 @@ describe("notifications from trip events", () => {
       classId: world.vip.id,
       expectedPrice: undefined,
     });
-    expect(
-      (await act(staff, trip.id, "price", { totalPrice: "2000.00" })).status,
-    ).toBe(200);
+    expect((await act(staff, trip.id, "price", { totalPrice: "2000.00" })).status).toBe(200);
     const proposed = (await notificationsOf(trip.id)).find((row) => row.kind === "PRICE_PROPOSED");
     expect(proposed).toMatchObject({ customerId: customer.id });
     expect(proposed?.body).toContain("٢٬٠٠٠ جنيه");
