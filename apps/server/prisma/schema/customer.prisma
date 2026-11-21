@@ -62,7 +62,8 @@ model CustomerSession {
   @@index([customerId])
 }
 
-// Booking without an account. Verified by phone OTP only, guests have no email verification path.
+// Booking without an account. Guests confirm their contact details with a code emailed to them for now; it moves to
+// WhatsApp once that's integrated.
 model GuestSession {
   id String @id @default(cuid())
 
