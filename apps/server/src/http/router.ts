@@ -23,6 +23,7 @@ import {
   siteLocationRoutes,
   staffLocationRoutes,
 } from "../modules/location/index";
+import { staffNotificationRoutes } from "../modules/notifications/index";
 import { pricingRoutes, quoteRoutes, tripClassRoutes } from "../modules/pricing/index";
 import { siteTripRoutes, staffTripRoutes } from "../modules/trips/index";
 import { env, origins, type Audience } from "../platform/config/env";
@@ -101,7 +102,8 @@ const v1 = createRouter()
   .route("/", pricingRoutes)
   .route("/", quoteRoutes)
   .route("/", siteTripRoutes)
-  .route("/", staffTripRoutes);
+  .route("/", staffTripRoutes)
+  .route("/", staffNotificationRoutes);
 
 export const routes = router.route("/health", health).route("/v1", v1);
 
