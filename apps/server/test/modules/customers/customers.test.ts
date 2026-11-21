@@ -63,7 +63,18 @@ const tripFactory = async () => {
     prisma.tripClass.create({ data: { nameEn: "Economy", nameAr: "اقتصادي" } }),
   ]);
   let code = 0;
-  return (customerId: string, { status = "PENDING", totalPrice = "100.00", daysAhead = 1 } = {}) =>
+  return (
+    customerId: string,
+    {
+      status = "PENDING",
+      totalPrice = "100.00",
+      daysAhead = 1,
+    }: {
+      status?: "PENDING" | "COMPLETED" | "CANCELLED";
+      totalPrice?: string;
+      daysAhead?: number;
+    } = {},
+  ) =>
     prisma.trip.create({
       data: {
         code: `TRH-${String(++code)}`,
