@@ -4,10 +4,14 @@ import { env } from "../config/env";
 import { AppError } from "../errors/app-error";
 
 // Who a token was issued to. Each audience has its own secret, so a token from one can never be used as another.
-// Staff join as a second audience once their auth is built.
-export type Audience = "admin";
+// Guests have no access tokens: their session is an opaque token checked against the database on every request.
+export type Audience = "admin" | "staff" | "customer";
 
-const secrets = { admin: () => env.ADMIN_SECRET } satisfies Record<Audience, () => string>;
+const secrets = {
+  admin: () => env.ADMIN_SECRET,
+  staff: () => env.STAFF_SECRET,
+  customer: () => env.CUSTOMER_SECRET,
+} satisfies Record<Audience, () => string>;
 
 // 15 minutes: access tokens are checked without a session lookup, so they're kept short.
 export const ACCESS_TOKEN_LIFETIME = 15 * 60;
