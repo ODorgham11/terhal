@@ -164,6 +164,12 @@ export const errorCodes = [
   "TRIP_LINK_INVALID",
   // Unlinking a trip that has no linked trip.
   "TRIP_NOT_LINKED",
+
+  // Analytics
+  // The trips CSV would have more rows than allowed (`limit`, 50,000): narrow the filters. `count` is how many matched.
+  "EXPORT_TOO_LARGE",
+  // A month's report can only be generated once the month is over (Cairo time).
+  "REPORT_MONTH_NOT_OVER",
 ] as const;
 
 export type ErrorCode = (typeof errorCodes)[number];

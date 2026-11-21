@@ -115,6 +115,8 @@
       "TRIP_ALREADY_LINKED": "One of these trips is already linked to another. Unlink it first.",
       "TRIP_LINK_INVALID": "These trips can't be linked. The return must be another trip picking up after the outbound.",
       "TRIP_NOT_LINKED": "This trip isn't linked to another one.",
+      "EXPORT_TOO_LARGE": "That's too many trips for one file. Narrow the dates or filters and try again.",
+      "REPORT_MONTH_NOT_OVER": "A month's report can only be made once the month is over.",
       "NETWORK_ERROR": "We couldn't reach the server. Check your connection and try again.",
       "UNEXPECTED_RESPONSE": "Something went wrong. Please try again."
     },
