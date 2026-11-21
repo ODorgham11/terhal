@@ -9,6 +9,7 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@tabler/icons-react": "^3.52.0",
     "@terhal/contracts": "workspace:^",
     "@terhal/server": "workspace:*",
     "hono": "catalog:",
