@@ -11,8 +11,8 @@ migration.
   partial indexes, foreign keys, triggers). Redis holds nothing that can't be rebuilt.
 - **Assume every dependency fails.** Redis, the email provider, the network, a deploy halfway through. Each failure must
   be detected, contained and recoverable without losing data.
-- **Write decisions down.** Significant decisions get a short ADR in [`docs/adr/`](adr/): the context, the decision, and
-  what we gave up.
+- **Write decisions down.** Significant decisions get an entry in [`decisions.md`](decisions.md): the context, the
+  decision, and what we gave up.
 
 ## Non-goals
 
@@ -36,7 +36,7 @@ tooling/
   eslint/       the shared, type-aware ESLint config
 infra/          local Postgres and Redis (Docker Compose)
 deploy/         the VPS: one Compose stack per environment, the edge Caddy, bootstrap and deploy scripts
-docs/           this file and the ADRs
+docs/           this file, infrastructure.md (where it runs) and decisions.md (why it's built this way)
 ```
 
 ## The server: a modular monolith

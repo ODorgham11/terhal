@@ -1,7 +1,7 @@
 # Terhal
 
 pnpm workspace + Turborepo. Read [docs/architecture.md](docs/architecture.md) before adding a module, a job or a
-migration.
+migration, and [docs/decisions.md](docs/decisions.md) before changing something that looks odd.
 
 | Path                 | What                                                                                      |
 | -------------------- | ----------------------------------------------------------------------------------------- |
@@ -12,7 +12,7 @@ migration.
 | `tooling/eslint`     | Shared ESLint config (type-aware `typescript-eslint`)                                     |
 | `infra`              | Local Postgres, Redis (cache) and Redis (queue)                                           |
 | `deploy`             | Docker Compose stacks, Caddy and scripts for the VPS                                      |
-| `docs`               | Architecture and decision records                                                         |
+| `docs`               | Architecture, infrastructure and the decision log                                         |
 
 Everything except the database runs in Docker on one VPS, behind Caddy. The database is Neon (one branch per
 environment: `production` for `main`, and `staging`).
