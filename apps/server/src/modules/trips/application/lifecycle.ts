@@ -72,16 +72,18 @@ export const confirmTrip = (id: string, staffId: string) =>
   );
 
 // T2 a: a driver and a vehicle, or an office. A driver or vehicle already on a trip in progress is refused by the
-// database (ASSIGNEE_BUSY).
-export const startTrip = (id: string, staffId: string) =>
+// database (ASSIGNEE_BUSY). Staff start a trip, or the driver from the report link (T3 d), whose token `guard` checks on
+// the locked trip.
+export const startTrip = (id: string, actor: TripActor, guard?: (trip: Trip) => void) =>
   move(
     id,
-    { staffId },
+    actor,
     {
       action: tripEventActions.STARTED,
       from: ["CONFIRMED"],
       to: "IN_PROGRESS",
       check: (trip) => {
+        guard?.(trip);
         if (!isAssigned(trip)) {
           throw new AppError({
             code: "ASSIGNMENT_REQUIRED",
@@ -93,18 +95,20 @@ export const startTrip = (id: string, staffId: string) =>
     },
   );
 
-export const endTrip = (id: string, staffId: string) =>
+export const endTrip = (id: string, actor: TripActor, guard?: (trip: Trip) => void) =>
   move(
     id,
-    { staffId },
+    actor,
     {
       action: tripEventActions.ENDED,
       from: ["IN_PROGRESS"],
       to: "AWAITING_REPORT",
+      check: guard,
     },
   );
 
-// T4 a: staff review the report and complete the trip; the driver ledger hooks in here (D8 a).
+// T4 a: staff review the report and complete the trip; the driver ledger hooks in here (D8 a). A trip with a driver needs
+// its report first (staff can fill it in); an office trip may complete without one (D9 a).
 export const completeTrip = (id: string, staffId: string) =>
   move(
     id,
@@ -113,6 +117,20 @@ export const completeTrip = (id: string, staffId: string) =>
       action: tripEventActions.COMPLETED,
       from: ["AWAITING_REPORT"],
       to: "COMPLETED",
+      check: async (trip) => {
+        if (trip.officeId) return;
+        const report = await prisma.tripReport.findUnique({
+          where: { tripId: trip.id },
+          select: { id: true },
+        });
+        if (!report) {
+          throw new AppError({
+            code: "REPORT_REQUIRED",
+            status: 409,
+            detail: "This trip needs its report before it can be completed.",
+          });
+        }
+      },
       after: (tx, trip) => onTripCompleted(tx, trip, { staffId }),
     },
   );
