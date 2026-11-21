@@ -3,8 +3,10 @@ import type { Prisma } from "../../../../generated/prisma/client";
 import { prisma } from "../../../platform/db/prisma";
 
 export interface AuditEntry {
-  // The admin who did it, or null for the system (the seed) and for sign in attempts on emails that aren't admins.
-  adminId: string | null;
+  // Who did it: an admin, a staff member, or neither (null or left out) for the system (the seed) and for sign in
+  // attempts on emails that aren't admins. Never both (the AuditLog_one_actor check).
+  adminId?: string | null;
+  staffId?: string | null;
   action: AuditAction;
   // What the event is about, e.g. an Admin, AdminSession, or AdminInvitation, and its id.
   entityType: string;
@@ -23,4 +25,12 @@ export const recordAudit = async (
   client: Client = prisma,
 ) => {
   await client.auditLog.create({ data: { ...entry, ipAddress } });
+};
+
+// Several events in one insert, e.g. every price a bulk upload changed. Same rules as recordAudit.
+export const recordAudits = async (entries: AuditEntry[], client: Client = prisma) => {
+  if (entries.length === 0) return;
+  await client.auditLog.createMany({
+    data: entries.map(({ ipAddress = null, ...entry }) => ({ ...entry, ipAddress })),
+  });
 };
