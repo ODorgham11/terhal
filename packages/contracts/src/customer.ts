@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CurrentPassword } from "./account";
+import { CarBody } from "./cars";
 import { Email, LinkToken, Name, Password, Phone } from "./fields";
 import { DEFAULT_LOCALE, Locale } from "./locale";
 
@@ -133,6 +134,98 @@ export const ChangeCustomerPhone = z
 export const ConfirmContactChange = z
   .object({ code: VerificationCode })
   .meta({ id: "ConfirmContactChange" });
+
+// Customers as staff and admins see them. Staff only view (the `customers` permission, or `trips` for the list);
+// suspending and reactivating are admin-panel only. Guests aren't customers and never appear here.
+
+const tripStatuses = [
+  "PENDING",
+  "CANCELLED",
+  "CONFIRMED",
+  "IN_PROGRESS",
+  "AWAITING_REPORT",
+  "COMPLETED",
+] as const;
+
+const Limit = z.coerce
+  .number({ error: "Limit must be a number." })
+  .int("Limit must be a whole number.")
+  .min(1, "Limit must be at least 1.")
+  .max(100, "Limit must be 100 at most.")
+  .default(50);
+
+const Cursor = z
+  .string()
+  .trim()
+  .min(1, "Cursor is required.")
+  .max(100, "Cursor must contain 100 characters at most.")
+  .meta({ description: "The previous page's nextCursor." });
+
+export const ListCustomers = z.object({
+  q: z.string().trim().max(100, "Search must contain 100 characters at most.").optional().meta({
+    description:
+      "Matches the name, phone or email, ignoring case and Arabic spelling variants (أ/ا, ة/ه, ى/ي, diacritics).",
+  }),
+  status: CustomerStatus.optional(),
+  cursor: Cursor.optional(),
+  limit: Limit,
+});
+
+export type ListCustomers = z.output<typeof ListCustomers>;
+
+export const CustomerSummary = Customer.extend({
+  verifiedAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+}).meta({ id: "CustomerSummary" });
+
+export const CustomerDetail = CustomerSummary.extend({
+  tripCount: z.int().meta({ description: "Every trip they booked, in any status." }),
+  totalSpent: z.string().meta({
+    description: "The total price of their completed trips, in EGP with two decimals.",
+    example: "1250.00",
+  }),
+}).meta({ id: "CustomerDetail" });
+
+export type CustomerDetail = z.infer<typeof CustomerDetail>;
+
+export const ListCustomerTrips = z.object({
+  status: z.enum(tripStatuses, { error: "Unknown status." }).optional(),
+  cursor: Cursor.optional(),
+  limit: Limit,
+});
+
+export type ListCustomerTrips = z.output<typeof ListCustomerTrips>;
+
+export const CustomerTrip = z
+  .object({
+    id: z.string(),
+    code: z.string(),
+    status: z.enum(tripStatuses),
+    source: z.enum(["CUSTOMER", "STAFF"]),
+    pickupDate: z.iso.datetime(),
+    pickup: z.string().meta({ description: "The pickup's name when it was booked." }),
+    dropoff: z.string().meta({ description: "The drop-off's name when it was booked." }),
+    car: CarBody,
+    passengers: z.int(),
+    totalPrice: z.string().nullable().meta({
+      description: "EGP with two decimals. Null while a price is requested.",
+      example: "1250.00",
+    }),
+    priceState: z.enum(["QUOTED", "REQUESTED", "PROPOSED", "ACCEPTED"]),
+    createdAt: z.iso.datetime(),
+  })
+  .meta({ id: "CustomerTrip", description: "A trip the customer booked, newest pickup first." });
+
+// Suspending or reactivating a customer is recorded with why.
+export const CustomerStatusChange = z
+  .object({
+    reason: z
+      .string({ error: "Reason is required." })
+      .trim()
+      .min(3, "Reason must contain at least 3 characters.")
+      .max(500, "Reason must contain 500 characters at most."),
+  })
+  .meta({ id: "CustomerStatusChange" });
 
 export const ContactChangeSent = z
   .object({
