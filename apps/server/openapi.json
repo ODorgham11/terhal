@@ -114,7 +114,30 @@
               "OUT_OF_COVERAGE",
               "TRIP_CLASS_NAME_TAKEN",
               "PRICING_EXISTS",
-              "QUOTE_SAME_PLACE"
+              "QUOTE_SAME_PLACE",
+              "PICKUP_TIME_INVALID",
+              "LOAD_DOES_NOT_FIT",
+              "PENDING_TRIP_LIMIT",
+              "PRICE_CHANGED",
+              "PRICE_REQUIRED",
+              "CUSTOMER_NOT_AVAILABLE",
+              "TRIP_STATUS_CONFLICT",
+              "CALL_TO_CANCEL",
+              "PRICE_NOT_ACCEPTED",
+              "ASSIGNMENT_REQUIRED",
+              "ASSIGNEE_BUSY",
+              "MONTH_REPORT_GENERATED",
+              "PRICE_NOT_REQUESTED",
+              "PRICE_NOT_PROPOSED",
+              "PRICE_REQUEST_OPEN",
+              "DRIVER_NOT_AVAILABLE",
+              "VEHICLE_NOT_AVAILABLE",
+              "VEHICLE_TOO_SMALL",
+              "ASSIGNMENT_OFFICE_MISMATCH",
+              "ASSIGNMENT_CONFLICT",
+              "TRIP_ALREADY_LINKED",
+              "TRIP_LINK_INVALID",
+              "TRIP_NOT_LINKED"
             ],
             "example": "VALIDATION_FAILED"
           },
@@ -3981,6 +4004,1692 @@
           "latitude": 29.9602,
           "longitude": 31.2569
         }
+      },
+      "SiteBooking": {
+        "type": "object",
+        "properties": {
+          "trip": {
+            "$ref": "#/components/schemas/SiteTrip"
+          },
+          "returnTrip": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SiteTrip"
+              },
+              {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "trip",
+          "returnTrip"
+        ]
+      },
+      "SiteTrip": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "TRH-7K3Q9P"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TripStatus"
+          },
+          "priceState": {
+            "$ref": "#/components/schemas/TripPriceState"
+          },
+          "totalPrice": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "1250.00",
+            "description": "EGP. Null while a price is requested."
+          },
+          "clientName": {
+            "type": "string"
+          },
+          "clientPhone": {
+            "type": "string"
+          },
+          "class": {
+            "$ref": "#/components/schemas/TripClassSnapshot"
+          },
+          "car": {
+            "$ref": "#/components/schemas/CarBody"
+          },
+          "passengers": {
+            "type": "integer"
+          },
+          "largeLuggage": {
+            "type": "integer"
+          },
+          "mediumLuggage": {
+            "type": "integer"
+          },
+          "smallLuggage": {
+            "type": "integer"
+          },
+          "pickupDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pickup": {
+            "$ref": "#/components/schemas/TripPlace"
+          },
+          "dropoff": {
+            "$ref": "#/components/schemas/TripPlace"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "previousTripId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The outbound trip, when this one is its return."
+          },
+          "returnTripId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The return trip, when this one has one."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "assignment": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "driver": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "firstName",
+                  "phone"
+                ]
+              },
+              "vehicle": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "make": {
+                    "type": "string"
+                  },
+                  "model": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "plateNumber": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "make",
+                  "model",
+                  "color",
+                  "plateNumber"
+                ]
+              },
+              "partner": {
+                "type": "boolean",
+                "description": "Operated by a partner office. Its driver and vehicle are shown when they're recorded."
+              }
+            },
+            "required": [
+              "driver",
+              "vehicle",
+              "partner"
+            ],
+            "description": "Null until the trip is confirmed and assigned."
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "status",
+          "priceState",
+          "totalPrice",
+          "clientName",
+          "clientPhone",
+          "class",
+          "car",
+          "passengers",
+          "largeLuggage",
+          "mediumLuggage",
+          "smallLuggage",
+          "pickupDate",
+          "pickup",
+          "dropoff",
+          "notes",
+          "previousTripId",
+          "returnTripId",
+          "createdAt",
+          "assignment"
+        ]
+      },
+      "TripStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "CANCELLED",
+          "CONFIRMED",
+          "IN_PROGRESS",
+          "AWAITING_REPORT",
+          "COMPLETED"
+        ]
+      },
+      "TripPriceState": {
+        "type": "string",
+        "enum": [
+          "QUOTED",
+          "REQUESTED",
+          "PROPOSED",
+          "ACCEPTED"
+        ],
+        "description": "QUOTED: priced at booking. REQUESTED: no price yet. PROPOSED: staff proposed one, waiting for the booker. ACCEPTED: the booker accepted it."
+      },
+      "TripClassSnapshot": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "nameEn",
+          "nameAr"
+        ],
+        "description": "The class as it was named at booking."
+      },
+      "TripPlace": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string",
+            "description": "Its name when the trip was booked."
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "nameEn",
+          "nameAr",
+          "latitude",
+          "longitude"
+        ]
+      },
+      "BookTrip": {
+        "type": "object",
+        "properties": {
+          "classId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "car": {
+            "$ref": "#/components/schemas/CarBody"
+          },
+          "pickup": {
+            "$ref": "#/components/schemas/Pin"
+          },
+          "dropoff": {
+            "$ref": "#/components/schemas/Pin"
+          },
+          "pickupDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-12-01T08:00:00Z"
+          },
+          "passengers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "largeLuggage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "default": 0
+          },
+          "mediumLuggage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "default": 0
+          },
+          "smallLuggage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "default": 0
+          },
+          "clientName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "description": "The passenger's name. Defaults to the booker's."
+          },
+          "clientPhone": {
+            "type": "string",
+            "example": "+201001234567",
+            "description": "The passenger's phone. Defaults to the booker's."
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "expectedPrice": {
+            "type": "string",
+            "example": "1250.00",
+            "description": "The quoted price. Leave it out for an option the quote showed without a price."
+          },
+          "return": {
+            "type": "object",
+            "properties": {
+              "pickupDate": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-12-01T08:00:00Z"
+              },
+              "pickup": {
+                "type": "object",
+                "properties": {
+                  "latitude": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "example": {
+                  "latitude": 29.9602,
+                  "longitude": 31.2569
+                },
+                "description": "Defaults to the outbound's drop-off."
+              },
+              "dropoff": {
+                "type": "object",
+                "properties": {
+                  "latitude": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "example": {
+                  "latitude": 29.9602,
+                  "longitude": 31.2569
+                },
+                "description": "Defaults to the outbound's pickup."
+              },
+              "expectedPrice": {
+                "type": "string",
+                "example": "1250.00",
+                "description": "The quote's `returnPrice`."
+              }
+            },
+            "required": [
+              "pickupDate"
+            ],
+            "description": "Also book the way back: a second trip with the same class, body, passengers and luggage, linked to this one."
+          }
+        },
+        "required": [
+          "classId",
+          "car",
+          "pickup",
+          "dropoff",
+          "pickupDate",
+          "passengers"
+        ]
+      },
+      "SiteTripsChanged": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SiteTrip"
+            },
+            "description": "The trips changed, outbound first."
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "SiteCancelTrip": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      },
+      "AcceptPrice": {
+        "type": "object",
+        "properties": {
+          "expectedPrice": {
+            "type": "string",
+            "example": "1250.00",
+            "description": "The total of the proposals shown: every proposed leg of the booking is accepted together."
+          }
+        },
+        "required": [
+          "expectedPrice"
+        ]
+      },
+      "DeclinePrice": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      },
+      "StaffBooking": {
+        "type": "object",
+        "properties": {
+          "trip": {
+            "$ref": "#/components/schemas/Trip"
+          },
+          "returnTrip": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Trip"
+              },
+              {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "trip",
+          "returnTrip"
+        ]
+      },
+      "Trip": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "TRH-7K3Q9P"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TripStatus"
+          },
+          "priceState": {
+            "$ref": "#/components/schemas/TripPriceState"
+          },
+          "totalPrice": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "1250.00",
+            "description": "EGP. Null while a price is requested."
+          },
+          "clientName": {
+            "type": "string"
+          },
+          "clientPhone": {
+            "type": "string"
+          },
+          "class": {
+            "$ref": "#/components/schemas/TripClassSnapshot"
+          },
+          "car": {
+            "$ref": "#/components/schemas/CarBody"
+          },
+          "passengers": {
+            "type": "integer"
+          },
+          "largeLuggage": {
+            "type": "integer"
+          },
+          "mediumLuggage": {
+            "type": "integer"
+          },
+          "smallLuggage": {
+            "type": "integer"
+          },
+          "pickupDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pickup": {
+            "$ref": "#/components/schemas/TripPlace"
+          },
+          "dropoff": {
+            "$ref": "#/components/schemas/TripPlace"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "previousTripId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The outbound trip, when this one is its return."
+          },
+          "returnTripId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The return trip, when this one has one."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER",
+              "STAFF"
+            ]
+          },
+          "booker": {
+            "$ref": "#/components/schemas/TripBooker"
+          },
+          "driver": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "firstName",
+              "lastName",
+              "phone"
+            ]
+          },
+          "vehicle": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "make": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              },
+              "plateNumber": {
+                "type": "string"
+              },
+              "body": {
+                "$ref": "#/components/schemas/CarBody"
+              }
+            },
+            "required": [
+              "id",
+              "make",
+              "model",
+              "color",
+              "plateNumber",
+              "body"
+            ]
+          },
+          "office": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "phone"
+            ]
+          },
+          "paymentMethod": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "paidAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "status",
+          "priceState",
+          "totalPrice",
+          "clientName",
+          "clientPhone",
+          "class",
+          "car",
+          "passengers",
+          "largeLuggage",
+          "mediumLuggage",
+          "smallLuggage",
+          "pickupDate",
+          "pickup",
+          "dropoff",
+          "notes",
+          "previousTripId",
+          "returnTripId",
+          "createdAt",
+          "source",
+          "booker",
+          "driver",
+          "vehicle",
+          "office",
+          "paymentMethod",
+          "paidAt",
+          "updatedAt"
+        ]
+      },
+      "TripBooker": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER",
+              "GUEST",
+              "STAFF"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "name",
+          "phone",
+          "email"
+        ]
+      },
+      "PaymentMethod": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "enum": [
+          "CASH_TO_DRIVER",
+          "CASH_AT_OFFICE",
+          "TRANSFER",
+          "CARD",
+          null
+        ]
+      },
+      "StaffBookTrip": {
+        "type": "object",
+        "properties": {
+          "classId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "car": {
+            "$ref": "#/components/schemas/CarBody"
+          },
+          "pickup": {
+            "$ref": "#/components/schemas/Pin"
+          },
+          "dropoff": {
+            "$ref": "#/components/schemas/Pin"
+          },
+          "pickupDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-12-01T08:00:00Z"
+          },
+          "passengers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "largeLuggage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "default": 0
+          },
+          "mediumLuggage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "default": 0
+          },
+          "smallLuggage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50,
+            "default": 0
+          },
+          "clientName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "description": "The passenger's name. Defaults to the booker's."
+          },
+          "clientPhone": {
+            "type": "string",
+            "example": "+201001234567",
+            "description": "The passenger's phone. Defaults to the booker's."
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "customerId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Book for this customer (found by phone or email in the customer list). Left out, the staff member is the booker."
+          },
+          "totalPrice": {
+            "type": "string",
+            "example": "1250.00",
+            "description": "The price to charge. Left out, the price list's; without one, a customer's trip is booked on request."
+          },
+          "backdated": {
+            "type": "boolean",
+            "default": false,
+            "description": "Needed for a pickup time in the past (recording a trip that already happened)."
+          },
+          "return": {
+            "type": "object",
+            "properties": {
+              "pickupDate": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-12-01T08:00:00Z"
+              },
+              "pickup": {
+                "type": "object",
+                "properties": {
+                  "latitude": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "example": {
+                  "latitude": 29.9602,
+                  "longitude": 31.2569
+                },
+                "description": "Defaults to the outbound's drop-off."
+              },
+              "dropoff": {
+                "type": "object",
+                "properties": {
+                  "latitude": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "example": {
+                  "latitude": 29.9602,
+                  "longitude": 31.2569
+                },
+                "description": "Defaults to the outbound's pickup."
+              },
+              "totalPrice": {
+                "$ref": "#/components/schemas/Price"
+              }
+            },
+            "required": [
+              "pickupDate"
+            ],
+            "description": "Also book the way back, linked to this one."
+          }
+        },
+        "required": [
+          "classId",
+          "car",
+          "pickup",
+          "dropoff",
+          "pickupDate",
+          "passengers"
+        ]
+      },
+      "TripOverview": {
+        "type": "object",
+        "properties": {
+          "today": {
+            "type": "integer",
+            "description": "Trips not cancelled picking up today (Cairo)."
+          },
+          "tomorrow": {
+            "type": "integer"
+          },
+          "unassigned": {
+            "type": "integer",
+            "description": "Pending or confirmed, not assigned yet."
+          },
+          "inProgress": {
+            "type": "integer"
+          },
+          "awaitingReport": {
+            "type": "integer"
+          },
+          "overdue": {
+            "type": "integer",
+            "description": "Pending or confirmed trips whose pickup time has passed."
+          },
+          "priceRequests": {
+            "type": "integer",
+            "description": "Pending trips waiting for a price."
+          }
+        },
+        "required": [
+          "today",
+          "tomorrow",
+          "unassigned",
+          "inProgress",
+          "awaitingReport",
+          "overdue",
+          "priceRequests"
+        ]
+      },
+      "TripDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "TRH-7K3Q9P"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TripStatus"
+          },
+          "priceState": {
+            "$ref": "#/components/schemas/TripPriceState"
+          },
+          "totalPrice": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "1250.00",
+            "description": "EGP. Null while a price is requested."
+          },
+          "clientName": {
+            "type": "string"
+          },
+          "clientPhone": {
+            "type": "string"
+          },
+          "class": {
+            "$ref": "#/components/schemas/TripClassSnapshot"
+          },
+          "car": {
+            "$ref": "#/components/schemas/CarBody"
+          },
+          "passengers": {
+            "type": "integer"
+          },
+          "largeLuggage": {
+            "type": "integer"
+          },
+          "mediumLuggage": {
+            "type": "integer"
+          },
+          "smallLuggage": {
+            "type": "integer"
+          },
+          "pickupDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pickup": {
+            "$ref": "#/components/schemas/TripPlace"
+          },
+          "dropoff": {
+            "$ref": "#/components/schemas/TripPlace"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "previousTripId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The outbound trip, when this one is its return."
+          },
+          "returnTripId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The return trip, when this one has one."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER",
+              "STAFF"
+            ]
+          },
+          "booker": {
+            "$ref": "#/components/schemas/TripBooker"
+          },
+          "driver": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "firstName",
+              "lastName",
+              "phone"
+            ]
+          },
+          "vehicle": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "make": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              },
+              "plateNumber": {
+                "type": "string"
+              },
+              "body": {
+                "$ref": "#/components/schemas/CarBody"
+              }
+            },
+            "required": [
+              "id",
+              "make",
+              "model",
+              "color",
+              "plateNumber",
+              "body"
+            ]
+          },
+          "office": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "phone"
+            ]
+          },
+          "paymentMethod": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "paidAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TripEvent"
+            },
+            "description": "Oldest first."
+          },
+          "previousTrip": {
+            "$ref": "#/components/schemas/TripLink"
+          },
+          "returnTrip": {
+            "$ref": "#/components/schemas/TripLink"
+          },
+          "report": {
+            "$ref": "#/components/schemas/TripReportSummary"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "status",
+          "priceState",
+          "totalPrice",
+          "clientName",
+          "clientPhone",
+          "class",
+          "car",
+          "passengers",
+          "largeLuggage",
+          "mediumLuggage",
+          "smallLuggage",
+          "pickupDate",
+          "pickup",
+          "dropoff",
+          "notes",
+          "previousTripId",
+          "returnTripId",
+          "createdAt",
+          "source",
+          "booker",
+          "driver",
+          "vehicle",
+          "office",
+          "paymentMethod",
+          "paidAt",
+          "updatedAt",
+          "events",
+          "previousTrip",
+          "returnTrip",
+          "report"
+        ]
+      },
+      "TripEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "action": {
+            "$ref": "#/components/schemas/TripEventAction"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/TripEventActor"
+          },
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {},
+            "description": "`from` and `to` for a status change, `reason` and `note`, and `changes`: each changed field's `before` and `after`."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "actor",
+          "data",
+          "createdAt"
+        ]
+      },
+      "TripEventAction": {
+        "type": "string",
+        "enum": [
+          "trip.created",
+          "trip.updated",
+          "trip.price_proposed",
+          "trip.price_accepted",
+          "trip.price_declined",
+          "trip.confirmed",
+          "trip.assigned",
+          "trip.unassigned",
+          "trip.started",
+          "trip.start_undone",
+          "trip.ended",
+          "trip.completed",
+          "trip.reopened",
+          "trip.cancelled",
+          "trip.report_link_issued",
+          "trip.report_submitted",
+          "trip.report_edited",
+          "trip.payment_recorded",
+          "trip.linked",
+          "trip.unlinked"
+        ]
+      },
+      "TripEventActor": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "STAFF",
+              "CUSTOMER",
+              "GUEST",
+              "SYSTEM"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "A person's name, or the job's for the system."
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "name"
+        ]
+      },
+      "TripLink": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TripStatus"
+          },
+          "pickupDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "status",
+          "pickupDate"
+        ]
+      },
+      "TripReportSummary": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vehiclePickup": {
+            "type": "string"
+          },
+          "startMileage": {
+            "type": "integer"
+          },
+          "pickupAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dropoffAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vehicleDropoff": {
+            "type": "string"
+          },
+          "endedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endMileage": {
+            "type": "integer"
+          },
+          "expenses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "string"
+                },
+                "notes": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "amount",
+                "notes"
+              ]
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "startedAt",
+          "vehiclePickup",
+          "startMileage",
+          "pickupAt",
+          "dropoffAt",
+          "vehicleDropoff",
+          "endedAt",
+          "endMileage",
+          "expenses",
+          "updatedAt"
+        ]
+      },
+      "UpdateTrip": {
+        "type": "object",
+        "properties": {
+          "pickupDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-12-01T08:00:00Z"
+          },
+          "pickup": {
+            "$ref": "#/components/schemas/Pin"
+          },
+          "dropoff": {
+            "$ref": "#/components/schemas/Pin"
+          },
+          "classId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "car": {
+            "$ref": "#/components/schemas/CarBody"
+          },
+          "passengers": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "largeLuggage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "mediumLuggage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "smallLuggage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          },
+          "clientName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "clientPhone": {
+            "type": "string",
+            "example": "+201001234567"
+          },
+          "totalPrice": {
+            "type": "string",
+            "example": "1250.00",
+            "description": "Editable until the trip is completed."
+          },
+          "paymentMethod": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "paidAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "ProposePrice": {
+        "type": "object",
+        "properties": {
+          "totalPrice": {
+            "$ref": "#/components/schemas/Price"
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "saveToPricing": {
+            "type": "boolean",
+            "default": false,
+            "description": "Also save it to the price list for this route (needs `pricing`)."
+          }
+        },
+        "required": [
+          "totalPrice"
+        ]
+      },
+      "CancelTrip": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/CancelReason"
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "CancelReason": {
+        "type": "string",
+        "enum": [
+          "CUSTOMER_REQUEST",
+          "NO_SHOW",
+          "NO_VEHICLE",
+          "DUPLICATE",
+          "OTHER"
+        ]
+      },
+      "AssignTrip": {
+        "type": "object",
+        "properties": {
+          "driverId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "vehicleId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "officeId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "acknowledgeConflicts": {
+            "type": "boolean",
+            "default": false,
+            "description": "Assign even though the driver or vehicle has a trip close by."
+          }
+        },
+        "description": "The whole assignment: what's left out or null is cleared. With an office, the driver and vehicle are optional and must come through it."
+      },
+      "AssignmentCandidates": {
+        "type": "object",
+        "properties": {
+          "drivers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "firstName": {
+                  "type": "string"
+                },
+                "lastName": {
+                  "type": "string"
+                },
+                "phone": {
+                  "type": "string"
+                },
+                "isExternal": {
+                  "type": "boolean"
+                },
+                "officeId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "conflicts": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TripConflict"
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "firstName",
+                "lastName",
+                "phone",
+                "isExternal",
+                "officeId",
+                "conflicts"
+              ]
+            }
+          },
+          "vehicles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "make": {
+                  "type": "string"
+                },
+                "model": {
+                  "type": "string"
+                },
+                "color": {
+                  "type": "string"
+                },
+                "plateNumber": {
+                  "type": "string"
+                },
+                "body": {
+                  "$ref": "#/components/schemas/CarBody"
+                },
+                "isExternal": {
+                  "type": "boolean"
+                },
+                "officeId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "conflicts": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TripConflict"
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "make",
+                "model",
+                "color",
+                "plateNumber",
+                "body",
+                "isExternal",
+                "officeId",
+                "conflicts"
+              ]
+            }
+          }
+        },
+        "required": [
+          "drivers",
+          "vehicles"
+        ],
+        "description": "Live drivers, and live vehicles big enough for the trip, each with its live trips within 3 hours of the pickup."
+      },
+      "TripConflict": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TripStatus"
+          },
+          "pickupDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "driverId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vehicleId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "status",
+          "pickupDate",
+          "driverId",
+          "vehicleId"
+        ]
+      },
+      "LinkTrips": {
+        "type": "object",
+        "properties": {
+          "returnTripId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "returnTripId"
+        ],
+        "description": "Make that trip this one's return."
       }
     },
     "parameters": {}
@@ -15689,6 +17398,2341 @@
           },
           "422": {
             "description": "OUT_OF_COVERAGE (`end`: pickup or dropoff, `leg`) or QUOTE_SAME_PLACE (both ends resolve to one place).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/trips": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Book a trip",
+        "description": "For a customer or a verified guest. The pickup must be 3 hours to 90 days ahead, on a quarter hour (Cairo time); both pins must be covered and not the same place; the passengers and luggage must fit the body.\n\n`expectedPrice` is the quoted price: a different current price fails with `PRICE_CHANGED` carrying it (null when the route has no price any more). An option without a price is booked on request (`priceState` REQUESTED).\n\nWith `return`, a second trip is booked in the same transaction, linked to the first. At most 3 pending trips per customer or guest email.\n\nSend an `Idempotency-Key`: repeating it returns the first booking (200) instead of booking again.",
+        "security": [
+          {
+            "customerCookie": []
+          },
+          {
+            "guestCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 100,
+              "description": "A random value (a UUID, say) made once per booking attempt and sent again on every retry of it.",
+              "example": "9b2f4c1e-6a7d-4e1b-9c3f-2d8a5b7e0f11"
+            },
+            "required": true,
+            "description": "A random value (a UUID, say) made once per booking attempt and sent again on every retry of it.",
+            "name": "idempotency-key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookTrip"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Already booked with this Idempotency-Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteBooking"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Booked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteBooking"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE (a customer), or VERIFICATION_REQUIRED (a guest who hasn't confirmed their code).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PRICE_CHANGED (`price`, `leg`), or PENDING_TRIP_LIMIT: 3 trips are already waiting for confirmation.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "PICKUP_TIME_INVALID (`reason`, `leg`), OUT_OF_COVERAGE (`end`, `leg`), QUOTE_SAME_PLACE (`leg`) or LOAD_DOES_NOT_FIT.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "List my trips",
+        "description": "Newest pickup first. A customer sees the trips booked for them; a verified guest, every guest trip booked with the same verified email.",
+        "security": [
+          {
+            "customerCookie": []
+          },
+          {
+            "guestCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/TripStatus"
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "description": "The previous page's nextCursor."
+            },
+            "required": false,
+            "description": "The previous page's nextCursor.",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of trips",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SiteTrip"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE (a customer), or VERIFICATION_REQUIRED (a guest who hasn't confirmed their code).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/trips/{id}": {
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Get one of my trips",
+        "description": "With the driver and vehicle once the trip is confirmed and assigned.",
+        "security": [
+          {
+            "customerCookie": []
+          },
+          {
+            "guestCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteTrip"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE (a customer), or VERIFICATION_REQUIRED (a guest who hasn't confirmed their code).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/trips/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Cancel my booking",
+        "description": "Only pending trips can be cancelled online; a confirmed one fails with `CALL_TO_CANCEL`. The whole booking is cancelled (a trip and its return), except a leg that has already started.",
+        "security": [
+          {
+            "customerCookie": []
+          },
+          {
+            "guestCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteCancelTrip"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The cancelled trips",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteTripsChanged"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE (a customer), or VERIFICATION_REQUIRED (a guest who hasn't confirmed their code).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CALL_TO_CANCEL, or TRIP_STATUS_CONFLICT (`tripStatus`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/trips/{id}/price/accept": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Accept a proposed price",
+        "description": "Accepts every proposed leg of the booking. `expectedPrice` is the total of the proposals shown; if a proposal changed, it fails with `PRICE_CHANGED` and the current total.",
+        "security": [
+          {
+            "customerCookie": []
+          },
+          {
+            "guestCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptPrice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The accepted trips",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteTripsChanged"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE (a customer), or VERIFICATION_REQUIRED (a guest who hasn't confirmed their code).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PRICE_NOT_PROPOSED, or PRICE_CHANGED (`price`, `legs`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/trips/{id}/price/decline": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Decline a proposed price",
+        "description": "Cancels the trip. Declining the outbound also cancels its pending return; declining the return keeps the outbound.",
+        "security": [
+          {
+            "customerCookie": []
+          },
+          {
+            "guestCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclinePrice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The cancelled trips",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteTripsChanged"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE (a customer), or VERIFICATION_REQUIRED (a guest who hasn't confirmed their code).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PRICE_NOT_PROPOSED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Book a trip",
+        "description": "For an existing customer (`customerId`: the customer is the booker and sees it on the site) or on the staff member's own (they're the booker).\n\nThe price is `totalPrice` if given, else the price list's. Without either, a customer's trip is booked on request; the staff member's own fails with `PRICE_REQUIRED`.\n\nAny future pickup time; a past one needs `backdated: true`. Both pins must be covered and not the same place, and the load must fit.\n\nSend an `Idempotency-Key`: repeating it returns the first booking (200). Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 100,
+              "description": "A random value (a UUID, say) made once per booking attempt and sent again on every retry of it.",
+              "example": "9b2f4c1e-6a7d-4e1b-9c3f-2d8a5b7e0f11"
+            },
+            "required": true,
+            "description": "A random value (a UUID, say) made once per booking attempt and sent again on every retry of it.",
+            "name": "idempotency-key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffBookTrip"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Already booked with this Idempotency-Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffBooking"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Booked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffBooking"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "CUSTOMER_NOT_AVAILABLE, PRICE_REQUIRED (`leg`), PICKUP_TIME_INVALID (`reason`, `leg`), OUT_OF_COVERAGE, QUOTE_SAME_PLACE or LOAD_DOES_NOT_FIT.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "List trips",
+        "description": "Newest pickup first. Filter by status, a pickup range (`from` inclusive, `to` exclusive), driver, vehicle, office or unassigned; `q` matches every word against the code, the passenger's name and phone. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/TripStatus"
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Pickups at or after this instant."
+            },
+            "required": false,
+            "description": "Pickups at or after this instant.",
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Pickups before this instant."
+            },
+            "required": false,
+            "description": "Pickups before this instant.",
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "description": "Every word must match the code, the passenger's name or their phone."
+            },
+            "required": false,
+            "description": "Every word must match the code, the passenger's name or their phone.",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "driverId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "vehicleId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "officeId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Only pending or confirmed trips without an office and without a driver or a vehicle."
+            },
+            "required": false,
+            "description": "Only pending or confirmed trips without an office and without a driver or a vehicle.",
+            "name": "unassigned",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "description": "The previous page's nextCursor."
+            },
+            "required": false,
+            "description": "The previous page's nextCursor.",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of trips",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Trip"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/overview": {
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "What needs attention",
+        "description": "Counts for the dashboard's front page: today's and tomorrow's trips (Cairo days), unassigned, in progress, awaiting a report, overdue and waiting for a price. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The counts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripOverview"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}": {
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Get a trip",
+        "description": "With its history, its linked trips and the driver's report, if any. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Change a trip",
+        "description": "Send only what changes. The details change while the trip is pending or confirmed; the price and payment until it's completed. Nothing is repriced on its own. Every change is recorded with before and after. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrip"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`), or PRICE_REQUEST_OPEN: propose a price instead.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "OUT_OF_COVERAGE, QUOTE_SAME_PLACE, LOAD_DOES_NOT_FIT, or VEHICLE_TOO_SMALL for the assigned vehicle.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/price": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Propose a price",
+        "description": "For a pending trip booked on request; proposing again replaces the earlier proposal. The booker then accepts or declines it, except on a trip a staff member booked, which is accepted at once. `saveToPricing` also writes it to the price list and needs `pricing`. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposePrice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PRICE_NOT_REQUESTED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/confirm": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Confirm a trip",
+        "description": "Pending to confirmed: the booking is accepted. Needs a quoted price or an accepted proposal. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`), or PRICE_NOT_ACCEPTED.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/start": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Start a trip",
+        "description": "Confirmed to in progress. Needs a driver and a vehicle, or an office. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`), ASSIGNMENT_REQUIRED, or ASSIGNEE_BUSY (`field`): the driver or vehicle is on a trip in progress.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/end": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "End a trip",
+        "description": "In progress to awaiting the driver's report. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`): the trip isn't where this action applies.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/complete": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Complete a trip",
+        "description": "Awaiting report to completed, once staff have reviewed the report. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`): the trip isn't where this action applies.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Cancel a trip",
+        "description": "Pending, confirmed or in progress, with a reason (OTHER needs a note). Only this trip: its linked trip stays. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelTrip"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`): the trip isn't where this action applies.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/unstart": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Undo a start",
+        "description": "In progress back to confirmed, for a trip started by mistake. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`): the trip isn't where this action applies.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/reopen": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Reopen a completed trip",
+        "description": "Completed back to awaiting report, until its month's report is generated. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`), or MONTH_REPORT_GENERATED.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/assignment": {
+      "put": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Assign a driver, a vehicle or an office",
+        "description": "The whole assignment, while the trip is pending or confirmed: what's left out is cleared. The vehicle must be the trip's body or larger. With an office, the driver and vehicle are optional and must come through it. A driver or vehicle with another live trip within 3 hours fails with `ASSIGNMENT_CONFLICT` listing them, unless `acknowledgeConflicts`. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTrip"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`), or ASSIGNMENT_CONFLICT (`conflicts`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "DRIVER_NOT_AVAILABLE, VEHICLE_NOT_AVAILABLE, OFFICE_NOT_AVAILABLE, VEHICLE_TOO_SMALL or ASSIGNMENT_OFFICE_MISMATCH.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/assignment/candidates": {
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Who could be assigned",
+        "description": "Live drivers, and live vehicles big enough for the trip, each with its live trips within 3 hours of the pickup. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The candidates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignmentCandidates"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/link": {
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Link a return trip",
+        "description": "Makes `returnTripId` this trip's return. Neither may be linked already, and the return must pick up later. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkTrips"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_ALREADY_LINKED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "TRIP_LINK_INVALID",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Unlink a trip",
+        "description": "Removes the link between this trip and its outbound or return. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Trip"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_NOT_LINKED",
             "content": {
               "application/problem+json": {
                 "schema": {
