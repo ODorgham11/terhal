@@ -28,6 +28,25 @@ export const auditActions = {
   TOTP_RESET: "admin.totp.reset",
   TOTP_RESET_ISSUED: "admin.totp.reset_issued",
   TOTP_RESET_CONFIRM_FAILED: "admin.totp.reset_confirm_failed",
+
+  // Fleet and offices, changed by staff in the dashboard.
+  DRIVER_CREATED: "fleet.driver.created",
+  DRIVER_UPDATED: "fleet.driver.updated",
+  DRIVER_ARCHIVED: "fleet.driver.archived",
+  DRIVER_RESTORED: "fleet.driver.restored",
+  // A payout or a manual adjustment on the driver's ledger.
+  DRIVER_TRANSACTION_RECORDED: "fleet.driver.transaction_recorded",
+  VEHICLE_CREATED: "fleet.vehicle.created",
+  VEHICLE_UPDATED: "fleet.vehicle.updated",
+  VEHICLE_ARCHIVED: "fleet.vehicle.archived",
+  VEHICLE_RESTORED: "fleet.vehicle.restored",
+  VEHICLE_IMAGE_ADDED: "fleet.vehicle.image_added",
+  VEHICLE_IMAGE_DELETED: "fleet.vehicle.image_deleted",
+  VEHICLE_IMAGES_REORDERED: "fleet.vehicle.images_reordered",
+  OFFICE_CREATED: "fleet.office.created",
+  OFFICE_UPDATED: "fleet.office.updated",
+  OFFICE_ARCHIVED: "fleet.office.archived",
+  OFFICE_RESTORED: "fleet.office.restored",
 } as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];
