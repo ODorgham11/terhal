@@ -64,7 +64,7 @@ export const expenseTypes = [
 export const ExpenseType = z.enum(expenseTypes, { error: "Unknown expense type." }).meta({
   id: "ExpenseType",
   description:
-    "DRIVER_FEE is an external driver's fee for the trip; OFFICE_FEE is what an office is paid for it (staff only, never reimbursed to the driver).",
+    "DRIVER_FEE is the driver's fee for the trip, for every driver (paid per trip); OFFICE_FEE is what an office is paid for it (staff only, never reimbursed to the driver).",
 });
 export type ExpenseType = z.infer<typeof ExpenseType>;
 

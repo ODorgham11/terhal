@@ -6003,7 +6003,7 @@
           "OFFICE_FEE",
           "OTHER"
         ],
-        "description": "DRIVER_FEE is an external driver's fee for the trip; OFFICE_FEE is what an office is paid for it (staff only, never reimbursed to the driver)."
+        "description": "DRIVER_FEE is the driver's fee for the trip, for every driver (paid per trip); OFFICE_FEE is what an office is paid for it (staff only, never reimbursed to the driver)."
       },
       "SubmitReport": {
         "type": "object",

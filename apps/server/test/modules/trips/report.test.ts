@@ -475,14 +475,16 @@ describe("the driver ledger", () => {
     expect(await owed(driver.id)).toBe("-800.00");
   });
 
-  it("gives an internal driver no trip fee", async () => {
+  it("pays an internal driver their trip fee too, netted against the cash they hold", async () => {
     const { trip, driver } = await assignedTrip();
-    await endWithReport(trip.id, report({ expenses }));
+    await endWithReport(trip.id, report({ expenses, cashCollected: "1500" }));
     await act(staff, trip.id, "complete");
     expect((await ledger(driver.id)).map((row) => [row.type, row.amount.toFixed(2)])).toEqual([
+      ["TRIP_FEE", "500.00"],
       ["EXPENSE_REIMBURSEMENT", "200.00"],
+      ["CASH_COLLECTED", "-1500.00"],
     ]);
-    expect(await owed(driver.id)).toBe("200.00");
+    expect(await owed(driver.id)).toBe("-800.00");
   });
 
   it("writes nothing for a report with nothing owed either way", async () => {
@@ -537,11 +539,11 @@ describe("the driver ledger", () => {
     await act(staff, trip.id, "complete");
     const payout = await staff.request(`/v1/staff/drivers/${driver.id}/transactions`, {
       method: "POST",
-      json: { type: "PAYOUT", amount: "200" },
+      json: { type: "PAYOUT", amount: "700" },
     });
     expect(payout.status).toBe(201);
     expect(await owed(driver.id)).toBe("0.00");
     await act(staff, trip.id, "reopen");
-    expect(await owed(driver.id)).toBe("-200.00");
+    expect(await owed(driver.id)).toBe("-700.00");
   });
 });

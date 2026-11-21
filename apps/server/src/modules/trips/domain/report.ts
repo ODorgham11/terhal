@@ -59,18 +59,18 @@ export interface LedgerLine {
 }
 
 // What completing a trip adds to its driver's balance:
-// - an external driver's fee, the report's DRIVER_FEE expenses, as TRIP_FEE (internal drivers are salaried, so a
-//   DRIVER_FEE on their trip never reaches their balance);
+// - the driver's fee for the trip, the report's DRIVER_FEE expenses, as TRIP_FEE. Every driver is paid per trip,
+//   internal or external, and nets it against the cash they hold;
 // - every other expense the driver paid, reimbursed, except OFFICE_FEE, which the company pays the office (O1 b);
 // - the cash the driver collected from the customer, which they now owe the company (negative).
 // Zero lines are left out.
-export const ledgerLines = (report: LedgerReport, isExternal: boolean): LedgerLine[] => {
+export const ledgerLines = (report: LedgerReport): LedgerLine[] => {
   const sum = (types: (type: ExpenseType) => boolean) =>
     report.expenses
       .filter((expense) => types(expense.type))
       .reduce((total, expense) => total + toPiastres(expense.amount), 0);
 
-  const fee = isExternal ? sum((type) => type === "DRIVER_FEE") : 0;
+  const fee = sum((type) => type === "DRIVER_FEE");
   const reimbursed = sum((type) => type !== "DRIVER_FEE" && type !== "OFFICE_FEE");
   const cash = toPiastres(report.cashCollected);
 

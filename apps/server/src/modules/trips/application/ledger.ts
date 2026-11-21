@@ -10,7 +10,7 @@ type Tx = Prisma.TransactionClient;
 
 const staffOf = (actor: TripActor) => ("staffId" in actor ? actor.staffId : null);
 
-// Completed: the trip's driver is owed their fee (external drivers) and the expenses they paid, less the cash they
+// Completed: the trip's driver is owed their fee and the expenses they paid, less the cash they
 // collected, all taken from the report. A trip without a driver, or an office trip completed without a report (D9 a),
 // writes nothing.
 export const recordCompletion = async (
@@ -22,24 +22,20 @@ export const recordCompletion = async (
   const row = await tx.trip.findUniqueOrThrow({
     where: { id: trip.id },
     select: {
-      driver: { select: { isExternal: true } },
       report: {
         select: { cashCollected: true, expenses: { select: { type: true, amount: true } } },
       },
     },
   });
-  if (!row.report || !row.driver) return;
+  if (!row.report) return;
 
-  const lines = ledgerLines(
-    {
-      cashCollected: row.report.cashCollected.toFixed(2),
-      expenses: row.report.expenses.map((expense) => ({
-        type: expense.type,
-        amount: expense.amount.toFixed(2),
-      })),
-    },
-    row.driver.isExternal,
-  );
+  const lines = ledgerLines({
+    cashCollected: row.report.cashCollected.toFixed(2),
+    expenses: row.report.expenses.map((expense) => ({
+      type: expense.type,
+      amount: expense.amount.toFixed(2),
+    })),
+  });
   await appendTripLedger(tx, {
     driverId: trip.driverId,
     tripId: trip.id,
