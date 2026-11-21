@@ -1079,7 +1079,34 @@
               "lastName",
               "email"
             ],
-            "description": "Null for the system and for sign in attempts on unknown emails."
+            "description": "The admin who did it, if an admin did."
+          },
+          "staff": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "firstName",
+              "lastName",
+              "email"
+            ],
+            "description": "The staff member who did it, from the dashboard. Both are null for the system."
           }
         },
         "required": [
@@ -1089,7 +1116,8 @@
           "entityId",
           "ipAddress",
           "createdAt",
-          "admin"
+          "admin",
+          "staff"
         ]
       },
       "Staff": {
@@ -5948,6 +5976,16 @@
             },
             "required": false,
             "name": "adminId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "staffId",
             "in": "query"
           },
           {

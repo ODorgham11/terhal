@@ -100,7 +100,8 @@ export const ListAuditLogs = z
     cursor: Id("Cursor").optional(),
     action: many(z.enum(actions), "Unknown action.").optional(),
     adminId: Id("Admin").optional(),
-    // Only the events with no admin behind them: the seed, or a failed sign in for an email that isn't an admin.
+    staffId: Id("Staff member").optional(),
+    // Only the events with nobody behind them: the seed, jobs, or a failed sign in for an email that isn't an admin.
     system: z
       .enum(["true", "false"], { error: "System must be true or false." })
       .transform((value) => value === "true")
@@ -117,8 +118,8 @@ export const ListAuditLogs = z
       .optional(),
     q: z.string().trim().max(100, "Search must contain 100 characters at most.").optional(),
   })
-  .refine((query) => !(query.adminId && query.system), {
-    message: "Filter by an admin or by system events, not both.",
+  .refine((query) => [query.adminId, query.staffId, query.system].filter(Boolean).length <= 1, {
+    message: "Filter by an admin, a staff member or system events, one at a time.",
     path: ["system"],
   })
   .refine((query) => !(query.from && query.to) || query.from <= query.to, {
@@ -143,6 +144,13 @@ export const AuditLog = z
     admin: z
       .object({ id: z.string(), firstName: z.string(), lastName: z.string(), email: z.string() })
       .nullable()
-      .meta({ description: "Null for the system and for sign in attempts on unknown emails." }),
+      .meta({ description: "The admin who did it, if an admin did." }),
+    staff: z
+      .object({ id: z.string(), firstName: z.string(), lastName: z.string(), email: z.string() })
+      .nullable()
+      .meta({
+        description:
+          "The staff member who did it, from the dashboard. Both are null for the system.",
+      }),
   })
   .meta({ id: "AuditLog" });
