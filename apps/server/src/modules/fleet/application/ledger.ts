@@ -93,3 +93,47 @@ export const recordDriverTransaction = async (
 
     return { transaction: toTransaction(transaction), amountOwed: amountOwed.toFixed(2) };
   });
+
+// --- Entries a trip writes (the trips module, when a trip is completed or reopened) ---
+
+export interface TripLedgerEntry {
+  type: "TRIP_FEE" | "EXPENSE_REIMBURSEMENT" | "CASH_COLLECTED" | "ADJUSTMENT";
+  // Signed, two decimals (DriverTransaction_sign holds each type to its direction).
+  amount: string;
+  note?: string;
+}
+
+// Appends a trip's entries to its driver's ledger, in the caller's transaction; the database keeps amountOwed.
+export const appendTripLedger = async (
+  tx: Prisma.TransactionClient,
+  {
+    driverId,
+    tripId,
+    staffId,
+    entries,
+  }: { driverId: string; tripId: string; staffId: string | null; entries: TripLedgerEntry[] },
+) => {
+  if (entries.length === 0) return;
+  await tx.driverTransaction.createMany({
+    data: entries.map((entry) => ({
+      driverId,
+      tripId,
+      staffId,
+      type: entry.type,
+      amount: entry.amount,
+      note: entry.note ?? null,
+    })),
+  });
+};
+
+// What a trip has added to each driver's balance so far, net of any reversals. Only trips write entries that name a
+// trip (staff payouts and adjustments never do), so this is exactly what the trip's completions left standing.
+export const tripLedgerBalances = async (tx: Prisma.TransactionClient, tripId: string) => {
+  const rows = await tx.driverTransaction.groupBy({
+    by: ["driverId"],
+    where: { tripId },
+    orderBy: { driverId: "asc" },
+    _sum: { amount: true },
+  });
+  return rows.map((row) => ({ driverId: row.driverId, amount: row._sum.amount?.toFixed(2) ?? "0.00" }));
+};

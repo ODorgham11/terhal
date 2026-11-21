@@ -4,6 +4,11 @@ export { driverRoutes } from "./http/driver-routes";
 export { officeRoutes } from "./http/office-routes";
 export { vehicleRoutes } from "./http/vehicle-routes";
 export {
+  appendTripLedger,
+  tripLedgerBalances,
+  type TripLedgerEntry,
+} from "./application/ledger";
+export {
   assignableFleet,
   lockAssignees,
   type Assignees,
