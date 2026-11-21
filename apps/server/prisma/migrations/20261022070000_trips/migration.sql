@@ -60,10 +60,12 @@ CREATE TABLE "Trip" (
     "notes" TEXT,
     "pickupId" TEXT NOT NULL,
     "pickupSnapshot" TEXT NOT NULL,
+    "pickupSnapshotAr" TEXT NOT NULL,
     "pickupLatitude" DECIMAL(9,6) NOT NULL,
     "pickupLongitude" DECIMAL(9,6) NOT NULL,
     "dropoffId" TEXT NOT NULL,
     "dropoffSnapshot" TEXT NOT NULL,
+    "dropoffSnapshotAr" TEXT NOT NULL,
     "dropoffLatitude" DECIMAL(9,6) NOT NULL,
     "dropoffLongitude" DECIMAL(9,6) NOT NULL,
     "previousTripId" TEXT,
@@ -154,7 +156,13 @@ CREATE INDEX "Trip_status_pickupDate_idx" ON "Trip"("status", "pickupDate");
 CREATE INDEX "Trip_customerId_idx" ON "Trip"("customerId");
 
 -- CreateIndex
+CREATE INDEX "Trip_guestSessionId_idx" ON "Trip"("guestSessionId");
+
+-- CreateIndex
 CREATE INDEX "Trip_driverId_idx" ON "Trip"("driverId");
+
+-- CreateIndex
+CREATE INDEX "Trip_vehicleId_idx" ON "Trip"("vehicleId");
 
 -- CreateIndex
 CREATE INDEX "Trip_officeId_idx" ON "Trip"("officeId");

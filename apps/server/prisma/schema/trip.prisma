@@ -129,18 +129,21 @@ model Trip {
 
   notes String?
 
-  // The location picked at booking, its name at the time, and the exact point within it.
-  pickup          Location @relation("TripPickup", fields: [pickupId], references: [id])
-  pickupId        String
-  pickupSnapshot  String
-  pickupLatitude  Decimal  @db.Decimal(9, 6)
-  pickupLongitude Decimal  @db.Decimal(9, 6)
+  // The location the pin resolved to at booking, its names at the time (pickupSnapshot in English, pickupSnapshotAr in
+  // Arabic), and the exact point within it.
+  pickup           Location @relation("TripPickup", fields: [pickupId], references: [id])
+  pickupId         String
+  pickupSnapshot   String
+  pickupSnapshotAr String
+  pickupLatitude   Decimal  @db.Decimal(9, 6)
+  pickupLongitude  Decimal  @db.Decimal(9, 6)
 
-  dropoff          Location @relation("TripDropoff", fields: [dropoffId], references: [id])
-  dropoffId        String
-  dropoffSnapshot  String
-  dropoffLatitude  Decimal  @db.Decimal(9, 6)
-  dropoffLongitude Decimal  @db.Decimal(9, 6)
+  dropoff           Location @relation("TripDropoff", fields: [dropoffId], references: [id])
+  dropoffId         String
+  dropoffSnapshot   String
+  dropoffSnapshotAr String
+  dropoffLatitude   Decimal  @db.Decimal(9, 6)
+  dropoffLongitude  Decimal  @db.Decimal(9, 6)
 
   // Link a trip to another trip such that we can keep track of round-about trips.
   previousTrip   Trip?   @relation("TripChain", fields: [previousTripId], references: [id], onDelete: Restrict)
@@ -155,7 +158,9 @@ model Trip {
 
   @@index([status, pickupDate])
   @@index([customerId])
+  @@index([guestSessionId])
   @@index([driverId])
+  @@index([vehicleId])
   @@index([officeId])
 }
 
