@@ -250,13 +250,13 @@ describe("signing in", () => {
 
 describe("resetting a password", () => {
   const requestReset = (email: string) =>
-    createAgent(DASHBOARD_ORIGIN).request("/v1/staff/auth/password-reset/request", {
+    createAgent(DASHBOARD_ORIGIN).request("/v1/staff/auth/password/reset/request", {
       method: "POST",
       json: { email },
     });
 
   const completeReset = (token: string, password = NEW_PASSWORD) =>
-    createAgent(DASHBOARD_ORIGIN).request("/v1/staff/auth/password-reset/complete", {
+    createAgent(DASHBOARD_ORIGIN).request("/v1/staff/auth/password/reset/complete", {
       method: "POST",
       json: { token, password },
     });

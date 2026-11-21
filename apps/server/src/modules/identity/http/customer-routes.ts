@@ -180,7 +180,7 @@ const session = createRoute({
 
 const requestReset = createRoute({
   method: "post",
-  path: "/site/auth/password-reset/request",
+  path: "/site/auth/password/reset/request",
   tags,
   summary: "Email a password reset link",
   description:
@@ -199,7 +199,7 @@ const requestReset = createRoute({
 
 const completeReset = createRoute({
   method: "post",
-  path: "/site/auth/password-reset/complete",
+  path: "/site/auth/password/reset/complete",
   tags,
   summary: "Set a new password from a reset link",
   description: "Signs the customer out everywhere. They then sign in with the new password.",

@@ -314,10 +314,10 @@ describe("sessions", () => {
 
 describe("resetting a password", () => {
   const requestReset = (agent: Agent, email = EMAIL) =>
-    agent.request("/v1/site/auth/password-reset/request", { method: "POST", json: { email } });
+    agent.request("/v1/site/auth/password/reset/request", { method: "POST", json: { email } });
 
   const completeReset = (agent: Agent, token: string, password = "New-password-2") =>
-    agent.request("/v1/site/auth/password-reset/complete", {
+    agent.request("/v1/site/auth/password/reset/complete", {
       method: "POST",
       json: { token, password },
     });

@@ -132,7 +132,7 @@ const session = createRoute({
 
 const requestPasswordReset = createRoute({
   method: "post",
-  path: "/staff/auth/password-reset/request",
+  path: "/staff/auth/password/reset/request",
   tags: authTags,
   summary: "Email a password reset link",
   description:
@@ -155,7 +155,7 @@ const requestPasswordReset = createRoute({
 
 const completePasswordReset = createRoute({
   method: "post",
-  path: "/staff/auth/password-reset/complete",
+  path: "/staff/auth/password/reset/complete",
   tags: authTags,
   summary: "Choose a new password",
   description: "Uses the link up and signs the staff member out everywhere.",

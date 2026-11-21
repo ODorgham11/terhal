@@ -1787,7 +1787,7 @@
         }
       }
     },
-    "/v1/staff/auth/password-reset/request": {
+    "/v1/staff/auth/password/reset/request": {
       "post": {
         "tags": [
           "Staff auth"
@@ -1831,7 +1831,7 @@
         }
       }
     },
-    "/v1/staff/auth/password-reset/complete": {
+    "/v1/staff/auth/password/reset/complete": {
       "post": {
         "tags": [
           "Staff auth"
@@ -2458,7 +2458,7 @@
         }
       }
     },
-    "/v1/site/auth/password-reset/request": {
+    "/v1/site/auth/password/reset/request": {
       "post": {
         "tags": [
           "Customer auth"
@@ -2502,7 +2502,7 @@
         }
       }
     },
-    "/v1/site/auth/password-reset/complete": {
+    "/v1/site/auth/password/reset/complete": {
       "post": {
         "tags": [
           "Customer auth"
