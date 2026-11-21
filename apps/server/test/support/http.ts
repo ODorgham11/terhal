@@ -2,6 +2,7 @@ import { routes } from "../../src/http/router";
 
 export const ADMIN_ORIGIN = "https://admin.local.terhal.co:3000";
 export const DASHBOARD_ORIGIN = "https://dashboard.local.terhal.co:3000";
+export const SITE_ORIGIN = "https://local.terhal.co:3000";
 
 // A browser in miniature: sends one frontend's Origin (the admin panel's unless told otherwise) and keeps the cookies
 // the API sets, by name, like a browser would for the API's host (paths aside: an agent only calls one audience's

@@ -48,3 +48,29 @@ export const staffSessionExpiry = (now: Date, createdAt: Date) =>
 // The staff sessions to revoke, oldest first, so a new one fits under the limit.
 export const staffSessionsToRevoke = <T>(activeOldestFirst: T[]) =>
   activeOldestFirst.slice(0, Math.max(0, activeOldestFirst.length - STAFF_MAX_ACTIVE_SESSIONS + 1));
+
+// Customer account rules. Customers stay signed in much longer than admins: a refresh keeps a session going for another
+// 30 days, up to 180 days after signing in, and they can be signed in on more devices at once.
+export const MAX_ACTIVE_CUSTOMER_SESSIONS = 10;
+export const CUSTOMER_SESSION_SLIDING_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
+export const CUSTOMER_SESSION_ABSOLUTE_LIFETIME_MS = 180 * 24 * 60 * 60 * 1000;
+
+export const customerSessionExpiry = (now: Date, createdAt: Date) =>
+  new Date(
+    Math.min(
+      now.getTime() + CUSTOMER_SESSION_SLIDING_LIFETIME_MS,
+      createdAt.getTime() + CUSTOMER_SESSION_ABSOLUTE_LIFETIME_MS,
+    ),
+  );
+
+export const customerSessionsToRevoke = <T>(activeOldestFirst: T[]) =>
+  activeOldestFirst.slice(
+    0,
+    Math.max(0, activeOldestFirst.length - MAX_ACTIVE_CUSTOMER_SESSIONS + 1),
+  );
+
+// How long a customer's password reset link works.
+export const PASSWORD_RESET_LIFETIME_MS = 60 * 60 * 1000;
+
+// A guest session lasts long enough to follow a booking through to the trip. It never slides.
+export const GUEST_SESSION_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;

@@ -2,7 +2,13 @@ import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { auditRoutes } from "../modules/audit/index";
-import { adminAuthRoutes, adminStaffRoutes, staffAuthRoutes } from "../modules/identity/index";
+import {
+  adminAuthRoutes,
+  adminStaffRoutes,
+  customerAuthRoutes,
+  guestRoutes,
+  staffAuthRoutes,
+} from "../modules/identity/index";
 import { env, origins, type Audience } from "../platform/config/env";
 import {
   ADMIN_COOKIE_AUTH,
@@ -44,7 +50,9 @@ const v1 = createRouter()
   .route("/", adminAuthRoutes)
   .route("/", adminStaffRoutes)
   .route("/", auditRoutes)
-  .route("/", staffAuthRoutes);
+  .route("/", staffAuthRoutes)
+  .route("/", customerAuthRoutes)
+  .route("/", guestRoutes);
 
 export const routes = router.route("/health", health).route("/v1", v1);
 
