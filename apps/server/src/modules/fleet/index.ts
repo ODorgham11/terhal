@@ -3,3 +3,9 @@
 export { driverRoutes } from "./http/driver-routes";
 export { officeRoutes } from "./http/office-routes";
 export { vehicleRoutes } from "./http/vehicle-routes";
+export {
+  assignableFleet,
+  lockAssignees,
+  type Assignees,
+  type LockedAssignees,
+} from "./application/assignees";
