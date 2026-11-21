@@ -266,6 +266,11 @@ export const SiteBooking = z
   .meta({ id: "SiteBooking" });
 export type SiteBooking = z.infer<typeof SiteBooking>;
 
+// The trips an action on the site changed: a whole booking can be cancelled, or every proposed leg accepted, at once.
+export const SiteTripsChanged = z
+  .object({ data: z.array(SiteTrip).meta({ description: "The trips changed, outbound first." }) })
+  .meta({ id: "SiteTripsChanged" });
+
 export const TripBooker = z
   .object({
     type: z.enum(["CUSTOMER", "GUEST", "STAFF"]),
