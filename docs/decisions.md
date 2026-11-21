@@ -40,6 +40,10 @@ cookie with a switcher on every page, not a URL prefix, so `proxy.ts` keeps mapp
 properties (`ms-`/`me-`, `start`/`end`), never left and right, so one layout serves both directions. Places and trip
 classes carry both names (`nameEn`, `nameAr`).
 
+### The name in Arabic is ترحال (2026-11-21)
+
+Every Arabic text (emails, the interface) writes the product's name as **ترحال**.
+
 ### Verification codes go by email, for now (2026-11-21)
 
 Customers confirm their account, and guests their contact details, with a 6-digit code. It's emailed: WhatsApp isn't
