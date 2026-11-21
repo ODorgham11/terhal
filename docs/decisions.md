@@ -62,6 +62,30 @@ The repo was stripped to an empty skeleton (no modules, models, migrations or pa
 Deployment (`deploy/`, the Dockerfiles, the workflows), the platform layer, Hono RPC and CI were kept. The schema came
 back on 2026-11-21, reworked as described under [Data model](#data-model).
 
+### Who owns what between the admin panel and the dashboard (2026-11-21)
+
+The staff dashboard runs the business: trips, fleet, offices, trip classes, pricing, analytics and the team. It also
+manages locations, with the same create, rename, move, delete and restore as the admin panel; location writes need the
+`pricing` permission. Admins keep full control of locations, admins, the audit log and staff (for support and recovery),
+and a read-only view of operations. Customers are the exception: staff can only view them (`customers` is a view-only
+permission), and suspending or reactivating a customer is admin-panel only. Full spec: [domain-api.md](domain-api.md).
+
+### Price on request (2026-11-21)
+
+A route with no price can still be booked. The trip is created with no `totalPrice` (`priceState` `REQUESTED`), staff
+propose a price, and the booker accepts it (or declines, which cancels the trip) before staff can confirm. Database
+checks keep `totalPrice` empty only while a price is requested and stop an unaccepted price from being confirmed. A
+priced booking carries the price the customer saw, and fails with `PRICE_CHANGED` if it moved since the quote; there is
+no quote table.
+
+What we gave up: a second step for the customer, and a trip that can sit unpriced until its pickup time, when it's
+cancelled automatically.
+
+### Customers can't cancel a confirmed trip online (2026-11-21)
+
+A pending trip can be cancelled from the site at any time. Once staff confirm it, the site tells the customer to call;
+only staff cancel confirmed trips, with a reason.
+
 ---
 
 ## Code
@@ -96,6 +120,12 @@ sign people out when a refresh response is lost on a bad connection. Revisit for
 
 See [infrastructure.md](infrastructure.md#why-one-vps-decided-2026-11-02).
 
+### Files live in Cloudflare R2 (2026-11-21)
+
+Vehicle images and the monthly analytics workbooks go in a private R2 bucket. Uploads pass through the API, which checks
+the type from the bytes and the size; reads use short-lived signed URLs. Nothing is stored on the VPS, so moving servers
+stays a redeploy.
+
 ---
 
 ## Data model
@@ -129,8 +159,8 @@ doesn't cover.
 
 ### Drivers have no accounts (2026-11-16)
 
-Drivers get a link to the trip's report and fill it in with the trip code. **Open:** the code alone is a weak
-credential. Revisit when the report flow is built (a signed, expiring link per trip, say).
+Drivers get a link to the trip's report instead of an account. The trip code was the first idea for getting in; it's a
+weak credential, so a per-trip token replaced it ([Driver report links](#driver-report-links-2026-11-21)).
 
 ### Offices (2026-11-21)
 
@@ -162,6 +192,60 @@ PostGIS was considered and not needed: everything is at city or governorate scal
 by meters. It would pay off for distance-based pricing, nearest-driver searches or route corridors; Neon supports it,
 and switching means converting the shape columns. Circles of neighbouring districts can overlap or reach past their
 governorate; for coverage that's fine.
+
+### Staff actions are audited too (2026-11-21)
+
+`AuditLog` names its actor: an admin, a staff member, or neither (the system), never both (`AuditLog_one_actor`). What
+staff change outside trips (prices, fleet, the team, locations) is recorded in the same transaction, and the log stays
+admin-only. Trips keep their own history in `TripEvent`.
+
+### Trip events carry their details (2026-11-21)
+
+`TripEvent.data` holds what an event needs to be read on its own: the status it moved from and to, a reason, changed
+fields with before and after values. Action names come from a fixed list in `@terhal/contracts`, like the audit log's.
+
+### Money is Egyptian pounds; business time is Cairo's (2026-11-21)
+
+There's no currency column: every amount is EGP, sent as a decimal string with two places, and checks keep prices and
+expenses positive. Rules about time (booking lead times, "today", the monthly report, analytics days) use
+`Africa/Cairo` on the server; the API sends and receives UTC instants.
+
+### A vehicle can be an upgrade (2026-11-21)
+
+Car bodies are ordered by size, SEDAN < SUV < MINIVAN < VAN (in contracts). A trip can be assigned a vehicle of its
+booked body or larger, never smaller.
+
+### Double booking (2026-11-21)
+
+Trips have a pickup time but no end time, so a true overlap can't be computed. The database guarantees a driver or a
+vehicle is on at most one trip in progress. Assigning one that has another live trip within three hours of the pickup
+returns `ASSIGNMENT_CONFLICT` with the clashing trips, unless staff confirm they've seen it.
+
+### Driver report links (2026-11-21)
+
+Replaces the open question under "Drivers have no accounts". A driver fills in a report through a per-trip link holding a
+random token, made on assignment. Only the token's hash is stored, it expires seven days after pickup, and it's
+replaced when the driver changes. It sits in the URL fragment, so it never reaches server logs; the page sends it in a
+header. Staff send it over WhatsApp click-to-chat until WhatsApp is integrated. The report locks for the driver once
+submitted; staff can still correct it.
+
+### The driver ledger (2026-11-21)
+
+`Driver.amountOwed` is what the company owes the driver (negative when the driver holds company cash). It's the running
+total of a `DriverTransaction` ledger, updated in the same transaction: trip fees (external drivers only), reimbursed
+expenses (every expense on a report is assumed paid by the driver), cash collected from customers, payouts and manual
+adjustments. Completing a trip writes its entries.
+
+### Office fees are report expenses (2026-11-21)
+
+What the business pays an office for a handed-off trip is an expense of type `OFFICE_FEE` on that trip's report. It
+counts towards the trip's costs in analytics but never towards the driver's ledger. There's no separate `officeCost`
+column.
+
+### Accounts carry a locale (2026-11-21)
+
+`Customer`, `GuestSession` and `Staff` have a `locale` (`ar` by default, or `en`), taken from the site's locale cookie
+when the account or session is made, so emails and notifications go out in the recipient's language.
 
 ---
 
