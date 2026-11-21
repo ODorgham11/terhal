@@ -1,5 +1,5 @@
 import { auditActions } from "@terhal/contracts";
-import type { Admin } from "../../../../generated/prisma/client";
+import type { Admin, Prisma } from "../../../../generated/prisma/client";
 import { signAccessToken } from "../../../platform/crypto/jwt";
 import { generateToken, hashToken } from "../../../platform/crypto/tokens";
 import { prisma } from "../../../platform/db/prisma";
@@ -32,10 +32,11 @@ const issueTokens = async (adminId: string, sessionId: string) => {
 };
 
 // Starts a session for an admin who has fully signed in, keeping at most a few active at once. `via` records how they
-// got here: a new account from an invitation, or password plus two-factor code.
+// got here: a new account from an invitation, password plus two-factor code, or setting up a new authenticator after a
+// two-factor reset.
 export const createSession = async (
   admin: Admin,
-  via: "invitation" | "password_and_totp",
+  via: "invitation" | "password_and_totp" | "two_factor_reset",
   { ipAddress, userAgent }: RequestInfo,
 ) => {
   const refreshToken = generateToken();
@@ -182,3 +183,130 @@ export const signOut = async (refreshToken: string | undefined, ipAddress: strin
     }
   });
 };
+
+// Why sessions were ended, recorded on each one.
+export type SessionRevokeReason =
+  | "revoked_by_owner"
+  | "revoked_with_others"
+  | "password_reset"
+  | "password_changed"
+  | "account_deactivated"
+  | "two_factor_reset";
+
+// Ends an admin's live sessions (every one, or every one but `except`) inside the caller's transaction, so the change
+// that calls for it and the sign out happen together. Each session ended is recorded, like the session limit's, under
+// `actorId`: the admin who did it, which may be someone else. Returns how many were ended.
+export const revokeAdminSessions = async (
+  tx: Prisma.TransactionClient,
+  adminId: string,
+  {
+    reason,
+    actorId,
+    ipAddress,
+    except,
+  }: {
+    reason: SessionRevokeReason;
+    actorId: string | null;
+    ipAddress: string | null;
+    except?: string;
+  },
+) => {
+  const now = new Date();
+
+  // Returns only the sessions this statement ended, so two requests at once never record one twice.
+  const revoked = await tx.adminSession.updateManyAndReturn({
+    where: {
+      adminId,
+      revokedAt: null,
+      expiresAt: { gt: now },
+      ...(except ? { id: { not: except } } : {}),
+    },
+    data: { revokedAt: now },
+    select: { id: true },
+  });
+
+  for (const { id } of revoked) {
+    await recordAudit(
+      {
+        adminId: actorId,
+        action: auditActions.SESSION_REVOKED,
+        entityType: "AdminSession",
+        entityId: id,
+        after: { reason },
+        ipAddress,
+      },
+      tx,
+    );
+  }
+
+  return revoked.length;
+};
+
+// The signed in admin's live sessions, newest first, marking the one making this request.
+export const listSessions = async (adminId: string, currentSessionId: string) => {
+  const sessions = await prisma.adminSession.findMany({
+    where: { adminId, revokedAt: null, expiresAt: { gt: new Date() } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, createdAt: true, expiresAt: true, ipAddress: true, userAgent: true },
+  });
+
+  return {
+    data: sessions.map((session) => ({
+      ...session,
+      createdAt: session.createdAt.toISOString(),
+      expiresAt: session.expiresAt.toISOString(),
+      current: session.id === currentSessionId,
+    })),
+    nextCursor: null,
+  };
+};
+
+// Ends one of the signed in admin's own sessions, e.g. a device they've lost. Another admin's session, or one that's
+// already over, is a 404, so session ids can't be probed.
+export const revokeOwnSession = async (
+  adminId: string,
+  sessionId: string,
+  ipAddress: string | null,
+) => {
+  await prisma.$transaction(async (tx) => {
+    const { count } = await tx.adminSession.updateMany({
+      where: { id: sessionId, adminId, revokedAt: null, expiresAt: { gt: new Date() } },
+      data: { revokedAt: new Date() },
+    });
+
+    if (count === 0) {
+      throw new AppError({
+        code: "NOT_FOUND",
+        status: 404,
+        detail: "There's no such session.",
+      });
+    }
+
+    await recordAudit(
+      {
+        adminId,
+        action: auditActions.SESSION_REVOKED,
+        entityType: "AdminSession",
+        entityId: sessionId,
+        after: { reason: "revoked_by_owner" satisfies SessionRevokeReason },
+        ipAddress,
+      },
+      tx,
+    );
+  });
+};
+
+// Signs the admin out everywhere except the session making this request.
+export const revokeOtherSessions = (
+  adminId: string,
+  currentSessionId: string,
+  ipAddress: string | null,
+) =>
+  prisma.$transaction((tx) =>
+    revokeAdminSessions(tx, adminId, {
+      reason: "revoked_with_others",
+      actorId: adminId,
+      ipAddress,
+      except: currentSessionId,
+    }),
+  );

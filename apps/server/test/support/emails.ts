@@ -28,3 +28,10 @@ export const lastResetTokenTo = (to: string) => {
   if (!token) throw new Error(`The latest email to ${to} has no reset link.`);
   return token;
 };
+
+// The token in the link to `path` (e.g. "invite") in the latest email to this address.
+export const lastLinkTokenTo = (to: string, path: string) => {
+  const token = new RegExp(`/${path}\\?token=([\\w-]+)`).exec(lastEmailTo(to).text)?.[1];
+  if (!token) throw new Error(`The latest email to ${to} has no ${path} link.`);
+  return token;
+};

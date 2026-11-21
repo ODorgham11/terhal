@@ -122,6 +122,15 @@ What we gave up:
   next request, not when the token expires.
 - Admins sign in with a password and then a TOTP code; the access token lives 15 minutes, a session at most 12 hours,
   and every request re-checks the admin is still active.
+- After the first (seeded) admin, every admin is invited by another. Actions that matter most (inviting an admin,
+  changing a password, deactivating an admin, resetting their two-factor) ask for the acting admin's current TOTP code
+  again, used up like a sign in code so it can't be replayed; failures are audited. A forgotten password is reset with
+  an emailed link (15 minutes, single use) plus a current TOTP code, and ends every session; changing it while signed
+  in ends every other session. An admin can list and end their own sessions.
+- Admins manage each other: nobody can deactivate themselves, and the last active admin can't be deactivated (the
+  active admins' rows are locked, so two admins deactivating each other at once can't leave none). An admin who lost
+  their authenticator has it reset by another admin: their sessions end and they're emailed a link (48 hours) to set up
+  a new one, confirmed with their password and a code from it, which signs them in.
 - Staff sign in with a password only. A session lasts 7 days from its last refresh and 30 days at most, on up to 5
   devices; every request re-checks the staff member is active and reloads their permissions. Resetting a password ends
   every session.

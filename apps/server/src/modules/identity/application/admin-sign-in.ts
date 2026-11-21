@@ -1,11 +1,10 @@
 import { auditActions } from "@terhal/contracts";
-import { decrypt } from "../../../platform/crypto/encryption";
 import { compare, compareAgainstNothing } from "../../../platform/crypto/passwords";
-import { verifyTotp } from "../../../platform/crypto/totp";
 import { prisma } from "../../../platform/db/prisma";
 import { AppError } from "../../../platform/errors/app-error";
 import { recordAudit } from "../../audit/index";
 import { inactive } from "./admins";
+import { codeInvalid, consumeTotpCode, totpSetupRequired } from "./step-up";
 
 const wrongCredentials = () =>
   new AppError({
@@ -63,13 +62,7 @@ export const checkPassword = async (email: string, password: string, ipAddress: 
     throw inactive();
   }
 
-  if (!admin.totpSecret) {
-    throw new AppError({
-      code: "TOTP_SETUP_REQUIRED",
-      status: 403,
-      detail: "Two-factor authentication isn't set up for this account.",
-    });
-  }
+  if (!admin.totpSecret) throw totpSetupRequired();
 
   // A correct password with no code after it can mean the password leaked, so the half-finished sign in is recorded too.
   await recordAudit({
@@ -106,38 +99,22 @@ export const verifySignIn = async (
     throw inactive();
   }
 
+  const failure = await consumeTotpCode({ ...admin, totpSecret: admin.totpSecret }, code, {
+    lastLoginAt: new Date(),
+  });
+
   // A wrong code after a correct password is worth recording: it can mean someone has the password but not the phone.
-  const fail = async (reason: "wrong_code" | "code_reused") => {
+  if (failure) {
     await recordAudit({
       adminId: admin.id,
       action: auditActions.SIGN_IN_TOTP_FAILED,
       entityType: "Admin",
       entityId: admin.id,
-      after: { reason },
+      after: { reason: failure },
       ipAddress,
     });
-    return new AppError({
-      code: "TOTP_CODE_INVALID",
-      status: 400,
-      detail: "That code didn't work. Check your authenticator app and try again.",
-    });
-  };
-
-  const secret = decrypt(admin.totpSecret);
-  const step = verifyTotp(secret, code, admin.totpLastUsedStep);
-
-  // Checked again without the last used step, to tell a wrong code apart from a correct one being reused.
-  if (step === null) {
-    throw await fail(verifyTotp(secret, code, null) === null ? "wrong_code" : "code_reused");
+    throw codeInvalid();
   }
-
-  // Record the step in the same statement that checks it, so two requests can't both use the same code.
-  const { count } = await prisma.admin.updateMany({
-    where: { id: admin.id, OR: [{ totpLastUsedStep: null }, { totpLastUsedStep: { lt: step } }] },
-    data: { totpLastUsedStep: step, lastLoginAt: new Date() },
-  });
-
-  if (count === 0) throw await fail("code_reused");
 
   return admin;
 };

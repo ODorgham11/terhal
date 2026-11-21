@@ -16,6 +16,18 @@ export const auditActions = {
   SESSION_REVOKED: "admin.session.revoked",
   SIGN_OUT: "admin.sign_out",
   STAFF_INVITED: "admin.staff.invited",
+  // A wrong or reused authenticator code (or a wrong current password) where an action asks for one again. `after`
+  // says which action (`purpose`) and why (`reason`).
+  STEP_UP_FAILED: "admin.step_up.failed",
+  PASSWORD_RESET_REQUESTED: "admin.password.reset_requested",
+  PASSWORD_RESET: "admin.password.reset",
+  PASSWORD_CHANGED: "admin.password.changed",
+  ACCOUNT_DEACTIVATED: "admin.account.deactivated",
+  ACCOUNT_REACTIVATED: "admin.account.reactivated",
+  // Another admin cleared an admin's authenticator and emailed them a link to set up a new one.
+  TOTP_RESET: "admin.totp.reset",
+  TOTP_RESET_ISSUED: "admin.totp.reset_issued",
+  TOTP_RESET_CONFIRM_FAILED: "admin.totp.reset_confirm_failed",
 } as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];

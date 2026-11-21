@@ -20,6 +20,17 @@ model Admin {
   totpLastUsedStep Int?
   lastLoginAt      DateTime?
 
+  // A password reset link, hashed. Single use: cleared when it's used or replaced by a newer request.
+  passwordResetHash      String?   @unique
+  passwordResetExpiresAt DateTime?
+
+  // A two-factor reset another admin started: a link to set up a new authenticator, hashed and single use.
+  twoFactorResetHash      String?   @unique
+  twoFactorResetExpiresAt DateTime?
+  // The new authenticator being set up from that link, encrypted. Never accepted at sign in until it's confirmed, when it
+  // moves to totpSecret.
+  pendingTotpSecret       String?
+
   sessions    AdminSession[]
   logs        AuditLog[]
   invitations AdminInvitation[]

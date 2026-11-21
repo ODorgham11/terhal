@@ -23,6 +23,29 @@ export const sessionExpiry = (now: Date, createdAt: Date) =>
 export const sessionsToRevoke = <T>(activeOldestFirst: T[]) =>
   activeOldestFirst.slice(0, Math.max(0, activeOldestFirst.length - MAX_ACTIVE_SESSIONS + 1));
 
+// Short, since anyone who can read the inbox can use the link. Completing it also takes the admin's authenticator code.
+export const ADMIN_PASSWORD_RESET_LIFETIME_MS = 15 * 60 * 1000;
+
+// As long as an invitation: setting up a new authenticator after a reset works the same way as accepting one.
+export const TWO_FACTOR_RESET_LIFETIME_MS = INVITATION_LIFETIME_MS;
+
+export type DeactivationRefusal = "self" | "last_active";
+
+// Why `actorId` can't deactivate `targetId`, or null when they can. `activeAdminIds` is every active admin at the time.
+// An admin can't deactivate themselves (another admin has to), and the last active admin can't be deactivated, or
+// nobody could sign in to the admin panel again.
+export const deactivationRefusal = (
+  actorId: string,
+  targetId: string,
+  activeAdminIds: readonly string[],
+): DeactivationRefusal | null => {
+  if (actorId === targetId) return "self";
+  if (activeAdminIds.includes(targetId) && activeAdminIds.every((id) => id === targetId)) {
+    return "last_active";
+  }
+  return null;
+};
+
 // Staff sign in to the dashboard every working day, so their sessions last longer than an admin's: a refresh keeps one
 // going for another 7 days, up to 30 days after signing in, on up to 5 devices at once.
 
