@@ -29,6 +29,14 @@
       "newPassword": "كلمة المرور الجديدة",
       "code": "الرمز",
       "permissions": "الصلاحيات"
+    },
+    "session": {
+      "unreachableTitle": "تعذّر الاتصال بالخادم",
+      "unreachableDescription": "تحقق من اتصالك وحاول مرة أخرى.",
+      "retry": "حاول مرة أخرى",
+      "forbiddenTitle": "ليست لديك صلاحية الوصول إلى هذه الصفحة",
+      "forbiddenDescription": "اطلب من الزميل المسؤول عن الفريق منحك الصلاحية.",
+      "signOut": "تسجيل الخروج"
     }
   },
   "errors": {

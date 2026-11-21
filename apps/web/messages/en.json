@@ -29,6 +29,14 @@
       "newPassword": "New password",
       "code": "Code",
       "permissions": "Permissions"
+    },
+    "session": {
+      "unreachableTitle": "We couldn't reach the server",
+      "unreachableDescription": "Check your connection and try again.",
+      "retry": "Try again",
+      "forbiddenTitle": "You don't have access to this page",
+      "forbiddenDescription": "Ask a colleague who manages the team to give you access.",
+      "signOut": "Sign out"
     }
   },
   "errors": {
