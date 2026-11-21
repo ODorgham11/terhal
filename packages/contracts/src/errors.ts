@@ -164,6 +164,18 @@ export const errorCodes = [
   "TRIP_LINK_INVALID",
   // Unlinking a trip that has no linked trip.
   "TRIP_NOT_LINKED",
+
+  // The driver report
+  // The report link's token matches no trip: mistyped, or replaced by a newer link (a new driver, or staff made one).
+  "REPORT_LINK_INVALID",
+  // The report link expired (7 days after pickup).
+  "REPORT_LINK_EXPIRED",
+  // The trip has no driver, so it has no report link.
+  "REPORT_LINK_UNAVAILABLE",
+  // The driver already submitted the report; only staff can change it now.
+  "REPORT_ALREADY_SUBMITTED",
+  // Completing a trip that has a driver needs its report first (staff can fill it in).
+  "REPORT_REQUIRED",
 ] as const;
 
 export type ErrorCode = (typeof errorCodes)[number];
