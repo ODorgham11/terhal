@@ -65,6 +65,10 @@ export const errorCodes = [
   "GOVERNORATE_READ_ONLY",
   // A pin isn't inside any place the platform serves. `end` says which one (pickup or dropoff), `leg` which trip.
   "OUT_OF_COVERAGE",
+
+  // Trip classes
+  // An active class already has this name, in English or in Arabic. Archived classes don't count.
+  "TRIP_CLASS_NAME_TAKEN",
 ] as const;
 
 export type ErrorCode = (typeof errorCodes)[number];

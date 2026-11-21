@@ -33,6 +33,10 @@ export const auditActions = {
   LOCATION_UPDATED: "location.updated",
   LOCATION_DELETED: "location.deleted",
   LOCATION_RESTORED: "location.restored",
+  TRIP_CLASS_CREATED: "trip_class.created",
+  TRIP_CLASS_UPDATED: "trip_class.updated",
+  TRIP_CLASS_ARCHIVED: "trip_class.archived",
+  TRIP_CLASS_RESTORED: "trip_class.restored",
 } as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];

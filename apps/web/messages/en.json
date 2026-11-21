@@ -78,6 +78,7 @@
       "LOCATION_COUNT_MISMATCH": "The places under this one changed. Check the count and try again.",
       "GOVERNORATE_READ_ONLY": "Governorates can only be renamed.",
       "OUT_OF_COVERAGE": "We don't serve this place yet.",
+      "TRIP_CLASS_NAME_TAKEN": "Another active class already has this name.",
       "NETWORK_ERROR": "We couldn't reach the server. Check your connection and try again.",
       "UNEXPECTED_RESPONSE": "Something went wrong. Please try again."
     },
