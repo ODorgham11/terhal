@@ -1,33 +1,7 @@
 import { z } from "zod";
+import { Email, LinkToken, Name, Password } from "./fields";
 
-// Normalized the same way everywhere an admin email comes in, so it always matches how it was stored.
-export const Email = z
-  .string({ error: "Email is required." })
-  .trim()
-  .toLowerCase()
-  .max(75, "Email must contain 75 characters at most.")
-  .pipe(z.email("Please enter a valid email address."))
-  .meta({ example: "admin@terhal.co" });
-
-const InvitationToken = z
-  .string({ error: "Invitation token is required." })
-  .min(1, "Invitation token is required.")
-  .meta({ description: "From the invitation link." });
-
-const Name = (label: string) =>
-  z
-    .string({ error: `${label} is required.` })
-    .trim()
-    .min(2, `${label} must contain at least 2 letters.`)
-    .max(50, `${label} must contain 50 letters at most.`);
-
-const Password = z
-  .string({ error: "Password is required." })
-  .min(8, "Password must contain at least 8 characters.")
-  .max(72, "Password must contain 72 characters at most.")
-  .regex(/[a-z]/, "Password must contain at least one lowercase letter.")
-  .regex(/[A-Z]/, "Password must contain at least one uppercase letter.")
-  .regex(/\d/, "Password must contain at least one number.");
+const InvitationToken = LinkToken("Invitation token");
 
 const Code = z
   .string({ error: "Authentication code is required." })

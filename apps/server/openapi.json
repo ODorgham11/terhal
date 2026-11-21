@@ -110,7 +110,7 @@
           "token": {
             "type": "string",
             "minLength": 1,
-            "description": "From the invitation link."
+            "description": "From the emailed link."
           }
         },
         "required": [
@@ -154,7 +154,7 @@
           "token": {
             "type": "string",
             "minLength": 1,
-            "description": "From the invitation link."
+            "description": "From the emailed link."
           },
           "firstName": {
             "type": "string",
@@ -207,7 +207,7 @@
           "email": {
             "type": "string",
             "maxLength": 75,
-            "example": "admin@terhal.co"
+            "example": "someone@terhal.co"
           },
           "password": {
             "type": "string",
@@ -328,10 +328,10 @@
             "schema": {
               "type": "string",
               "minLength": 1,
-              "description": "From the invitation link."
+              "description": "From the emailed link."
             },
             "required": true,
-            "description": "From the invitation link.",
+            "description": "From the emailed link.",
             "name": "token",
             "in": "query"
           }
