@@ -137,7 +137,9 @@
               "ASSIGNMENT_CONFLICT",
               "TRIP_ALREADY_LINKED",
               "TRIP_LINK_INVALID",
-              "TRIP_NOT_LINKED"
+              "TRIP_NOT_LINKED",
+              "EXPORT_TOO_LARGE",
+              "REPORT_MONTH_NOT_OVER"
             ],
             "example": "VALIDATION_FAILED"
           },
@@ -5690,6 +5692,620 @@
           "returnTripId"
         ],
         "description": "Make that trip this one's return."
+      },
+      "Analytics": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "groupBy": {
+            "type": "string",
+            "enum": [
+              "day",
+              "week",
+              "month"
+            ]
+          },
+          "totals": {
+            "type": "object",
+            "properties": {
+              "trips": {
+                "type": "integer",
+                "description": "Every trip picking up in the range, cancelled ones too."
+              },
+              "byStatus": {
+                "type": "object",
+                "properties": {
+                  "PENDING": {
+                    "type": "integer"
+                  },
+                  "CANCELLED": {
+                    "type": "integer"
+                  },
+                  "CONFIRMED": {
+                    "type": "integer"
+                  },
+                  "IN_PROGRESS": {
+                    "type": "integer"
+                  },
+                  "AWAITING_REPORT": {
+                    "type": "integer"
+                  },
+                  "COMPLETED": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "completed": {
+                "type": "integer"
+              },
+              "cancelled": {
+                "type": "integer"
+              },
+              "cancellationRate": {
+                "type": "number",
+                "description": "Cancelled trips over all trips, 0 to 1."
+              },
+              "revenue": {
+                "type": "string",
+                "example": "1250.00",
+                "description": "The total price of completed trips (Y2)."
+              },
+              "bookedValue": {
+                "type": "string",
+                "example": "1250.00",
+                "description": "The total price of every trip not cancelled, priced so far, completed ones included."
+              },
+              "averageFare": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "example": "1250.00",
+                "description": "Revenue per completed trip."
+              },
+              "expenses": {
+                "type": "string",
+                "example": "1250.00",
+                "description": "Every expense on the completed trips' reports, office fees included."
+              },
+              "officeFees": {
+                "type": "string",
+                "example": "1250.00",
+                "description": "EGP, two decimals."
+              },
+              "margin": {
+                "type": "string",
+                "example": "1250.00",
+                "description": "Revenue minus expenses."
+              },
+              "unpaid": {
+                "type": "object",
+                "properties": {
+                  "trips": {
+                    "type": "integer"
+                  },
+                  "amount": {
+                    "type": "string",
+                    "example": "1250.00",
+                    "description": "EGP, two decimals."
+                  }
+                },
+                "required": [
+                  "trips",
+                  "amount"
+                ],
+                "description": "Completed trips not marked paid."
+              }
+            },
+            "required": [
+              "trips",
+              "byStatus",
+              "completed",
+              "cancelled",
+              "cancellationRate",
+              "revenue",
+              "bookedValue",
+              "averageFare",
+              "expenses",
+              "officeFees",
+              "margin",
+              "unpaid"
+            ]
+          },
+          "trend": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "period": {
+                  "type": "string",
+                  "description": "The bucket's first day (Cairo), YYYY-MM-DD."
+                },
+                "trips": {
+                  "type": "integer",
+                  "description": "Every trip, cancelled ones too."
+                },
+                "completed": {
+                  "type": "integer"
+                },
+                "cancelled": {
+                  "type": "integer"
+                },
+                "revenue": {
+                  "type": "string",
+                  "example": "1250.00",
+                  "description": "EGP, two decimals."
+                },
+                "bookedValue": {
+                  "type": "string",
+                  "example": "1250.00",
+                  "description": "EGP, two decimals."
+                },
+                "expenses": {
+                  "type": "string",
+                  "example": "1250.00",
+                  "description": "EGP, two decimals."
+                },
+                "margin": {
+                  "type": "string",
+                  "example": "1250.00",
+                  "description": "EGP, two decimals."
+                }
+              },
+              "required": [
+                "period",
+                "trips",
+                "completed",
+                "cancelled",
+                "revenue",
+                "bookedValue",
+                "expenses",
+                "margin"
+              ]
+            },
+            "description": "Every bucket in the range, empty ones too, oldest first."
+          },
+          "byClass": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "classId": {
+                  "type": "string"
+                },
+                "nameEn": {
+                  "type": "string"
+                },
+                "nameAr": {
+                  "type": "string"
+                },
+                "trips": {
+                  "type": "integer",
+                  "description": "Trips not cancelled."
+                },
+                "completed": {
+                  "type": "integer"
+                },
+                "revenue": {
+                  "type": "string",
+                  "example": "1250.00",
+                  "description": "The total price of the completed trips."
+                }
+              },
+              "required": [
+                "classId",
+                "nameEn",
+                "nameAr",
+                "trips",
+                "completed",
+                "revenue"
+              ]
+            }
+          },
+          "byCar": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "car": {
+                  "$ref": "#/components/schemas/CarBody"
+                },
+                "trips": {
+                  "type": "integer",
+                  "description": "Trips not cancelled."
+                },
+                "completed": {
+                  "type": "integer"
+                },
+                "revenue": {
+                  "type": "string",
+                  "example": "1250.00",
+                  "description": "The total price of the completed trips."
+                }
+              },
+              "required": [
+                "car",
+                "trips",
+                "completed",
+                "revenue"
+              ]
+            }
+          },
+          "bySource": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "$ref": "#/components/schemas/TripSource"
+                },
+                "trips": {
+                  "type": "integer",
+                  "description": "Trips not cancelled."
+                },
+                "completed": {
+                  "type": "integer"
+                },
+                "revenue": {
+                  "type": "string",
+                  "example": "1250.00",
+                  "description": "The total price of the completed trips."
+                }
+              },
+              "required": [
+                "source",
+                "trips",
+                "completed",
+                "revenue"
+              ]
+            }
+          },
+          "topRoutes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "nameEn": {
+                      "type": "string"
+                    },
+                    "nameAr": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "nameEn",
+                    "nameAr"
+                  ]
+                },
+                "to": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "nameEn": {
+                      "type": "string"
+                    },
+                    "nameAr": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "nameEn",
+                    "nameAr"
+                  ]
+                },
+                "trips": {
+                  "type": "integer",
+                  "description": "Trips not cancelled."
+                },
+                "completed": {
+                  "type": "integer"
+                },
+                "revenue": {
+                  "type": "string",
+                  "example": "1250.00",
+                  "description": "The total price of the completed trips."
+                }
+              },
+              "required": [
+                "from",
+                "to",
+                "trips",
+                "completed",
+                "revenue"
+              ]
+            },
+            "description": "The 10 busiest governorate pairs, by trips not cancelled."
+          },
+          "fleet": {
+            "type": "object",
+            "properties": {
+              "inHouse": {
+                "type": "object",
+                "properties": {
+                  "trips": {
+                    "type": "integer",
+                    "description": "Trips not cancelled."
+                  },
+                  "completed": {
+                    "type": "integer"
+                  },
+                  "revenue": {
+                    "type": "string",
+                    "example": "1250.00",
+                    "description": "The total price of the completed trips."
+                  }
+                },
+                "required": [
+                  "trips",
+                  "completed",
+                  "revenue"
+                ],
+                "description": "Trips not handed to an office."
+              },
+              "office": {
+                "type": "object",
+                "properties": {
+                  "trips": {
+                    "type": "integer",
+                    "description": "Trips not cancelled."
+                  },
+                  "completed": {
+                    "type": "integer"
+                  },
+                  "revenue": {
+                    "type": "string",
+                    "example": "1250.00",
+                    "description": "The total price of the completed trips."
+                  }
+                },
+                "required": [
+                  "trips",
+                  "completed",
+                  "revenue"
+                ],
+                "description": "Trips handed to an office."
+              },
+              "byDriver": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "driverId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "trips": {
+                      "type": "integer",
+                      "description": "Trips not cancelled."
+                    },
+                    "completed": {
+                      "type": "integer"
+                    },
+                    "revenue": {
+                      "type": "string",
+                      "example": "1250.00",
+                      "description": "The total price of the completed trips."
+                    }
+                  },
+                  "required": [
+                    "driverId",
+                    "name",
+                    "trips",
+                    "completed",
+                    "revenue"
+                  ]
+                },
+                "description": "The 50 busiest drivers."
+              },
+              "byVehicle": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "vehicleId": {
+                      "type": "string"
+                    },
+                    "plateNumber": {
+                      "type": "string"
+                    },
+                    "trips": {
+                      "type": "integer",
+                      "description": "Trips not cancelled."
+                    },
+                    "completed": {
+                      "type": "integer"
+                    },
+                    "revenue": {
+                      "type": "string",
+                      "example": "1250.00",
+                      "description": "The total price of the completed trips."
+                    }
+                  },
+                  "required": [
+                    "vehicleId",
+                    "plateNumber",
+                    "trips",
+                    "completed",
+                    "revenue"
+                  ]
+                },
+                "description": "The 50 busiest vehicles."
+              }
+            },
+            "required": [
+              "inHouse",
+              "office",
+              "byDriver",
+              "byVehicle"
+            ]
+          },
+          "costs": {
+            "type": "object",
+            "properties": {
+              "byType": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "$ref": "#/components/schemas/ExpenseType"
+                    },
+                    "amount": {
+                      "type": "string",
+                      "example": "1250.00",
+                      "description": "EGP, two decimals."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "amount"
+                  ]
+                },
+                "description": "The completed trips' expenses, every type listed."
+              },
+              "total": {
+                "type": "string",
+                "example": "1250.00",
+                "description": "EGP, two decimals."
+              }
+            },
+            "required": [
+              "byType",
+              "total"
+            ]
+          },
+          "driverBalances": {
+            "type": "object",
+            "properties": {
+              "owedToDrivers": {
+                "type": "string",
+                "example": "1250.00",
+                "description": "What the company owes drivers, in total."
+              },
+              "heldByDrivers": {
+                "type": "string",
+                "example": "1250.00",
+                "description": "Company cash drivers hold, in total."
+              },
+              "drivers": {
+                "type": "integer",
+                "description": "Drivers with a balance other than zero."
+              }
+            },
+            "required": [
+              "owedToDrivers",
+              "heldByDrivers",
+              "drivers"
+            ],
+            "description": "Now, whatever the range."
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "groupBy",
+          "totals",
+          "trend",
+          "byClass",
+          "byCar",
+          "bySource",
+          "topRoutes",
+          "fleet",
+          "costs",
+          "driverBalances"
+        ]
+      },
+      "TripSource": {
+        "type": "string",
+        "enum": [
+          "CUSTOMER",
+          "STAFF"
+        ],
+        "description": "CUSTOMER: booked on the site (a customer or a guest). STAFF: booked in the dashboard."
+      },
+      "ExpenseType": {
+        "type": "string",
+        "enum": [
+          "INTERCITY_TOLL",
+          "FUEL",
+          "CAR_MAINTENANCE",
+          "DRIVER_FEE",
+          "OFFICE_FEE",
+          "OTHER"
+        ]
+      },
+      "AnalyticsReport": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer"
+          },
+          "month": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer",
+            "description": "Bytes."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When it was last generated."
+          }
+        },
+        "required": [
+          "year",
+          "month",
+          "size",
+          "createdAt",
+          "generatedAt"
+        ]
+      },
+      "AnalyticsReportLink": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer"
+          },
+          "month": {
+            "type": "integer"
+          },
+          "url": {
+            "type": "string",
+            "description": "Downloads the workbook until it expires."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "year",
+          "month",
+          "url",
+          "expiresAt"
+        ]
       }
     },
     "parameters": {}
@@ -19733,6 +20349,766 @@
           },
           "409": {
             "description": "TRIP_NOT_LINKED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/analytics": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get the analytics page's figures",
+        "description": "For trips picking up from `from` to `to` (Cairo days, both included): totals, a trend by `groupBy`, breakdowns by class, car body, source and governorate pair, the fleet, costs and the margin. Revenue counts completed trips; booked value every trip not cancelled. Needs `analytics`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "From: a Cairo calendar day, included.",
+              "example": "2026-11-01"
+            },
+            "required": true,
+            "description": "From: a Cairo calendar day, included.",
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "To: a Cairo calendar day, included.",
+              "example": "2026-11-01"
+            },
+            "required": true,
+            "description": "To: a Cairo calendar day, included.",
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ],
+              "default": "day",
+              "description": "The trend's buckets. Weeks start on Saturday."
+            },
+            "required": false,
+            "description": "The trend's buckets. Weeks start on Saturday.",
+            "name": "groupBy",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The figures",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Analytics"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/analytics/reports": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "List the monthly reports",
+        "description": "Every month with a report, newest first. A report is generated on the 1st of each month (Cairo time) for the month before. Needs `analytics`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The reports",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AnalyticsReport"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/analytics/reports/{year}/{month}": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get a link to a monthly report",
+        "description": "A signed link to the month's XLSX workbook, valid for 15 minutes. Needs `analytics`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 9999
+            },
+            "required": true,
+            "name": "year",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "required": true,
+            "name": "month",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The link",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsReportLink"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: the month has no report.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/analytics/reports/{year}/{month}/regenerate": {
+      "post": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Generate a month's report again",
+        "description": "Writes the month's workbook from the data as it is now, replacing the earlier one, or makes it if there's none. Doing it twice gives the same result. Once a month has a report, its completed trips can't be reopened. Needs `analytics`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 9999
+            },
+            "required": true,
+            "name": "year",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "required": true,
+            "name": "month",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "REPORT_MONTH_NOT_OVER: the month hasn't ended yet (Cairo time).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/exports/trips.csv": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Download trips as CSV",
+        "description": "The trips matching the filters (the trip list's), oldest pickup first, at most 50000; more is `EXPORT_TOO_LARGE` before anything is sent. UTF-8 with a byte order mark; text a spreadsheet would run as a formula starts with an apostrophe. Needs `analytics` or `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Pickups at or after this instant."
+            },
+            "required": false,
+            "description": "Pickups at or after this instant.",
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Pickups before this instant."
+            },
+            "required": false,
+            "description": "Pickups before this instant.",
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "$ref": "#/components/schemas/TripStatus"
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "$ref": "#/components/schemas/TripSource"
+            },
+            "required": false,
+            "description": "CUSTOMER: booked on the site (a customer or a guest). STAFF: booked in the dashboard.",
+            "name": "source",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "description": "Every word must match the code, the passenger's name or their phone."
+            },
+            "required": false,
+            "description": "Every word must match the code, the passenger's name or their phone.",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "driverId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "vehicleId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "officeId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trips",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "EXPORT_TOO_LARGE (`count`, `limit`): narrow the filters.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/exports/drivers.csv": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Download drivers as CSV",
+        "description": "Every driver, archived ones too, with the same encoding as the trips CSV. Needs `analytics`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The drivers",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/exports/vehicles.csv": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Download vehicles as CSV",
+        "description": "Every vehicle, archived ones too, with the same encoding as the trips CSV. Needs `analytics`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The vehicles",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/exports/customers.csv": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Download customers as CSV",
+        "description": "Every customer account except deleted ones, with how many trips each booked, with the same encoding as the trips CSV. Needs `analytics`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The customers",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/exports/pricing.csv": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Download prices as CSV",
+        "description": "The price list, as the price list's own export (`/staff/pricing/export.csv`) gives it. Needs `analytics`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The prices",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
             "content": {
               "application/problem+json": {
                 "schema": {
