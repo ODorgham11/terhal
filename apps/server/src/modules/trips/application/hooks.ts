@@ -1,5 +1,6 @@
 import type { Prisma } from "../../../../generated/prisma/client";
 import type { RecordedTripEvent, TripActor } from "./events";
+import { issueReportLink } from "./report-link";
 
 // Where the features built on trips plug in. Each runs inside the transaction of the change that triggered it, so its
 // writes (a notification row, a ledger entry) are saved with the change or not at all. Keep them fast: anything slow
@@ -27,5 +28,5 @@ export const onTripReopened: (tx: Tx, trip: HookTrip, actor: TripActor) => Promi
   Promise.resolve();
 
 // The trip's driver changed (A1, D1 b, D2 a). The old report link is already revoked by then; a new one is issued here
-// once the driver report exists.
-export const onDriverChanged: (tx: Tx, trip: HookTrip) => Promise<void> = () => Promise.resolve();
+// for the new driver, if there is one.
+export const onDriverChanged: (tx: Tx, trip: HookTrip) => Promise<void> = issueReportLink;

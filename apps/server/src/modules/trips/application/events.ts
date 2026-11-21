@@ -91,12 +91,13 @@ export type TripFields = Partial<
     | "paidAt"
     | "previousTripId"
     | "reportTokenHash"
+    | "reportTokenSalt"
     | "reportTokenExpiresAt"
   >
 >;
 
 // Never written to an event: secrets.
-const UNRECORDED = new Set(["reportTokenHash", "reportTokenExpiresAt"]);
+const UNRECORDED = new Set(["reportTokenHash", "reportTokenSalt", "reportTokenExpiresAt"]);
 
 export interface TripChange {
   tripId: string;

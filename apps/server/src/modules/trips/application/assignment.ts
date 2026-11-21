@@ -122,6 +122,7 @@ export const assignTrip = async (id: string, staffId: string, input: AssignTrip)
         // The report link belongs to the driver it was sent to.
         ...(wanted.driverId !== current.driverId && {
           reportTokenHash: null,
+          reportTokenSalt: null,
           reportTokenExpiresAt: null,
         }),
       }),
