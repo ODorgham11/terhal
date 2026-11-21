@@ -228,6 +228,8 @@ export const DriverTransactionRecorded = z
   })
   .meta({ id: "DriverTransactionRecorded" });
 
+export type DriverTransactionRecorded = z.infer<typeof DriverTransactionRecorded>;
+
 export const ListDriverTransactions = z.object(PageQuery);
 
 export type ListDriverTransactions = z.output<typeof ListDriverTransactions>;
@@ -365,6 +367,8 @@ export const OfficeDetail = Office.extend({
     .meta({ description: "Trips handed to it that are still live, soonest first (at most 100)." }),
 }).meta({ id: "OfficeDetail" });
 
+export type OfficeDetail = z.infer<typeof OfficeDetail>;
+
 const OfficeFields = {
   name: Text("Name", 100),
   contact: Text("Contact", 100),
@@ -429,3 +433,5 @@ export const NearbyOffices = z
     data: z.array(NearbyOffice),
   })
   .meta({ id: "NearbyOffices" });
+
+export type NearbyOffices = z.infer<typeof NearbyOffices>;
