@@ -1,17 +1,21 @@
 import { createRoute } from "@hono/zod-openapi";
 import {
+  AdminSession,
   ChangeAdminPassword,
   CompleteAdminPasswordReset,
+  IdParam,
   RequestAdminPasswordReset,
+  page,
 } from "@terhal/contracts";
 import type { Context } from "hono";
 import {
   ADMIN_COOKIE_AUTH,
+  clearAdminSession,
   currentAdminId,
   currentAdminSessionId,
   requireAdmin,
 } from "../../../platform/http/authenticate";
-import { body, createRouter, problemResponse } from "../../../platform/http/router";
+import { body, createRouter, json, problemResponse } from "../../../platform/http/router";
 import {
   bodyKey,
   createRateLimitKey,
@@ -23,6 +27,7 @@ import {
   completeAdminPasswordReset,
   requestAdminPasswordReset,
 } from "../application/admin-password";
+import { listSessions, revokeOtherSessions, revokeOwnSession } from "../application/sessions";
 import { requestInfo } from "./request-info";
 
 const MINUTE = 60 * 1000;
@@ -114,6 +119,59 @@ const changePassword = createRoute({
   },
 });
 
+const sessions = createRoute({
+  method: "get",
+  path: "/admin/auth/sessions",
+  tags,
+  summary: "List your sessions",
+  description: "Your active sessions, newest first, in one page. `current` marks this one.",
+  middleware: [
+    requireAdmin,
+    rateLimit({ limit: 120, windowMs: MINUTE, key: perAdmin("admin:sessions:list") }),
+  ] as const,
+  security,
+  responses: {
+    200: { description: "Your active sessions", ...json(page(AdminSession)) },
+    ...signedIn,
+  },
+});
+
+const revokeSession = createRoute({
+  method: "delete",
+  path: "/admin/auth/sessions/{id}",
+  tags,
+  summary: "End one of your sessions",
+  description: "Ending the current session also clears its cookies, like signing out.",
+  middleware: [
+    requireAdmin,
+    rateLimit({ limit: 60, windowMs: 15 * MINUTE, key: perAdmin("admin:sessions:revoke") }),
+  ] as const,
+  security,
+  request: { params: IdParam },
+  responses: {
+    204: { description: "Session ended" },
+    ...signedIn,
+    404: problemResponse("NOT_FOUND: no such active session of yours."),
+  },
+});
+
+const revokeOthers = createRoute({
+  method: "post",
+  path: "/admin/auth/sessions/all/revoke",
+  tags,
+  summary: "Sign out everywhere else",
+  description: "Ends every session of yours except this one.",
+  middleware: [
+    requireAdmin,
+    rateLimit({ limit: 20, windowMs: 15 * MINUTE, key: perAdmin("admin:sessions:revoke-all") }),
+  ] as const,
+  security,
+  responses: {
+    204: { description: "Every other session ended" },
+    ...signedIn,
+  },
+});
+
 export const adminAccountRoutes = createRouter()
   .openapi(requestPasswordReset, async (c) => {
     await requestAdminPasswordReset(c.req.valid("json").email, requestInfo(c).ipAddress);
@@ -127,6 +185,25 @@ export const adminAccountRoutes = createRouter()
     await changeAdminPassword(
       c.req.valid("json"),
       { adminId: currentAdminId(c), sessionId: currentAdminSessionId(c) },
+      requestInfo(c).ipAddress,
+    );
+    return c.body(null, 204);
+  })
+  .openapi(sessions, async (c) => {
+    return c.json(await listSessions(currentAdminId(c), currentAdminSessionId(c)), 200);
+  })
+  .openapi(revokeSession, async (c) => {
+    const { id } = c.req.valid("param");
+    await revokeOwnSession(currentAdminId(c), id, requestInfo(c).ipAddress);
+
+    // Ending the session making the request is signing out, so the browser stops sending its cookies.
+    if (id === currentAdminSessionId(c)) clearAdminSession(c);
+    return c.body(null, 204);
+  })
+  .openapi(revokeOthers, async (c) => {
+    await revokeOtherSessions(
+      currentAdminId(c),
+      currentAdminSessionId(c),
       requestInfo(c).ipAddress,
     );
     return c.body(null, 204);

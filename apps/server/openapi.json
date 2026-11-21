@@ -325,6 +325,46 @@
           "code"
         ]
       },
+      "AdminSession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ipAddress": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "userAgent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "current": {
+            "type": "boolean",
+            "description": "The session making this request."
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "expiresAt",
+          "ipAddress",
+          "userAgent",
+          "current"
+        ]
+      },
       "AdminInvitationSent": {
         "type": "object",
         "properties": {
@@ -1534,6 +1574,199 @@
           },
           "401": {
             "description": "INVALID_CREDENTIALS: the current password is wrong. UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/sessions": {
+      "get": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "List your sessions",
+        "description": "Your active sessions, newest first, in one page. `current` marks this one.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Your active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminSession"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "End one of your sessions",
+        "description": "Ending the current session also clears its cookies, like signing out.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Session ended"
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such active session of yours.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/sessions/all/revoke": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Sign out everywhere else",
+        "description": "Ends every session of yours except this one.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Every other session ended"
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
             "content": {
               "application/problem+json": {
                 "schema": {
