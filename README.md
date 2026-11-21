@@ -112,6 +112,13 @@ Set `ADMIN_EMAIL` in `apps/server/.env` and run `pnpm --filter @terhal/server db
 invitation email, link included, is printed to the console. The seed only works while no admin exists; every admin after
 the first is invited by an admin.
 
+### Governorates
+
+Governorates and their outlines only come from a seed: the API can rename them but never creates, moves or reshapes
+them. Download geoBoundaries' ADM1 file for Egypt (the command is at the top of `apps/server/prisma/seed-governorates.ts`)
+and run `pnpm --filter @terhal/server db:seed:governorates <path to the file>`. Running it again changes nothing unless
+the file did.
+
 ## Checks
 
 ```sh

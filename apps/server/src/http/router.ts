@@ -18,6 +18,12 @@ import {
   staffAuthRoutes,
   teamRoutes,
 } from "../modules/identity/index";
+import {
+  adminLocationRoutes,
+  siteLocationRoutes,
+  staffLocationRoutes,
+} from "../modules/location/index";
+import { pricingRoutes, quoteRoutes, tripClassRoutes } from "../modules/pricing/index";
 import { env, origins, type Audience } from "../platform/config/env";
 import {
   ADMIN_COOKIE_AUTH,
@@ -86,7 +92,13 @@ const v1 = createRouter()
   .route("/", guestRoutes)
   .route("/", driverRoutes)
   .route("/", vehicleRoutes)
-  .route("/", officeRoutes);
+  .route("/", officeRoutes)
+  .route("/", adminLocationRoutes)
+  .route("/", staffLocationRoutes)
+  .route("/", siteLocationRoutes)
+  .route("/", tripClassRoutes)
+  .route("/", pricingRoutes)
+  .route("/", quoteRoutes);
 
 export const routes = router.route("/health", health).route("/v1", v1);
 

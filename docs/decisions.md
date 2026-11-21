@@ -319,6 +319,35 @@ How the fleet and office routes ([domain-api.md](domain-api.md), F and O) settle
 - **Tables of modules that don't exist yet:** the fleet module reads `Trip` and `Location` directly, marked with TODOs to
   go through the trips and locations modules once they exist.
 
+### Locations, pricing and quotes: details the spec left open (2026-11-21)
+
+Choices made while building the location, trip class, pricing and quote routes, closest to [domain-api.md](domain-api.md):
+
+- **A delete's `expectedCount` is a query parameter** (`DELETE …/locations/{id}?expectedCount=3`), not a body. The
+  detail route returns it as `subtreeSize`; a mismatch is `LOCATION_COUNT_MISMATCH` with the current `count`.
+- **Deleted locations can't be edited** (`LOCATION_DELETED`): restore first. Restoring a location that went with an
+  ancestor, or whose parent is deleted, is `LOCATION_NOT_RESTORABLE`.
+- **Governorate outlines are one ring.** The column is a single polygon, so the seed keeps a multipolygon's largest part
+  and drops islands (the Red Sea's, Port Said's). Matching is by English or Arabic name, normalized.
+- **The outlines' licence is ODbL, not CC BY.** geoBoundaries' Egypt ADM1 (gbOpen) is derived from OpenStreetMap and
+  published under ODbL 1.0, so the attribution served with the outlines credits geoBoundaries and OpenStreetMap
+  contributors. Simplified, the 27 outlines are about 63 KB uncompressed.
+- **An outlines URL with an old `v`** gets the current outlines cached for a minute instead of for good, so a stale
+  version never pins wrong data in a cache.
+- **The pricing walk ranks pairs by locality**, not by steps up the tree: a pair's specificity is the sum of its ends'
+  (area 2, district 1, governorate 0), ties going to the more specific pickup. So "Cairo → Smouha" (an area) beats
+  "Maadi → Alexandria", and an area sitting directly in a governorate counts as specific as one in a district.
+- **Bad references in a price are `VALIDATION_FAILED`**, with the field's path (`fromId`, or `rows.3.classId` in a bulk
+  upload): unknown or deleted places, unknown or archived classes, an area priced to itself, a row repeated in an
+  upload. Only a clash with an existing row is its own code, `PRICING_EXISTS`. Changing a price changes only the price;
+  a different route, class or body is another row. Archived classes keep their rows, which can still be repriced.
+- **A quote lists every active class with every car body, each with `fits`.** The answers say the site shows the ones
+  that fit; returning all of them with the flag lets the site do that and still explain why a body is missing.
+- **A quote's return leg takes optional pins, not a date.** Prices don't depend on time (P4 a), so the date waits for
+  booking; the pins default to the outbound's reversed (R2). Either leg resolving to one place is `QUOTE_SAME_PLACE`
+  with `leg`; a pin outside coverage is `OUT_OF_COVERAGE` with `end` and `leg`. Both are 422.
+- **Upcoming trips in a location's usage** are pending or confirmed trips picking up or dropping off there.
+
 ### Accounts carry a locale (2026-11-21)
 
 `Customer`, `GuestSession` and `Staff` have a `locale` (`ar` by default, or `en`), taken from the site's locale cookie

@@ -74,6 +74,35 @@ export const errorCodes = [
   "LAST_TEAM_MANAGER",
   // The staff member or customer being acted on was deleted, which is final.
   "ACCOUNT_DELETED",
+
+  // Locations
+  // A live location in the same parent already has this name, in English or in Arabic.
+  "LOCATION_NAME_TAKEN",
+  // The parent doesn't exist, is deleted, or isn't broader (a district goes in a governorate, an area in either).
+  "LOCATION_PARENT_INVALID",
+  // The location is deleted: restore it before changing it.
+  "LOCATION_DELETED",
+  // Only a deleted location that was deleted itself (not along with an ancestor) can be restored, and only while its
+  // parent is live.
+  "LOCATION_NOT_RESTORABLE",
+  // A delete's expectedCount isn't the size of the live subtree any more. `count` has the current size.
+  "LOCATION_COUNT_MISMATCH",
+  // Governorates come from the seed: they can only be renamed, never created, moved or deleted.
+  "GOVERNORATE_READ_ONLY",
+  // A pin isn't inside any place the platform serves. `end` says which one (pickup or dropoff), `leg` which trip.
+  "OUT_OF_COVERAGE",
+
+  // Trip classes
+  // An active class already has this name, in English or in Arabic. Archived classes don't count.
+  "TRIP_CLASS_NAME_TAKEN",
+
+  // Pricing
+  // The route already has a price for this class and car body: change that one instead.
+  "PRICING_EXISTS",
+
+  // Quotes
+  // The pickup and the drop-off resolve to the same place, so the trip isn't bookable. `leg` says which trip.
+  "QUOTE_SAME_PLACE",
 ] as const;
 
 export type ErrorCode = (typeof errorCodes)[number];
