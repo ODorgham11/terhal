@@ -142,41 +142,59 @@ const notActive = (who: string) =>
     detail: `This ${who} account is not active.`,
   });
 
-// The id in a valid access cookie for this audience, or a 401.
-const accessTokenSubject = async (c: Context, audience: Audience) => {
+// The account and session ids in a valid access cookie for this audience, or a 401.
+const accessToken = async (c: Context, audience: Audience) => {
   const token = getCookie(c, sessionCookieNames[audience].accessCookie);
   if (!token) throw unauthenticated();
   return verifyAccessToken(audience, token);
 };
 
-// Every require* middleware loads the account on every request, since a token can't reflect a deactivation or a
-// permission change made after it was issued: the change takes effect immediately.
+// Every require* middleware loads the token's session and its account on every request, in one query. A token can't
+// reflect what happened after it was issued, so this is what makes signing out, revoking a session, resetting a
+// password, a deactivation or a permission change take effect at once.
+const isLive = (
+  session: { revokedAt: Date | null; expiresAt: Date } | null,
+  ownerId: string | undefined,
+  subject: string,
+) =>
+  session !== null &&
+  ownerId === subject &&
+  session.revokedAt === null &&
+  session.expiresAt > new Date();
 
 export interface AdminActor {
   adminId: string;
+  sessionId: string;
 }
 
 // The signed in admin's id, on a route behind requireAdmin.
 export const currentAdminId = (c: Context) => (c.get("admin") as AdminActor).adminId;
+export const currentAdminSessionId = (c: Context) => (c.get("admin") as AdminActor).sessionId;
 
 export const requireAdmin = createMiddleware<{ Variables: { admin: AdminActor } }>(
   async (c, next) => {
-    const adminId = await accessTokenSubject(c, "admin");
-    const found = await prisma.admin.findUnique({
-      where: { id: adminId },
-      select: { status: true },
+    const { subject, sessionId } = await accessToken(c, "admin");
+    const session = await prisma.adminSession.findUnique({
+      where: { id: sessionId },
+      select: {
+        adminId: true,
+        revokedAt: true,
+        expiresAt: true,
+        admin: { select: { status: true } },
+      },
     });
 
-    if (!found) throw unauthenticated();
-    if (found.status !== "ACTIVE") throw notActive("admin");
+    if (!session || !isLive(session, session.adminId, subject)) throw unauthenticated();
+    if (session.admin.status !== "ACTIVE") throw notActive("admin");
 
-    c.set("admin", { adminId });
+    c.set("admin", { adminId: subject, sessionId });
     await next();
   },
 );
 
 export interface StaffActor {
   staffId: string;
+  sessionId: string;
   permissions: StaffPermission[];
 }
 
@@ -184,22 +202,27 @@ export const currentStaff = (c: Context) => c.get("staff") as StaffActor;
 
 export const requireStaff = createMiddleware<{ Variables: { staff: StaffActor } }>(
   async (c, next) => {
-    const staffId = await accessTokenSubject(c, "staff");
-    const found = await prisma.staff.findUnique({
-      where: { id: staffId },
-      select: { status: true, permissions: true },
+    const { subject, sessionId } = await accessToken(c, "staff");
+    const session = await prisma.staffSession.findUnique({
+      where: { id: sessionId },
+      select: {
+        staffId: true,
+        revokedAt: true,
+        expiresAt: true,
+        staff: { select: { status: true, permissions: true } },
+      },
     });
 
-    if (!found) throw unauthenticated();
-    if (found.status !== "ACTIVE") throw notActive("staff");
+    if (!session || !isLive(session, session.staffId, subject)) throw unauthenticated();
+    if (session.staff.status !== "ACTIVE") throw notActive("staff");
 
     // Permissions this version doesn't know (one since removed, say) are dropped rather than failing every request.
-    const stored = Array.isArray(found.permissions) ? found.permissions : [];
+    const stored = Array.isArray(session.staff.permissions) ? session.staff.permissions : [];
     const permissions = stored.filter(
       (value): value is StaffPermission => StaffPermission.safeParse(value).success,
     );
 
-    c.set("staff", { staffId, permissions });
+    c.set("staff", { staffId: subject, sessionId, permissions });
     await next();
   },
 );
@@ -220,22 +243,28 @@ export const requirePermission = (...needed: StaffPermission[]) =>
 
 export interface CustomerActor {
   customerId: string;
+  sessionId: string;
 }
 
 export const currentCustomerId = (c: Context) => (c.get("customer") as CustomerActor).customerId;
 
 export const requireCustomer = createMiddleware<{ Variables: { customer: CustomerActor } }>(
   async (c, next) => {
-    const customerId = await accessTokenSubject(c, "customer");
-    const found = await prisma.customer.findUnique({
-      where: { id: customerId },
-      select: { status: true },
+    const { subject, sessionId } = await accessToken(c, "customer");
+    const session = await prisma.customerSession.findUnique({
+      where: { id: sessionId },
+      select: {
+        customerId: true,
+        revokedAt: true,
+        expiresAt: true,
+        customer: { select: { status: true } },
+      },
     });
 
-    if (!found) throw unauthenticated();
-    if (found.status !== "ACTIVE") throw notActive("customer");
+    if (!session || !isLive(session, session.customerId, subject)) throw unauthenticated();
+    if (session.customer.status !== "ACTIVE") throw notActive("customer");
 
-    c.set("customer", { customerId });
+    c.set("customer", { customerId: subject, sessionId });
     await next();
   },
 );
