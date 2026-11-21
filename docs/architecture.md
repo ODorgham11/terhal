@@ -118,6 +118,9 @@ What we gave up:
   the sign in challenge only reach `/v1/admin/auth`.
 - Admins sign in with a password and then a TOTP code; the access token lives 15 minutes, a session at most 12 hours,
   and every request re-checks the admin is still active.
+- Staff sign in with a password only. A session lasts 7 days from its last refresh and 30 days at most, on up to 5
+  devices; every request re-checks the staff member is active and reloads their permissions. Resetting a password ends
+  every session.
 - Everything security relevant is written to the audit log, in the same transaction as the change it records.
 
 ## Failure handling
