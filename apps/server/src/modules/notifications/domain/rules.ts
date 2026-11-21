@@ -12,8 +12,13 @@ import {
 
 export type StaffNotificationKind = Exclude<NotificationKind, BookerNotificationKind>;
 
+// Who recorded the event. A driver acts through the trip's report link (start, end, the report).
 export type EventActor =
-  { staffId: string } | { customerId: string } | { guestSessionId: string } | { system: string };
+  | { staffId: string }
+  | { customerId: string }
+  | { guestSessionId: string }
+  | { driverId: string }
+  | { system: string };
 
 // What the rules need to know about the trip, after the event.
 export interface TripFacts {
@@ -85,7 +90,7 @@ const forEvent = (event: EventNotice, trip: TripFacts): Planned => {
     case tripEventActions.CANCELLED: {
       if ("system" in event.actor)
         return { booker: "TRIP_CANCELLED", staff: "CANCELLED_BY_SYSTEM" };
-      if ("staffId" in event.actor) return { booker: "TRIP_CANCELLED", staff: null };
+      if (!byBooker(event.actor)) return { booker: "TRIP_CANCELLED", staff: null };
       // The return leg cancelled with a declined outbound (R3 a): staff already have PRICE_DECLINED for it.
       const withDecline = event.data?.withTripId !== undefined;
       return { booker: "CANCELLATION_RECEIPT", staff: withDecline ? null : "CANCELLED_BY_BOOKER" };

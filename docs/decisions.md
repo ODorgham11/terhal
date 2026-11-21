@@ -481,7 +481,9 @@ What we gave up: an email goes out up to 5 seconds after the change, and the swe
   - A booker who declines a price gets a cancellation receipt and staff get `PRICE_DECLINED`; the return leg cancelled
     with it adds no second staff notice.
   - Completing a trip again after a reopen doesn't thank the booker twice (its dedupe key is the trip, not the event).
-  - "Report submitted" is keyed on the existing `trip.report_submitted` action, which the driver report will record.
+  - "Report submitted" is keyed on the existing `trip.report_submitted` action, which the driver report records with
+    the driver as actor (`{ driverId }`). A driver's start or end and report edits or links tell nobody; a cancellation
+    by anyone but the booker is a `TRIP_CANCELLED` email with its reason.
 - **Dedupe keys.** Every notification has a unique `dedupeKey` naming its cause and recipient
   (`event.<event id>.<recipient>`, `reminder.<kind>.<trip>.<due ms>.<recipient>`), so a retried job never writes it
   twice.

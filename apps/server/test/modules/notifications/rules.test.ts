@@ -28,6 +28,7 @@ const customer = { customerId: "c1" };
 const guest = { guestSessionId: "g1" };
 const staff = { staffId: "s1" };
 const system = { system: "expire-pending-trips" };
+const driver = { driverId: "d1" };
 
 describe("who is told what (N1)", () => {
   it("tells the booker and staff of a booking on the site", () => {
@@ -122,10 +123,17 @@ describe("who is told what (N1)", () => {
     expect(planNotifications({ action: a.COMPLETED, actor: staff }, trip()).booker).toBe(
       "TRIP_COMPLETED",
     );
-    expect(planNotifications({ action: a.REPORT_SUBMITTED, actor: system }, trip())).toEqual({
+    expect(planNotifications({ action: a.REPORT_SUBMITTED, actor: driver }, trip())).toEqual({
       booker: null,
       staff: "REPORT_SUBMITTED",
     });
+    // A driver starting or ending through the report link, or a report edit or link: nobody is told.
+    for (const action of [a.STARTED, a.ENDED, a.REPORT_EDITED, a.REPORT_LINK_ISSUED]) {
+      expect(planNotifications({ action, actor: driver }, trip())).toEqual({
+        booker: null,
+        staff: null,
+      });
+    }
     expect(planNotifications({ action: a.UPDATED, actor: staff }, trip())).toEqual({
       booker: null,
       staff: null,
