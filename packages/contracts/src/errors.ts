@@ -103,6 +103,66 @@ export const errorCodes = [
   // Quotes
   // The pickup and the drop-off resolve to the same place, so the trip isn't bookable. `leg` says which trip.
   "QUOTE_SAME_PLACE",
+
+  // Booking
+  // The pickup time breaks the booking rules: `reason` is TOO_SOON (under 3 hours ahead), TOO_FAR (over 90 days ahead),
+  // OFF_GRID (not on a quarter hour), IN_PAST (staff need `backdated`) or BEFORE_OUTBOUND (a return before its
+  // outbound). `leg` says which trip.
+  "PICKUP_TIME_INVALID",
+  // The passengers or the luggage don't fit the car body.
+  "LOAD_DOES_NOT_FIT",
+  // The booker already has the most pending trips allowed (3). Wait for one to be confirmed, or cancel one.
+  "PENDING_TRIP_LIMIT",
+  // The price isn't the one the booker saw (`expectedPrice`). `price` is the current one, null when there's none (book on
+  // request), and `leg` says which trip.
+  "PRICE_CHANGED",
+  // A staff member booking on their own must give the trip a price: only a customer's trip can wait for one. `leg` says
+  // which trip.
+  "PRICE_REQUIRED",
+  // The customer named in a staff booking doesn't exist or isn't active.
+  "CUSTOMER_NOT_AVAILABLE",
+
+  // Trip lifecycle
+  // The trip isn't in a status this action applies to (someone else may have just moved it). `status` is its current one.
+  "TRIP_STATUS_CONFLICT",
+  // A confirmed trip can't be cancelled online: the booker has to call.
+  "CALL_TO_CANCEL",
+  // Confirming needs a price the booker saw: quoted at booking, or proposed and accepted.
+  "PRICE_NOT_ACCEPTED",
+  // Starting needs a driver and a vehicle, or an office.
+  "ASSIGNMENT_REQUIRED",
+  // The driver or the vehicle (`field`) is already on a trip in progress.
+  "ASSIGNEE_BUSY",
+  // Reopening a completed trip after its month's report was generated.
+  "MONTH_REPORT_GENERATED",
+
+  // Price on request
+  // Proposing a price for a trip that isn't pending with a requested or proposed price.
+  "PRICE_NOT_REQUESTED",
+  // Accepting or declining when there's no proposed price waiting.
+  "PRICE_NOT_PROPOSED",
+  // Editing the price of a trip whose price is requested or proposed: propose one instead.
+  "PRICE_REQUEST_OPEN",
+
+  // Assignment
+  // The driver or the vehicle named doesn't exist or is archived.
+  "DRIVER_NOT_AVAILABLE",
+  "VEHICLE_NOT_AVAILABLE",
+  // The vehicle's body is smaller than the trip's.
+  "VEHICLE_TOO_SMALL",
+  // A trip handed to an office can only have that office's driver and vehicle.
+  "ASSIGNMENT_OFFICE_MISMATCH",
+  // The driver or the vehicle has another live trip within 3 hours of this pickup. `conflicts` lists them; send
+  // `acknowledgeConflicts` to assign anyway.
+  "ASSIGNMENT_CONFLICT",
+
+  // Linked trips
+  // One of the trips already has a linked trip: unlink it first.
+  "TRIP_ALREADY_LINKED",
+  // The trips can't be linked: the same trip, or a return that picks up before the outbound.
+  "TRIP_LINK_INVALID",
+  // Unlinking a trip that has no linked trip.
+  "TRIP_NOT_LINKED",
 ] as const;
 
 export type ErrorCode = (typeof errorCodes)[number];
