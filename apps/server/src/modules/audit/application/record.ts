@@ -4,8 +4,7 @@ import { prisma } from "../../../platform/db/prisma";
 
 // Who did it: an admin, a staff member, or nobody (adminId null) for the system (the seed) and for sign in attempts on
 // emails that aren't admins. Never both (AuditLog_one_actor).
-type AuditActor =
-  { adminId: string | null; staffId?: never } | { staffId: string; adminId?: never };
+type AuditActor = { adminId: string | null; staffId?: null } | { staffId: string; adminId?: null };
 
 export type AuditEntry = AuditActor & {
   action: AuditAction;

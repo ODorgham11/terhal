@@ -80,6 +80,8 @@
       "LOCATION_NOT_AVAILABLE": "That place doesn't exist or has been deleted.",
       "IMAGE_TYPE_NOT_ALLOWED": "Upload a JPEG, PNG or WebP image.",
       "IMAGE_LIMIT_REACHED": "This vehicle already has 5 images. Delete one first.",
+      "LAST_TEAM_MANAGER": "Someone active has to keep the team permission.",
+      "ACCOUNT_DELETED": "This account was deleted.",
       "NETWORK_ERROR": "We couldn't reach the server. Check your connection and try again.",
       "UNEXPECTED_RESPONSE": "Something went wrong. Please try again."
     },

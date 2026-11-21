@@ -30,7 +30,7 @@ export const signInCustomer = async (identifier: string, password: string) => {
 
   // They may have lost the first code or let it expire, so send a fresh one to finish with.
   if (customer.status === "UNVERIFIED") {
-    await sendCustomerCode(customer.id, customer.email);
+    await sendCustomerCode(customer);
     throw verificationRequired();
   }
 

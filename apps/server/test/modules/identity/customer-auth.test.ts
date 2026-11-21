@@ -60,15 +60,15 @@ describe("signing up", () => {
       email: EMAIL,
       phone: PHONE,
       status: "UNVERIFIED",
+      locale: "ar",
     });
     // No session until the code is entered.
     expect((await agent.request("/v1/site/auth/session")).status).toBe(401);
 
-    // The email is in Arabic, then English.
+    // In Arabic only, the default language.
     const [email] = emailsTo(EMAIL);
-    expect(email?.text.indexOf("رمز التحقق")).toBeLessThan(
-      email?.text.indexOf("verification code") ?? 0,
-    );
+    expect(email?.subject).toBe("رمز التحقق من ترحال");
+    expect(email?.text).not.toMatch(/verification code/);
 
     const verified = await verify(agent, lastCodeTo(EMAIL));
     expect(verified.status).toBe(200);
@@ -104,6 +104,37 @@ describe("signing up", () => {
   it("only takes calls from the customer site", async () => {
     const response = await signUp(createAgent());
     expect(await response.json()).toMatchObject({ code: "UNTRUSTED_ORIGIN" });
+  });
+});
+
+describe("the customer's language", () => {
+  it("is taken at sign up, and their emails are sent in it alone", async () => {
+    const agent = createAgent(SITE_ORIGIN);
+
+    const created = await signUp(agent, { locale: "en" });
+    expect(await created.json()).toMatchObject({ locale: "en" });
+
+    const [code] = emailsTo(EMAIL);
+    expect(code?.subject).toBe("Your Terhal verification code");
+    expect(code?.text).not.toMatch(/[\u0600-\u06FF]/);
+
+    await verify(agent, lastCodeTo(EMAIL));
+    await agent.request("/v1/site/auth/password/reset/request", {
+      method: "POST",
+      json: { email: EMAIL },
+    });
+    const reset = emailsTo(EMAIL).at(-1);
+    expect(reset?.subject).toBe("Reset your Terhal password");
+    expect(reset?.text).not.toMatch(/[\u0600-\u06FF]/);
+  });
+
+  it("refuses a language the site doesn't have", async () => {
+    const response = await signUp(createAgent(SITE_ORIGIN), { locale: "fr" });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      code: "VALIDATION_FAILED",
+      errors: [expect.objectContaining({ path: "locale" })],
+    });
   });
 });
 

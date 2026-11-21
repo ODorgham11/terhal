@@ -15,6 +15,7 @@ const toGuestResponse = (session: GuestSession): GuestResponse => ({
   lastName: session.lastName,
   phone: session.phone,
   email: session.email,
+  locale: session.locale,
   verified: session.verifiedAt !== null,
   expiresAt: session.expiresAt.toISOString(),
 });
@@ -51,7 +52,7 @@ export const startGuest = async (input: GuestStart, previousToken: string | unde
     },
   });
 
-  await deliverVerificationCode(input.email, code);
+  await deliverVerificationCode(input.email, code, input.locale);
   return { token, guest: toGuestResponse(session), expiresAt: session.expiresAt };
 };
 
@@ -99,7 +100,7 @@ export const resendGuestCode = async (token: string | undefined) => {
     where: { id: session.id, verifiedAt: null },
     data: columns,
   });
-  if (count > 0) await deliverVerificationCode(session.email, code);
+  if (count > 0) await deliverVerificationCode(session.email, code, session.locale);
 };
 
 // The verified guest. requireGuest has already checked the session.

@@ -47,6 +47,21 @@ export const auditActions = {
   OFFICE_UPDATED: "fleet.office.updated",
   OFFICE_ARCHIVED: "fleet.office.archived",
   OFFICE_RESTORED: "fleet.office.restored",
+
+  // Managing staff, by an admin or by a staff member with the team permission (the actor says which). STAFF_INVITED
+  // above covers invitations from both.
+  STAFF_INVITATION_REVOKED: "staff.invitation.revoked",
+  STAFF_INVITATION_RESENT: "staff.invitation.resent",
+  STAFF_PERMISSIONS_CHANGED: "staff.permissions_changed",
+  STAFF_SUSPENDED: "staff.suspended",
+  STAFF_REACTIVATED: "staff.reactivated",
+  STAFF_DELETED: "staff.deleted",
+  // A staff member changing their own password while signed in.
+  STAFF_PASSWORD_CHANGED: "staff.password.changed",
+
+  // An admin suspending or reactivating a customer; `after` carries the reason.
+  CUSTOMER_SUSPENDED: "customer.suspended",
+  CUSTOMER_REACTIVATED: "customer.reactivated",
 } as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];

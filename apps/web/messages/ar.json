@@ -80,6 +80,8 @@
       "LOCATION_NOT_AVAILABLE": "هذا المكان غير موجود أو محذوف.",
       "IMAGE_TYPE_NOT_ALLOWED": "ارفع صورة بصيغة JPEG أو PNG أو WebP.",
       "IMAGE_LIMIT_REACHED": "لهذه المركبة 5 صور بالفعل. احذف واحدة أولًا.",
+      "LAST_TEAM_MANAGER": "يجب أن يحتفظ عضو مفعّل واحد على الأقل بصلاحية إدارة الفريق.",
+      "ACCOUNT_DELETED": "تم حذف هذا الحساب.",
       "NETWORK_ERROR": "تعذّر الاتصال بالخادم. تحقق من اتصالك وحاول مرة أخرى.",
       "UNEXPECTED_RESPONSE": "حدث خطأ ما. يُرجى المحاولة مرة أخرى."
     },

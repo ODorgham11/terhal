@@ -118,14 +118,46 @@ export const signOutStaff = async (refreshToken: string | undefined) => {
   });
 };
 
-// Ends every session a staff member has, e.g. after their password changes. Pass the transaction client when it's part
-// of a change, so the change and the sign out happen together.
+// Ends every session a staff member has (or every one but `except`), e.g. after their password changes. Pass the
+// transaction client when it's part of a change, so the change and the sign out happen together.
 export const revokeAllStaffSessions = async (
   staffId: string,
   client: typeof prisma | Prisma.TransactionClient = prisma,
+  except?: string,
 ) => {
   await client.staffSession.updateMany({
-    where: { staffId, revokedAt: null },
+    where: { staffId, revokedAt: null, ...(except ? { id: { not: except } } : {}) },
     data: { revokedAt: new Date() },
   });
+};
+
+// The signed in staff member's live sessions, newest first, marking the one making this request.
+export const listStaffSessions = async (staffId: string, currentSessionId: string) => {
+  const sessions = await prisma.staffSession.findMany({
+    where: { staffId, revokedAt: null, expiresAt: { gt: new Date() } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: { id: true, createdAt: true, expiresAt: true, ipAddress: true, userAgent: true },
+  });
+
+  return {
+    data: sessions.map((session) => ({
+      ...session,
+      createdAt: session.createdAt.toISOString(),
+      expiresAt: session.expiresAt.toISOString(),
+      current: session.id === currentSessionId,
+    })),
+    nextCursor: null,
+  };
+};
+
+// Ends one of the signed in staff member's own sessions, e.g. a device they've lost. Someone else's session, or one
+// that's already over, is a 404, so session ids can't be probed.
+export const revokeOwnStaffSession = async (staffId: string, sessionId: string) => {
+  const { count } = await prisma.staffSession.updateMany({
+    where: { id: sessionId, staffId, revokedAt: null, expiresAt: { gt: new Date() } },
+    data: { revokedAt: new Date() },
+  });
+  if (count === 0) {
+    throw new AppError({ code: "NOT_FOUND", status: 404, detail: "There's no such session." });
+  }
 };

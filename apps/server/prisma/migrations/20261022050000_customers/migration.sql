@@ -19,6 +19,8 @@ CREATE TABLE "Customer" (
     "verificationExpiresAt" TIMESTAMP(3),
     "verificationAttempts" INTEGER NOT NULL DEFAULT 0,
     "verificationMethod" "VerificationMethod",
+    "pendingEmail" TEXT,
+    "pendingPhone" TEXT,
     "verifiedVia" "VerificationMethod",
     "verifiedAt" TIMESTAMP(3),
     "passwordResetHash" TEXT,
@@ -101,3 +103,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER "Customer_search"
     BEFORE INSERT OR UPDATE OF "firstName", "lastName", "phone", "email", "search" ON "Customer"
     FOR EACH ROW EXECUTE FUNCTION "customer_search"();
+
+-- A customer changes their email or their phone at a time: one code is stored, so it can only confirm one of them.
+ALTER TABLE "Customer" ADD CONSTRAINT "Customer_one_pending_change"
+    CHECK (num_nonnulls("pendingEmail", "pendingPhone") <= 1);

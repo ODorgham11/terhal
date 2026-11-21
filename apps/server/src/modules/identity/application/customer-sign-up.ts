@@ -1,4 +1,5 @@
 import type { CustomerSignUp } from "@terhal/contracts";
+import type { Customer } from "../../../../generated/prisma/client";
 import { hash } from "../../../platform/crypto/passwords";
 import { violatedUniqueIndex } from "../../../platform/db/errors";
 import { prisma } from "../../../platform/db/prisma";
@@ -20,7 +21,14 @@ const alreadyExists = () =>
   });
 
 // Creates an unverified account and emails it a code. The customer has no session until they enter the code.
-export const signUp = async ({ firstName, lastName, phone, email, password }: CustomerSignUp) => {
+export const signUp = async ({
+  firstName,
+  lastName,
+  phone,
+  email,
+  password,
+  locale,
+}: CustomerSignUp) => {
   const existing = await prisma.customer.findFirst({
     where: { OR: [{ email }, { phone }] },
     select: { id: true },
@@ -37,6 +45,7 @@ export const signUp = async ({ firstName, lastName, phone, email, password }: Cu
         lastName,
         phone,
         email,
+        locale,
         passwordHash: await hash(password),
         status: "UNVERIFIED",
         ...columns,
@@ -47,7 +56,7 @@ export const signUp = async ({ firstName, lastName, phone, email, password }: Cu
       throw violatedUniqueIndex(error) ? alreadyExists() : error;
     });
 
-  await deliverVerificationCode(email, code);
+  await deliverVerificationCode(email, code, locale);
   return toCustomerResponse(customer);
 };
 
@@ -91,19 +100,19 @@ export const verifyCustomer = async (email: string, code: string) => {
 
 // Emails a new code to an unverified customer, replacing the old one. Does nothing for any other email, and the caller
 // answers the same either way, so this doesn't reveal which emails have accounts.
-export const sendCustomerCode = async (customerId: string, email: string) => {
+export const sendCustomerCode = async (customer: Pick<Customer, "id" | "email" | "locale">) => {
   const { code, columns } = newVerificationCode();
   const { count } = await prisma.customer.updateMany({
-    where: { id: customerId, status: "UNVERIFIED" },
+    where: { id: customer.id, status: "UNVERIFIED" },
     data: { ...columns, verificationMethod: "EMAIL" },
   });
-  if (count > 0) await deliverVerificationCode(email, code);
+  if (count > 0) await deliverVerificationCode(customer.email, code, customer.locale);
 };
 
 export const resendCustomerCode = async (email: string) => {
   const customer = await prisma.customer.findUnique({
     where: { email },
-    select: { id: true, status: true },
+    select: { id: true, email: true, status: true, locale: true },
   });
-  if (customer?.status === "UNVERIFIED") await sendCustomerCode(customer.id, email);
+  if (customer?.status === "UNVERIFIED") await sendCustomerCode(customer);
 };

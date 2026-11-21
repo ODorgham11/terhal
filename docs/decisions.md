@@ -324,6 +324,48 @@ How the fleet and office routes ([domain-api.md](domain-api.md), F and O) settle
 `Customer`, `GuestSession` and `Staff` have a `locale` (`ar` by default, or `en`), taken from the site's locale cookie
 when the account or session is made, so emails and notifications go out in the recipient's language.
 
+The API is on another host, so it can't read the site's cookie: sign up and guest start take `locale` in the body
+(Arabic when left out). Verification codes and password resets go out in the recipient's language alone. Staff
+invitations stay bilingual, since the invitee has no account yet, and so do admin emails: admins have no locale.
+
+### Managing the team (2026-11-21)
+
+Staff with `team`, and admins, list staff, set their permissions, suspend, reactivate and delete them, and list, revoke
+and resend invitations. Anyone with `team` can grant any permission. Nobody changes their own permissions, suspends or
+deletes themselves (`CANNOT_TARGET_SELF`), and at least one active staff member always holds `team`
+(`LAST_TEAM_MANAGER`): every active `team` holder's row is locked for the change, like the last-admin rule, so two
+managers acting on each other at once can't leave nobody. Changes take effect on the target's next request.
+
+- **Deleting is soft and final.** The status becomes `DELETED`, sessions end, and the email becomes
+  `deleted-<id>@deleted.invalid` so the address can be invited again; the audit entry keeps the real one. Acting on a
+  deleted staff member again is `ACCOUNT_DELETED` (deleting again changes nothing). The team list hides deleted staff
+  unless asked for by status.
+- **Suspending and deleting also cancel a pending password reset link.**
+- **Resending an invitation** gives it a new link, valid for 7 more days, even when it had expired; the old link stops
+  working (only its hash is stored, so it can't be sent again). The invitation list therefore includes expired ones.
+- **Every invitation is audited now**, from the dashboard too, under the staff member who sent it.
+- **Admins manage staff without a fresh authenticator code**, unlike managing other admins: it's support work on another
+  audience's accounts, and the guard rails still apply.
+- **Staff session changes aren't audited**, matching staff sign in, which isn't either; a staff password change is.
+
+### Customer self-service (2026-11-21)
+
+Customers edit their name and language, and change their password (ending their other sessions) and their sessions
+under `/v1/site/account`. A new email or phone needs the current password, so an open session alone can't take the
+account, and waits in `pendingEmail` or `pendingPhone` until the emailed code confirms it: the code goes to the new email,
+or for a phone, to the current email (there's no SMS yet). It reuses the sign up code columns, so one change waits at a
+time (`Customer_one_pending_change`), and asking again replaces it. Confirming an email change cancels a reset link sent
+to the old address. An address another account took meanwhile is `ACCOUNT_ALREADY_EXISTS`. The old address isn't told
+of the change yet.
+
+### Customers as staff and admins see them (2026-11-21)
+
+The `customers` module is a read-only view: the list (`customers` or `trips`), a customer with their trip count and the
+total of their completed trips, and their trips (`customers`); admins see the same. It reads the `Trip` table directly
+until a trips module exists to ask. Suspending and reactivating are admin-only and live in identity: both take a reason
+(kept in the audit log), suspending ends sessions at once and cancels a reset link, and reactivating restores `ACTIVE`, or
+`UNVERIFIED` for a customer who never verified.
+
 ---
 
 ## Process

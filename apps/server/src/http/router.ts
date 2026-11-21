@@ -3,15 +3,20 @@ import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { auditRoutes } from "../modules/audit/index";
 import { driverRoutes, officeRoutes, vehicleRoutes } from "../modules/fleet/index";
+import { adminCustomerRoutes, staffCustomerRoutes } from "../modules/customers/index";
 import {
   adminAccountRoutes,
   adminAuthRoutes,
+  adminCustomerStatusRoutes,
   adminInvitationRoutes,
   adminManagementRoutes,
   adminStaffRoutes,
+  customerAccountRoutes,
   customerAuthRoutes,
   guestRoutes,
+  staffAccountRoutes,
   staffAuthRoutes,
+  teamRoutes,
 } from "../modules/identity/index";
 import { env, origins, type Audience } from "../platform/config/env";
 import {
@@ -69,9 +74,15 @@ const v1 = createRouter()
   .route("/", adminInvitationRoutes)
   .route("/", adminManagementRoutes)
   .route("/", adminStaffRoutes)
+  .route("/", adminCustomerRoutes)
+  .route("/", adminCustomerStatusRoutes)
   .route("/", auditRoutes)
   .route("/", staffAuthRoutes)
+  .route("/", teamRoutes)
+  .route("/", staffAccountRoutes)
+  .route("/", staffCustomerRoutes)
   .route("/", customerAuthRoutes)
+  .route("/", customerAccountRoutes)
   .route("/", guestRoutes)
   .route("/", driverRoutes)
   .route("/", vehicleRoutes)

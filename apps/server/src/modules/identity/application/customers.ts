@@ -12,6 +12,7 @@ export const toCustomerResponse = (customer: Customer): CustomerResponse => ({
   phone: customer.phone,
   email: customer.email,
   status: customer.status,
+  locale: customer.locale,
 });
 
 // The signed in customer. requireCustomer has already checked they exist and are active.

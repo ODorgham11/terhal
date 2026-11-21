@@ -1,5 +1,8 @@
-// The emails staff receive. Plain text, Arabic first then English in the same message, since the product is fully
-// bilingual and we don't know which the reader prefers. Times are shown in Cairo time, where the company works.
+import type { Locale } from "@terhal/contracts";
+
+// The emails staff receive, in plain text. A staff member's own emails are in their language. An invitation goes to
+// someone without an account yet, whose language we don't know, so it's in both, Arabic first. Times are shown in Cairo
+// time, where the company works.
 
 const formatTime = (date: Date, locale: string) =>
   new Intl.DateTimeFormat(locale, {
@@ -31,22 +34,25 @@ export const staffInvitationEmail = (link: string, expiresAt: Date) => ({
   ),
 });
 
-export const staffPasswordResetEmail = (link: string) => ({
-  subject: "إعادة تعيين كلمة المرور | Reset your Terhal password",
-  text: bilingual(
-    [
-      "طلب أحدهم إعادة تعيين كلمة المرور لحسابك في لوحة تحكم ترحال.",
-      "",
-      `اختر كلمة مرور جديدة من هنا: ${link}`,
-      "",
-      "يمكن استخدام هذا الرابط مرة واحدة فقط، وتنتهي صلاحيته بعد ساعة. سيتم تسجيل خروجك من جميع أجهزتك. إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة وستبقى كلمة المرور كما هي.",
-    ],
-    [
-      "Someone asked to reset the password of your Terhal dashboard account.",
-      "",
-      `Choose a new password here: ${link}`,
-      "",
-      "This link can only be used once and expires in an hour. You'll be signed out on all your devices. If you didn't ask for this, you can ignore this email and your password stays the same.",
-    ],
-  ),
-});
+export const staffPasswordResetEmail = (link: string, locale: Locale) =>
+  locale === "ar"
+    ? {
+        subject: "إعادة تعيين كلمة المرور في ترحال",
+        text: [
+          "طلب أحدهم إعادة تعيين كلمة المرور لحسابك في لوحة تحكم ترحال.",
+          "",
+          `اختر كلمة مرور جديدة من هنا: ${link}`,
+          "",
+          "يمكن استخدام هذا الرابط مرة واحدة فقط، وتنتهي صلاحيته بعد ساعة. سيتم تسجيل خروجك من جميع أجهزتك. إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة وستبقى كلمة المرور كما هي.",
+        ].join("\n"),
+      }
+    : {
+        subject: "Reset your Terhal password",
+        text: [
+          "Someone asked to reset the password of your Terhal dashboard account.",
+          "",
+          `Choose a new password here: ${link}`,
+          "",
+          "This link can only be used once and expires in an hour. You'll be signed out on all your devices. If you didn't ask for this, you can ignore this email and your password stays the same.",
+        ].join("\n"),
+      };

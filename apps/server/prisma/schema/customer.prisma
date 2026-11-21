@@ -33,6 +33,11 @@ model Customer {
   verificationAttempts  Int                 @default(0)
   verificationMethod    VerificationMethod?
 
+  // A new email or phone the customer asked to change to, waiting for the code above. It replaces the current one only
+  // once the code is confirmed. At most one at a time (Customer_one_pending_change).
+  pendingEmail String?
+  pendingPhone String?
+
   verifiedVia VerificationMethod?
   verifiedAt  DateTime?
 
