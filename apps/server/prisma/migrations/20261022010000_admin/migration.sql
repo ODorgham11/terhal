@@ -13,6 +13,11 @@ CREATE TABLE "Admin" (
     "totpEnabledAt" TIMESTAMP(3),
     "totpLastUsedStep" INTEGER,
     "lastLoginAt" TIMESTAMP(3),
+    "passwordResetHash" TEXT,
+    "passwordResetExpiresAt" TIMESTAMP(3),
+    "twoFactorResetHash" TEXT,
+    "twoFactorResetExpiresAt" TIMESTAMP(3),
+    "pendingTotpSecret" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -65,6 +70,12 @@ CREATE TABLE "AuditLog" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Admin_passwordResetHash_key" ON "Admin"("passwordResetHash");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Admin_twoFactorResetHash_key" ON "Admin"("twoFactorResetHash");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "AdminInvitation_tokenHash_key" ON "AdminInvitation"("tokenHash");
