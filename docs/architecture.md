@@ -148,7 +148,7 @@ What we gave up:
 | Timeouts | Requests get a 503 after 15 seconds. Every outbound call must have a timeout. |
 | Health   | `/health/live` checks only that the process is up. `/health/ready` drives the deploy's healthcheck: it fails while shutting down or when Postgres is unreachable; Redis is reported as `degraded`. |
 | Shutdown | On `SIGTERM` the API fails readiness, stops accepting connections, finishes in-flight requests, then closes Prisma and Redis, inside the container's `stop_grace_period`. The worker stops taking jobs and finishes its current ones. |
-| Jobs     | Processors must be idempotent (BullMQ runs jobs at least once): give jobs deterministic ids, retry with backoff. |
+| Jobs     | Processors must be idempotent (BullMQ runs jobs at least once): give jobs deterministic ids, retry with backoff. Never queue a job from inside a transaction: write an outbox row in it, and let a scheduled sweep queue it once committed (notifications' `sweep-notifications`, every 5 seconds). Delayed jobs (reminders) only wake the worker; the row they belong to says whether they're still due. |
 | Redis down | Rate limits on sign in fail closed: an unreachable Redis must not mean unlimited password guesses. |
 | Client IPs | Rate limits trust only the header named by `CLIENT_IP_HEADER`, which the edge Caddy overwrites. Never publish the server's port. |
 | Neon     | `DATABASE_URL` is the pooled URL (PgBouncer, transaction mode), so no session state: no session advisory locks. Migrations use the direct URL. The API and the database must be in the same region. |
