@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { directionOf } from "@/i18n/locales";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+// One family for both languages: IBM Plex Sans Arabic draws Arabic and Latin to the same design, so a page that mixes
+// them (an English name in an Arabic sentence, a code, an email) keeps one rhythm and one x-height. Self-hosted by
+// next/font, so browsers never call Google.
+const plex = IBM_Plex_Sans_Arabic({
+  variable: "--font-plex",
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,11 +25,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
 
   return (
-    <html
-      lang={locale}
-      dir={directionOf(locale)}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang={locale} dir={directionOf(locale)} className={`${plex.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-white">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
