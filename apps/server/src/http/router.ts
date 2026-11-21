@@ -6,6 +6,7 @@ import {
   adminAccountRoutes,
   adminAuthRoutes,
   adminInvitationRoutes,
+  adminManagementRoutes,
   adminStaffRoutes,
   customerAuthRoutes,
   guestRoutes,
@@ -52,6 +53,7 @@ const v1 = createRouter()
   .route("/", adminAuthRoutes)
   .route("/", adminAccountRoutes)
   .route("/", adminInvitationRoutes)
+  .route("/", adminManagementRoutes)
   .route("/", adminStaffRoutes)
   .route("/", auditRoutes)
   .route("/", staffAuthRoutes)

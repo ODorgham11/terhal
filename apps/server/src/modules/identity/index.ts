@@ -4,6 +4,7 @@
 export { inviteFirstAdmin } from "./application/admin-invitations";
 export { adminAccountRoutes } from "./http/admin-account-routes";
 export { adminInvitationRoutes } from "./http/admin-invitation-routes";
+export { adminManagementRoutes } from "./http/admin-management-routes";
 export { adminAuthRoutes } from "./http/admin-routes";
 export { adminStaffRoutes } from "./http/admin-staff-routes";
 export { customerAuthRoutes } from "./http/customer-routes";
