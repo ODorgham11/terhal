@@ -15,6 +15,7 @@ export const auditActions = {
   SIGN_IN_SUCCEEDED: "admin.sign_in.succeeded",
   SESSION_REVOKED: "admin.session.revoked",
   SIGN_OUT: "admin.sign_out",
+  STAFF_INVITED: "admin.staff.invited",
 } as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];
