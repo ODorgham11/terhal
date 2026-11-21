@@ -1,6 +1,7 @@
 import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
+import { analyticsRoutes } from "../modules/analytics/index";
 import { auditRoutes } from "../modules/audit/index";
 import { driverRoutes, officeRoutes, vehicleRoutes } from "../modules/fleet/index";
 import { adminCustomerRoutes, staffCustomerRoutes } from "../modules/customers/index";
@@ -23,8 +24,14 @@ import {
   siteLocationRoutes,
   staffLocationRoutes,
 } from "../modules/location/index";
+import { staffNotificationRoutes } from "../modules/notifications/index";
 import { pricingRoutes, quoteRoutes, tripClassRoutes } from "../modules/pricing/index";
-import { siteTripRoutes, staffTripRoutes } from "../modules/trips/index";
+import {
+  driverReportRoutes,
+  siteTripRoutes,
+  staffReportRoutes,
+  staffTripRoutes,
+} from "../modules/trips/index";
 import { env, origins, type Audience } from "../platform/config/env";
 import {
   ADMIN_COOKIE_AUTH,
@@ -101,7 +108,11 @@ const v1 = createRouter()
   .route("/", pricingRoutes)
   .route("/", quoteRoutes)
   .route("/", siteTripRoutes)
-  .route("/", staffTripRoutes);
+  .route("/", staffTripRoutes)
+  .route("/", driverReportRoutes)
+  .route("/", staffReportRoutes)
+  .route("/", analyticsRoutes)
+  .route("/", staffNotificationRoutes);
 
 export const routes = router.route("/health", health).route("/v1", v1);
 

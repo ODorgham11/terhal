@@ -46,6 +46,7 @@ apps/server/src/
   modules/
     identity/       admin invitations, sign in with two-factor, sessions (staff and customers join here)
     audit/          the append-only audit log and the admin panel's view of it
+    analytics/      the dashboard's figures, CSV exports and the monthly XLSX report (reads other modules' tables)
     ...             fleet, trips, pricing, locations, notifications, as they're ported
   platform/         config, db, redis, crypto, email, errors, http, rate limits, logging, jobs, lifecycle
   http/             composition root: global middleware, health, mounts each module's routes under /v1
@@ -136,6 +137,10 @@ What we gave up:
   every session.
 - Customers sign up with a password and confirm their email with a 6-digit code before their first session. A session
   lasts 30 days from its last refresh and 180 days at most, on up to 10 devices. They sign in with their email or phone.
+- Drivers have no accounts either: a trip's report link (`terhal.co/report#<token>`) is their credential for that trip
+  alone. The page sends the token in a `Report-Token` header to `/v1/site/driver/report` (no cookie), limited per IP;
+  the token is a keyed HMAC, so the database holds only its hash and a salt, and it stops working when the driver
+  changes, staff replace it, or 7 days after pickup.
 - Guests book without an account: a session cookie (30 days, never extended) that's only usable once they confirm the
   code emailed to them.
 - Everything security relevant is written to the audit log, in the same transaction as the change it records.
@@ -148,7 +153,7 @@ What we gave up:
 | Timeouts | Requests get a 503 after 15 seconds. Every outbound call must have a timeout. |
 | Health   | `/health/live` checks only that the process is up. `/health/ready` drives the deploy's healthcheck: it fails while shutting down or when Postgres is unreachable; Redis is reported as `degraded`. |
 | Shutdown | On `SIGTERM` the API fails readiness, stops accepting connections, finishes in-flight requests, then closes Prisma and Redis, inside the container's `stop_grace_period`. The worker stops taking jobs and finishes its current ones. |
-| Jobs     | Processors must be idempotent (BullMQ runs jobs at least once): give jobs deterministic ids, retry with backoff. |
+| Jobs     | Processors must be idempotent (BullMQ runs jobs at least once): give jobs deterministic ids, retry with backoff. Each module with jobs has its own queue (`trips`, `analytics`, `notifications`); schedules are BullMQ job schedulers named after their job, upserted on every worker start, and a cron in business time takes `tz: "Africa/Cairo"`. Never queue a job from inside a transaction: write an outbox row in it, and let a scheduled sweep queue it once committed (notifications' `sweep-notifications`, every 5 seconds). Delayed jobs (reminders) only wake the worker; the row they belong to says whether they're still due. |
 | Redis down | Rate limits on sign in fail closed: an unreachable Redis must not mean unlimited password guesses. |
 | Client IPs | Rate limits trust only the header named by `CLIENT_IP_HEADER`, which the edge Caddy overwrites. Never publish the server's port. |
 | Neon     | `DATABASE_URL` is the pooled URL (PgBouncer, transaction mode), so no session state: no session advisory locks. Migrations use the direct URL. The API and the database must be in the same region. |

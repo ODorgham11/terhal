@@ -68,7 +68,7 @@ The staff dashboard runs the business: trips, fleet, offices, trip classes, pric
 manages locations, with the same create, rename, move, delete and restore as the admin panel; location writes need the
 `pricing` permission. Admins keep full control of locations, admins, the audit log and staff (for support and recovery),
 and a read-only view of operations. Customers are the exception: staff can only view them (`customers` is a view-only
-permission), and suspending or reactivating a customer is admin-panel only. Full spec: [domain-api.md](domain-api.md).
+permission), and suspending or reactivating a customer is admin-panel only. Full spec: [domains.md](domains.md).
 
 ### Price on request (2026-11-21)
 
@@ -190,7 +190,7 @@ Prisma can't express "exactly one of these columns is set", so CHECK constraints
 | --- | --- |
 | `Trip_one_booker` | A trip is booked by exactly one of a customer, a guest and a staff member. |
 | `Notification_one_recipient` | A notification goes to exactly one of a customer, a guest and a staff member. |
-| `TripEvent_one_actor` | A trip event's actor is exactly one of a staff member, a customer, a guest and the system (`system` names the background job). |
+| `TripEvent_one_actor` | A trip event's actor is exactly one of a staff member, a customer, a guest, the driver (through the report link, added 2026-11-21) and the system (`system` names the background job). |
 
 ### A trip stop can be anywhere (2026-11-16)
 
@@ -284,7 +284,7 @@ column.
 
 ### Fleet and office routes: the details the spec left open (2026-11-21)
 
-How the fleet and office routes ([domain-api.md](domain-api.md), F and O) settle what the answers didn't:
+How the fleet and office routes ([domains.md](domains.md), F and O) settle what the answers didn't:
 
 - **"Upcoming live trip" is any pending, confirmed or in-progress trip**, whatever its pickup time: one past its pickup is
   still unresolved until the background jobs move it on. Awaiting a report doesn't block archiving. A blocked archive is
@@ -321,7 +321,7 @@ How the fleet and office routes ([domain-api.md](domain-api.md), F and O) settle
 
 ### Locations, pricing and quotes: details the spec left open (2026-11-21)
 
-Choices made while building the location, trip class, pricing and quote routes, closest to [domain-api.md](domain-api.md):
+Choices made while building the location, trip class, pricing and quote routes, closest to [domains.md](domains.md):
 
 - **A delete's `expectedCount` is a query parameter** (`DELETE …/locations/{id}?expectedCount=3`), not a body. The
   detail route returns it as `subtreeSize`; a mismatch is `LOCATION_COUNT_MISMATCH` with the current `count`.
@@ -398,7 +398,7 @@ and reactivating restores `ACTIVE`, or `UNVERIFIED` for a customer who never ver
 ### Trips: the details the spec left open (2026-11-21)
 
 Choices made building booking, the lifecycle, price on request, assignment and links, closest to
-[domain-api.md](domain-api.md):
+[domains.md](domains.md):
 
 - **One function changes a trip.** `changeTrip` locks the row, checks the status, updates on the status it found and
   records the `TripEvent` (`from`/`to`, each other changed field's `before`/`after`, a reason); creation and the second
@@ -430,7 +430,8 @@ Choices made building booking, the lifecycle, price on request, assignment and l
   cancelled. If any leg left is confirmed, nothing is cancelled (`CALL_TO_CANCEL`). The optional reason is kept as the
   event's `note`, with reason `CUSTOMER_REQUEST`. Staff cancel one leg at a time.
 - **Completing doesn't require a report yet**: the driver report isn't built, so the report work decides whether to
-  require one (office trips may complete without, D9 a).
+  require one (office trips may complete without, D9 a). **Replaced** by
+  [The driver report](#the-driver-report-the-details-the-spec-left-open-2026-11-21): a trip with a driver needs one.
 - **Editing** (B10 a): details while pending or confirmed, `totalPrice` and payment until completed. The price can't be
   edited while it's requested or proposed (`PRICE_REQUEST_OPEN`). A new pin resolves again, refreshing the place and its
   names; a new class refreshes its snapshot; a new body must fit the load and the assigned vehicle. An edit of only
@@ -454,6 +455,161 @@ Choices made building booking, the lifecycle, price on request, assignment and l
   is read directly.
 - **Rate limits** (X7): booking on the site 10 an hour per IP; site trip reads 120 and changes 30 a minute per booker;
   dashboard trip reads 240 and changes 120 a minute per staff member.
+
+### The driver report: the details the spec left open (2026-11-21)
+
+Choices made building the report link, the report routes and the ledger on completion, closest to
+[domains.md](domains.md#d-driver-report):
+
+- **Staff can show the link again.** The spec said only the token's hash is stored and the link is shown once, but the
+  dashboard also needs to show it again ("Send report link" after it was issued on assignment) without breaking the
+  link the driver already has. So the token is an HMAC of the trip, the driver and a random salt under its own secret,
+  `REPORT_LINK_SECRET` (`keyedToken`). The trip stores the hash (to find the trip from a token), the salt and the expiry
+  (`Trip_report_token`: all three or none). A leaked database alone still opens nothing. Changing the secret breaks every
+  live link and nothing else; staff then make new ones. It was first derived from `TOTP_ENCRYPTION_KEY`, but that tied
+  the links to the admins' authenticators: rotating one would have broken the other, and that key can't be rotated
+  without re-encrypting every two-factor secret (2026-11-21). `GET …/report-link` shows the link,
+  `POST …/report-link` replaces it (the old one stops working, `trip.report_link_issued`).
+- **Issued on assignment** (`onDriverChanged`), with no event of its own: the assignment's event says the driver
+  changed. Removing the driver removes the link. The expiry (7 days after pickup) moves when staff move the pickup.
+- **WhatsApp.** The route returns the plain link, a prefilled message in `?locale=` (Arabic by default; drivers have no
+  locale) and a `wa.me` link to the driver's phone with it.
+- **The driver is a trip event actor.** `TripEvent.driverId`, counted by `TripEvent_one_actor`, so the history says the
+  driver started, ended or reported the trip; the dashboard shows the actor as `DRIVER`.
+- **The driver's routes** are `/v1/site/driver/report` (read), `/start`, `/end` and `PUT` (submit), with the token in a
+  `Report-Token` header, limited per IP to 60 reads and 20 changes a minute. A bad or replaced token is 401
+  `REPORT_LINK_INVALID`, an expired one 401 `REPORT_LINK_EXPIRED`; the token is checked again on the locked trip, so a
+  link replaced a moment ago can't act. The view carries when the trip was started and ended, to prefill the report.
+- **Submitting** is allowed once the trip has started: a trip still in progress is ended by it (an ENDED event by the
+  driver). After that it's locked for the driver (`REPORT_ALREADY_SUBMITTED`). Drivers can't enter `OFFICE_FEE`.
+- **Staff** read the report (`GET …/report`, 404 until there is one) and fill in or correct it with
+  `PUT …/report`, replacing it whole, while the trip awaits its report (after `end`, or after reopening). The first
+  write is `trip.report_submitted`, later ones `trip.report_edited`.
+- **Cash collected is a report field** (`TripReport.cashCollected`, zero or more, `TripReport_cash_collected`), since
+  the driver is the one who knows. On an unpaid trip, cash above zero records the payment (`CASH_TO_DRIVER`, paid at
+  the report's end time) as a `trip.payment_recorded` event.
+- **Completing requires a report for a trip with a driver** (`REPORT_REQUIRED`); staff fill it in when the driver
+  doesn't. An office trip may complete without one (D9 a). Every non-office trip that reaches awaiting report has a
+  driver, since starting needs one.
+- **The ledger on completion** (D8 a, O1 b), from the report, as the completing staff member: `TRIP_FEE` = the report's
+  `DRIVER_FEE` expenses, for external drivers only (an internal driver's `DRIVER_FEE` never reaches their balance);
+  `EXPENSE_REIMBURSEMENT` = every other expense except `OFFICE_FEE`, summed into one entry; `CASH_COLLECTED` = minus the
+  cash collected. Zero entries are skipped. An office trip with a recorded driver follows the same rules; without a
+  driver or a report it writes nothing.
+- **Reopening reverses with adjustments.** The ledger is append-only and its sign check keeps `TRIP_FEE` positive, so a
+  reversal is one `ADJUSTMENT` per driver for minus what the trip's entries still add up to. Only trips write entries
+  naming a trip (staff payouts and adjustments don't), so that sum is exactly what earlier completions left standing,
+  and completing again counts the corrected report once.
+
+### Analytics reads across modules (2026-11-21)
+
+The analytics module is a read-only view of the whole business, so it queries the trip, fleet, customer and location
+tables directly (raw SQL for the figures, Prisma for the exports and the workbook) instead of asking each module for
+its rows. Going through every module's `index.ts` would mean one bespoke query per figure in five modules, or loading
+rows into memory to join them in code. It never writes another module's tables; its only table is
+`AnalyticsDocument`. The price list CSV is the exception: the pricing module already exports it, so analytics serves
+that file through pricing's `index.ts`.
+
+What we gave up: a column renamed in another module can break an analytics query without that module's code changing.
+The analytics tests cover every query, so `pnpm test` catches it.
+
+### Analytics: the details the spec left open (2026-11-21)
+
+How the analytics figures, the exports and the monthly report ([domains.md](domains.md), Y) settle what the answers
+didn't:
+
+- **The range is Cairo calendar days.** `GET /v1/staff/analytics` takes `from` and `to` as dates (`YYYY-MM-DD`, both
+  included), not instants: a trip belongs to the range when its pickup falls between Cairo midnight on `from` and Cairo
+  midnight after `to`. At most 1,100 days. The bounds are computed by Postgres (`AT TIME ZONE 'Africa/Cairo'`), so the
+  summer clock is handled by its time zone database. The trips CSV keeps the trip list's filters (instants), so the
+  list can export what it shows.
+- **Which trips each figure counts.** `totals.trips` and the trend count every trip, cancelled ones too, which is what
+  the cancellation rate divides by. Breakdowns (class, body, source, routes, fleet) count trips not cancelled, with
+  how many completed and what those earned. Revenue is completed trips' `totalPrice` (Y2); booked value is every trip
+  not cancelled that has a price. Expenses are those on completed trips' reports, office fees included (O1 b), so the
+  margin (revenue − expenses) compares like with like; an unfinished trip's costs show once it's completed.
+  `unpaid` is completed trips without `paidAt` (B8). Driver balances are the ledger's totals now, whatever the range.
+- **Buckets.** The trend lists every bucket in the range, empty ones too. Weeks start on Saturday, as Egyptian
+  calendars do; a bucket at either end holds only the range's days. Top routes are the 10 busiest governorate pairs
+  (each end's root in the location tree); the busiest drivers and vehicles are capped at 50.
+- **Money stays exact.** Postgres sums the decimals and returns text; the margin and the average are computed in
+  piastres with `bigint`, never floats.
+- **The trips CSV** counts the matching trips first and refuses more than 50,000 with `422 EXPORT_TOO_LARGE`
+  (`count`, `limit`) before sending anything; the stream also stops at 50,000. Rows are read 1,000 at a time and
+  written as they're read. Its columns are the trip's details, the Cairo pickup time, who booked it, the assignment and
+  the report's expense total. Drivers, vehicles and customers (deleted accounts left out) stream the same way, without
+  a cap. Every CSV is UTF-8 with a byte order mark, and text starting with `= + - @`, a tab or a carriage return gets a
+  leading apostrophe; a negative amount is left as a number.
+- **Permissions.** Everything needs `analytics`, except the trips CSV, which also takes `trips`. Pricing's own export
+  still needs `pricing`; `/v1/staff/exports/pricing.csv` serves the same file to `analytics`. Reads are limited to 60 a
+  minute per staff member, exports and regeneration to 10.
+- **The monthly report** is an XLSX workbook written by exceljs's streaming writer: a summary sheet (the month's
+  figures), then the month's trips (the CSV's columns, amounts as numbers), expenses, driver ledger entries made in the
+  month, and office fees. Cells hold values, never formulas. It's stored at `analytics/reports/<yyyy-mm>.xlsx` through
+  `platform/storage`, so the local folder and R2 are the same code; switching is `STORAGE_DRIVER`.
+- **Regenerating is idempotent.** A month has one key and one `AnalyticsDocument` row (now with `size` and
+  `updatedAt`), so regenerating replaces both; the file is written before the row. Only a month that's over in Cairo
+  can have a report (`422 REPORT_MONTH_NOT_OVER`): a report for a running month would stop its trips being reopened
+  (T8 a) while they can still change. It's generated in the request (a month is a few thousand rows), and returns the
+  report.
+- **The job.** BullMQ job scheduler `monthly-report` on its own `analytics` queue, cron `0 2 1 * *` in `Africa/Cairo`:
+  02:00 on the 1st, for the month before. It skips a month that already has a report, so retries (5, backing off from
+  a minute) and reruns change nothing. Each worker start also adds a one-off `monthly-report-<yyyy-mm>` job for the
+  previous month, so a 1st missed while the worker was down is caught up; its id makes adding it again a no-op.
+- **Download links** last 15 minutes (`SIGNED_URL_LIFETIME`). The link is made from the row's key with the storage in
+  use; `bucket` on the row is informational.
+
+### Notifications go through an outbox (2026-11-21)
+
+The trips hook (`afterTripEvent`) runs inside the change's transaction, but a BullMQ job can only be queued once that
+transaction has committed: queued earlier, a rolled back change would still email; queued after, a crash between the
+commit and the queue would lose the email. So the hook only writes rows (the notifications, a `PENDING` email
+`NotificationDelivery` for the booker, the trip's `NotificationReminder`s), and a scheduled job,
+`sweep-notifications`, runs every 5 seconds to queue every pending delivery not yet queued and move reminder jobs to
+match their rows. Job ids are deterministic (`delivery.<id>`, `reminder.<kind>.<trip>.<due ms>`), so two sweeps, or a
+sweep after a crash, add nothing. A delivery still pending 30 minutes after it was queued (Redis was emptied) is
+queued again.
+
+What we gave up: an email goes out up to 5 seconds after the change, and the sweep is two cheap indexed queries every
+5 seconds whether or not there's anything to send.
+
+### Notifications: the details the spec left open (2026-11-21)
+
+- **Who is told what** (N1, Q3) is one pure function of the event and the trip afterwards (`notifications/domain`):
+  - The driver's details (A6 a) are emailed when a confirmed trip is assigned or reassigned, and with the confirmation
+    if it was assigned before; assigning a pending trip emails nothing. Unassigning emails nothing.
+  - Each leg of a return booking is its own trip and gets its own emails.
+  - A staff member's own booking (no customer) tells nobody. A staff booking for a customer emails them
+    `BOOKED_BY_STAFF`; booked without a price, the rest of the team gets `PRICE_REQUESTED`.
+  - Staff in-app notices go to every active staff member with `trips`, except the one who acted.
+  - A booker who declines a price gets a cancellation receipt and staff get `PRICE_DECLINED`; the return leg cancelled
+    with it adds no second staff notice.
+  - Completing a trip again after a reopen doesn't thank the booker twice (its dedupe key is the trip, not the event).
+  - "Report submitted" is keyed on the existing `trip.report_submitted` action, which the driver report records with
+    the driver as actor (`{ driverId }`). A driver's start or end and report edits or links tell nobody; a cancellation
+    by anyone but the booker is a `TRIP_CANCELLED` email with its reason.
+- **Dedupe keys.** Every notification has a unique `dedupeKey` naming its cause and recipient
+  (`event.<event id>.<recipient>`, `reminder.<kind>.<trip>.<due ms>.<recipient>`), so a retried job never writes it
+  twice.
+- **In-app is not a delivery.** Staff notifications are the inbox: `Notification.readAt` is their state, and
+  `NotificationDelivery` rows exist only for outbound sends (email now, WhatsApp later). The unread count is one count
+  over a partial index on unread staff rows (`Notification_staff_unread`).
+- **Reminders** are rows, one per trip and kind (`PICKUP` 24 h before a confirmed pickup, `PRICE` 24 h before pickup
+  while a proposal is unanswered, `UNASSIGNED` 2 h before pickup while there's neither an office nor a driver and a
+  vehicle). Every trip event recomputes them, so a pickup change moves them and a cancel, an assignment or an answer
+  drops them. The delayed job only wakes the worker: it sends only if the row still holds that time and the trip still
+  calls for it before its pickup, then clears the row. A booker reminder already past when scheduled (confirmed 10 hours
+  ahead) is dropped; the unassigned warning is sent at once as long as the trip hasn't picked up.
+- **Delivery:** 6 attempts with exponential backoff from 30 seconds. Each attempt counts on the row with its error, and
+  the last marks it `FAILED`. Resend gets the delivery's id as an idempotency key, so a retry after a send that went
+  through but wasn't recorded doesn't email twice.
+- **Language (N5):** the title and plain text are written at notification time in the recipient's locale and stored;
+  the HTML (right to left for Arabic, with codes, phones and links kept left to right) is rendered again from the
+  stored `data` when it's sent. Times are Cairo's. The booker's link is `SITE_URL/trips/<id>`, which the site has to
+  serve.
+- **Reads across modules.** Notifications reads trips, customers, guests, staff and fleet rows straight through Prisma,
+  read-only, instead of through their modules: the trips hook calls into notifications, so calling back into trips
+  would make a cycle.
 
 ---
 

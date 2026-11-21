@@ -2,7 +2,7 @@ import { z } from "zod";
 import { CarBody } from "./cars";
 import { Pin, ResolvedLocation } from "./locations";
 
-// A quote: what every active class and car body costs between two pins (docs/domain-api.md, section Q). Stateless:
+// A quote: what every active class and car body costs between two pins (docs/domains.md, section Q). Stateless:
 // booking recomputes the price and compares it with the one the customer saw (Q4).
 
 const Count = (label: string, min: number) =>
