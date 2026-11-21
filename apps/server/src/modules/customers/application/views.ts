@@ -4,13 +4,13 @@ import {
   type ListCustomerTrips,
   type ListCustomers,
 } from "@terhal/contracts";
-import type { Customer, Prisma, Trip } from "../../../../generated/prisma/client";
+import type { Customer } from "../../../../generated/prisma/client";
 import { prisma } from "../../../platform/db/prisma";
 import { AppError } from "../../../platform/errors/app-error";
+import { customerTripTotals, customerTrips } from "../../trips/index";
 
 // Customers as staff and admins see them: a read-only view. Customers own their details (identity), and admins suspend
-// them there. There's no trips module yet, so their trips are read here straight from the Trip table; once there is,
-// this goes through its index instead.
+// them there. Their trips come from the trips module.
 
 const customerNotFound = () =>
   new AppError({ code: "NOT_FOUND", status: 404, detail: "There's no customer with this id." });
@@ -48,35 +48,13 @@ export const getCustomer = async (customerId: string): Promise<CustomerDetail> =
   const customer = await prisma.customer.findUnique({ where: { id: customerId } });
   if (!customer) throw customerNotFound();
 
-  const [tripCount, completed] = await Promise.all([
-    prisma.trip.count({ where: { customerId } }),
-    prisma.trip.aggregate({
-      where: { customerId, status: "COMPLETED" },
-      _sum: { totalPrice: true },
-    }),
-  ]);
+  const totals = await customerTripTotals(customerId);
 
   return {
     ...toSummary(customer),
-    tripCount,
-    totalSpent: (completed._sum.totalPrice ?? 0).toFixed(2),
+    ...totals,
   };
 };
-
-const toTrip = (trip: Trip) => ({
-  id: trip.id,
-  code: trip.code,
-  status: trip.status,
-  source: trip.source,
-  pickupDate: trip.pickupDate.toISOString(),
-  pickup: trip.pickupSnapshot,
-  dropoff: trip.dropoffSnapshot,
-  car: trip.car,
-  passengers: trip.passengers,
-  totalPrice: trip.totalPrice?.toFixed(2) ?? null,
-  priceState: trip.priceState,
-  createdAt: trip.createdAt.toISOString(),
-});
 
 // The trips they booked (staff booking on their behalf included), latest pickup first, a page at a time.
 export const listCustomerTrips = async (
@@ -87,14 +65,5 @@ export const listCustomerTrips = async (
     throw customerNotFound();
   }
 
-  const where: Prisma.TripWhereInput = { customerId, status };
-  const rows = await prisma.trip.findMany({
-    where,
-    orderBy: [{ pickupDate: "desc" }, { id: "desc" }],
-    take: limit + 1,
-    ...(cursor && { cursor: { id: cursor }, skip: 1 }),
-  });
-
-  const data = rows.slice(0, limit).map(toTrip);
-  return { data, nextCursor: rows.length > limit ? (data.at(-1)?.id ?? null) : null };
+  return customerTrips(customerId, { status, cursor, limit });
 };
