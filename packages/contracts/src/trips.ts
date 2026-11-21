@@ -450,7 +450,7 @@ export const UpdateTrip = z
     paymentMethod: PaymentMethod.nullable().optional(),
     paidAt: z.iso.datetime({ error: "Paid at must be an ISO-8601 instant." }).nullable().optional(),
   })
-  .refine((update) => Object.values(update).some((value) => value !== undefined), {
+  .refine((update) => Object.values(update).some((value: unknown) => value !== undefined), {
     message: "Send at least one field to change.",
   })
   .meta({ id: "UpdateTrip" });
