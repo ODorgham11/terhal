@@ -10,6 +10,7 @@ import {
   adminStaffRoutes,
   customerAuthRoutes,
   guestRoutes,
+  staffAccountRoutes,
   staffAuthRoutes,
   teamRoutes,
 } from "../modules/identity/index";
@@ -59,6 +60,7 @@ const v1 = createRouter()
   .route("/", auditRoutes)
   .route("/", staffAuthRoutes)
   .route("/", teamRoutes)
+  .route("/", staffAccountRoutes)
   .route("/", customerAuthRoutes)
   .route("/", guestRoutes);
 

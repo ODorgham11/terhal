@@ -1016,6 +1016,90 @@
           "permissions"
         ]
       },
+      "UpdateStaffAccount": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "+201001234567"
+          },
+          "locale": {
+            "$ref": "#/components/schemas/Locale"
+          }
+        }
+      },
+      "ChangePassword": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "minLength": 1
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 72,
+            "pattern": "[a-z]"
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "AccountSession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ipAddress": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "userAgent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "current": {
+            "type": "boolean",
+            "description": "The session making this request."
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "expiresAt",
+          "ipAddress",
+          "userAgent",
+          "current"
+        ]
+      },
       "Customer": {
         "type": "object",
         "properties": {
@@ -5276,6 +5360,344 @@
           },
           "503": {
             "description": "SERVICE_UNAVAILABLE: the email couldn't be sent. Try again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/account": {
+      "patch": {
+        "tags": [
+          "Staff account"
+        ],
+        "summary": "Change your name, phone or language",
+        "description": "Only the fields sent change; a null phone removes it. Emails and notifications go out in `locale`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStaffAccount"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Your account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Staff"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/auth/password": {
+      "post": {
+        "tags": [
+          "Staff auth"
+        ],
+        "summary": "Change your password",
+        "description": "Takes the current password. Signs you out everywhere else; this session stays.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePassword"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password changed"
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS: the current password is wrong. UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/auth/sessions": {
+      "get": {
+        "tags": [
+          "Staff auth"
+        ],
+        "summary": "List your sessions",
+        "description": "Your active sessions, newest first, in one page. `current` marks this one.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Your active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AccountSession"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/auth/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "Staff auth"
+        ],
+        "summary": "End one of your sessions",
+        "description": "Ending the current session also clears its cookies, like signing out.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Session ended"
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such active session of yours.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/auth/sessions/all/revoke": {
+      "post": {
+        "tags": [
+          "Staff auth"
+        ],
+        "summary": "Sign out everywhere else",
+        "description": "Ends every session of yours except this one.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Every other session ended"
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
             "content": {
               "application/problem+json": {
                 "schema": {
