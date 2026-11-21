@@ -227,17 +227,27 @@ export const requireStaff = createMiddleware<{ Variables: { staff: StaffActor } 
   },
 );
 
+const forbidden = () =>
+  new AppError({
+    code: "FORBIDDEN",
+    status: 403,
+    detail: "You don't have permission to do this.",
+  });
+
 // Goes after requireStaff: a 403 unless the staff member holds every one of these permissions.
 export const requirePermission = (...needed: StaffPermission[]) =>
   createMiddleware<{ Variables: { staff: StaffActor } }>(async (c, next) => {
     const { permissions } = c.get("staff");
-    if (!needed.every((permission) => permissions.includes(permission))) {
-      throw new AppError({
-        code: "FORBIDDEN",
-        status: 403,
-        detail: "You don't have permission to do this.",
-      });
-    }
+    if (!needed.every((permission) => permissions.includes(permission))) throw forbidden();
+    await next();
+  });
+
+// Goes after requireStaff: a 403 unless the staff member holds at least one of these permissions. For reads shared
+// across areas, e.g. the driver list, which `fleet` manages and `trips` needs for assigning drivers.
+export const requireAnyPermission = (...accepted: [StaffPermission, ...StaffPermission[]]) =>
+  createMiddleware<{ Variables: { staff: StaffActor } }>(async (c, next) => {
+    const { permissions } = c.get("staff");
+    if (!accepted.some((permission) => permissions.includes(permission))) throw forbidden();
     await next();
   });
 
