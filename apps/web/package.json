@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tabler/icons-react": "^3.52.0",
+    "@tanstack/react-query": "^5.108.2",
     "@terhal/contracts": "workspace:^",
     "@terhal/server": "workspace:*",
     "hono": "catalog:",
