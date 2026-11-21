@@ -28,6 +28,11 @@ export const auditActions = {
   TOTP_RESET: "admin.totp.reset",
   TOTP_RESET_ISSUED: "admin.totp.reset_issued",
   TOTP_RESET_CONFIRM_FAILED: "admin.totp.reset_confirm_failed",
+  // Locations, changed from the admin panel or the dashboard. A delete's `after` lists every location it removed.
+  LOCATION_CREATED: "location.created",
+  LOCATION_UPDATED: "location.updated",
+  LOCATION_DELETED: "location.deleted",
+  LOCATION_RESTORED: "location.restored",
 } as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];

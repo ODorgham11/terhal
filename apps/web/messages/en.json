@@ -71,6 +71,13 @@
       "CANNOT_TARGET_SELF": "You can't do this to your own account.",
       "LAST_ACTIVE_ADMIN": "You can't deactivate the last active admin.",
       "ADMIN_NOT_ACTIVE": "This admin isn't active.",
+      "LOCATION_NAME_TAKEN": "Another place in the same parent already has this name.",
+      "LOCATION_PARENT_INVALID": "Choose a live parent that's broader than this place.",
+      "LOCATION_DELETED": "This place is deleted. Restore it first.",
+      "LOCATION_NOT_RESTORABLE": "This place can't be restored on its own. Restore the place it was deleted with, or its parent, first.",
+      "LOCATION_COUNT_MISMATCH": "The places under this one changed. Check the count and try again.",
+      "GOVERNORATE_READ_ONLY": "Governorates can only be renamed.",
+      "OUT_OF_COVERAGE": "We don't serve this place yet.",
       "NETWORK_ERROR": "We couldn't reach the server. Check your connection and try again.",
       "UNEXPECTED_RESPONSE": "Something went wrong. Please try again."
     },

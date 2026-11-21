@@ -48,6 +48,23 @@ export const errorCodes = [
   "LAST_ACTIVE_ADMIN",
   // The admin being acted on isn't active. Not ACCOUNT_NOT_ACTIVE, which means the signed in account itself.
   "ADMIN_NOT_ACTIVE",
+
+  // Locations
+  // A live location in the same parent already has this name, in English or in Arabic.
+  "LOCATION_NAME_TAKEN",
+  // The parent doesn't exist, is deleted, or isn't broader (a district goes in a governorate, an area in either).
+  "LOCATION_PARENT_INVALID",
+  // The location is deleted: restore it before changing it.
+  "LOCATION_DELETED",
+  // Only a deleted location that was deleted itself (not along with an ancestor) can be restored, and only while its
+  // parent is live.
+  "LOCATION_NOT_RESTORABLE",
+  // A delete's expectedCount isn't the size of the live subtree any more. `count` has the current size.
+  "LOCATION_COUNT_MISMATCH",
+  // Governorates come from the seed: they can only be renamed, never created, moved or deleted.
+  "GOVERNORATE_READ_ONLY",
+  // A pin isn't inside any place the platform serves. `end` says which one (pickup or dropoff), `leg` which trip.
+  "OUT_OF_COVERAGE",
 ] as const;
 
 export type ErrorCode = (typeof errorCodes)[number];

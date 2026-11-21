@@ -8,6 +8,7 @@ export * from "./errors";
 export * from "./fields";
 export * from "./lists";
 export * from "./locale";
+export * from "./locations";
 export * from "./permissions";
 export * from "./problem";
 export * from "./search";
