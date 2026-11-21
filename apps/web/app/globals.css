@@ -1,14 +1,175 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/*
+ * Theme tokens. Components only use these (bg-surface, text-muted, border-border, bg-primary...), never raw palette
+ * colors, so a rebrand or a dark mode is a change here and nowhere else. Dark follows the system setting.
+ */
+:root {
+  --background: oklch(0.985 0.002 247);
+  --foreground: oklch(0.21 0.02 265);
+  --surface: oklch(1 0 0);
+  --surface-muted: oklch(0.967 0.003 265);
+  --muted: oklch(0.55 0.02 264);
+  --border: oklch(0.92 0.004 265);
+  --input: oklch(0.87 0.006 265);
+  --ring: oklch(0.55 0.15 255);
+
+  --primary: oklch(0.45 0.13 255);
+  --primary-hover: oklch(0.39 0.12 255);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --danger: oklch(0.55 0.21 27);
+  --danger-soft: oklch(0.96 0.02 27);
+  --success: oklch(0.52 0.13 155);
+  --success-soft: oklch(0.96 0.03 155);
+  --warning: oklch(0.6 0.13 70);
+  --warning-soft: oklch(0.97 0.04 85);
+  --info: oklch(0.5 0.13 245);
+  --info-soft: oklch(0.96 0.02 245);
+
+  --overlay: oklch(0.15 0.02 265 / 0.45);
+
+  color-scheme: light;
 }
 
-/* Tailwind v4 resets buttons to the default cursor, so bring the pointer back for anything clickable. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.17 0.01 265);
+    --foreground: oklch(0.96 0.003 265);
+    --surface: oklch(0.21 0.012 265);
+    --surface-muted: oklch(0.25 0.012 265);
+    --muted: oklch(0.7 0.015 265);
+    --border: oklch(0.3 0.012 265);
+    --input: oklch(0.38 0.012 265);
+    --ring: oklch(0.7 0.13 255);
+
+    --primary: oklch(0.68 0.13 255);
+    --primary-hover: oklch(0.74 0.12 255);
+    --primary-foreground: oklch(0.17 0.02 265);
+
+    --danger: oklch(0.7 0.17 25);
+    --danger-soft: oklch(0.3 0.06 25);
+    --success: oklch(0.72 0.13 155);
+    --success-soft: oklch(0.29 0.05 155);
+    --warning: oklch(0.8 0.13 80);
+    --warning-soft: oklch(0.3 0.05 80);
+    --info: oklch(0.72 0.12 245);
+    --info-soft: oklch(0.29 0.05 245);
+
+    --overlay: oklch(0 0 0 / 0.6);
+
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-overlay: var(--overlay);
+}
+
 @layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  /* Tailwind v4 resets buttons to the default cursor, so bring the pointer back for anything clickable. */
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+/*
+ * Overlay animations, driven by Radix's data-state. The drawer slides in from the inline end, which is the right in
+ * English and the left in Arabic, so its starting offset flips with the direction.
+ */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes slide-in-from-end {
+  from {
+    transform: translateX(var(--slide-from-end));
+  }
+}
+@keyframes slide-out-to-end {
+  to {
+    transform: translateX(var(--slide-from-end));
+  }
+}
+
+:root {
+  --slide-from-end: 100%;
+}
+[dir="rtl"] {
+  --slide-from-end: -100%;
+}
+
+@utility animate-overlay {
+  &[data-state="open"] {
+    animation: fade-in 150ms ease-out;
+  }
+  &[data-state="closed"] {
+    animation: fade-out 120ms ease-in;
+  }
+}
+
+@utility animate-pop {
+  &[data-state="open"] {
+    animation: pop-in 150ms ease-out;
+  }
+  &[data-state="closed"] {
+    animation: fade-out 120ms ease-in;
+  }
+}
+
+@utility animate-drawer {
+  &[data-state="open"] {
+    animation: slide-in-from-end 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  &[data-state="closed"] {
+    animation: slide-out-to-end 180ms ease-in;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
   }
 }
