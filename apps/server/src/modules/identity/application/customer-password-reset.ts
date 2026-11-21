@@ -1,3 +1,4 @@
+import type { Locale } from "@terhal/contracts";
 import { origins } from "../../../platform/config/env";
 import { hash } from "../../../platform/crypto/passwords";
 import { generateToken, hashToken } from "../../../platform/crypto/tokens";
@@ -15,20 +16,27 @@ const resetInvalid = () =>
     detail: "This reset link is invalid or has already been used. Please ask for a new one.",
   });
 
-const resetEmail = (link: string) =>
-  [
-    "طلبت إعادة تعيين كلمة المرور لحسابك في ترحال. اختر كلمة مرور جديدة من هنا:",
-    link,
-    "",
-    "الرابط صالح لمدة ساعة واحدة ويمكن استخدامه مرة واحدة فقط. إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة وستبقى كلمة مرورك كما هي.",
-    "",
-    "---",
-    "",
-    "You asked to reset the password of your Terhal account. Choose a new one here:",
-    link,
-    "",
-    "This link works once and expires in 1 hour. If you didn't ask for it, you can ignore this email and your password stays the same.",
-  ].join("\n");
+// In the customer's language only: they chose it on the site.
+const resetEmail = (link: string, locale: Locale) =>
+  locale === "ar"
+    ? {
+        subject: "إعادة تعيين كلمة المرور في ترحال",
+        text: [
+          "طلبت إعادة تعيين كلمة المرور لحسابك في ترحال. اختر كلمة مرور جديدة من هنا:",
+          link,
+          "",
+          "الرابط صالح لمدة ساعة واحدة ويمكن استخدامه مرة واحدة فقط. إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة وستبقى كلمة مرورك كما هي.",
+        ].join("\n"),
+      }
+    : {
+        subject: "Reset your Terhal password",
+        text: [
+          "You asked to reset the password of your Terhal account. Choose a new one here:",
+          link,
+          "",
+          "This link works once and expires in 1 hour. If you didn't ask for it, you can ignore this email and your password stays the same.",
+        ].join("\n"),
+      };
 
 // Emails a reset link, replacing any earlier one so only the newest works. Does nothing for an email without an account
 // (or a suspended or deleted one), and the caller answers the same either way, so this doesn't reveal which emails have
@@ -36,7 +44,7 @@ const resetEmail = (link: string) =>
 export const requestPasswordReset = async (email: string) => {
   const customer = await prisma.customer.findUnique({
     where: { email },
-    select: { id: true, status: true },
+    select: { id: true, status: true, locale: true },
   });
   if (!customer || customer.status === "SUSPENDED" || customer.status === "DELETED") return;
 
@@ -49,12 +57,12 @@ export const requestPasswordReset = async (email: string) => {
     },
   });
 
+  const { subject, text } = resetEmail(
+    `${origins.site}/reset-password?token=${token}`,
+    customer.locale,
+  );
   try {
-    await sendEmail(
-      email,
-      "إعادة تعيين كلمة المرور في ترحال | Reset your Terhal password",
-      resetEmail(`${origins.site}/reset-password?token=${token}`),
-    );
+    await sendEmail(email, subject, text);
   } catch (error) {
     logger.error({ err: error }, "failed to send a password reset link");
   }

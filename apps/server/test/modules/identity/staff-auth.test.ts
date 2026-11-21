@@ -279,8 +279,10 @@ describe("resetting a password", () => {
     expect((await requestReset("staff@terhal.co")).status).toBe(202);
     const token = linkToken("staff@terhal.co", "reset-password");
 
-    const [, subject] = sendEmail.mock.calls[0] ?? [];
-    expect(subject).toMatch(/^إعادة تعيين/);
+    // In the staff member's language only (Arabic by default).
+    const [, subject, text] = sendEmail.mock.calls[0] ?? [];
+    expect(subject).toBe("إعادة تعيين كلمة المرور في ترحال");
+    expect(text).not.toMatch(/Choose a new password/);
 
     expect(await (await completeReset(replaced)).json()).toMatchObject({
       code: "PASSWORD_RESET_INVALID",
