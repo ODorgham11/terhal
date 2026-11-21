@@ -32,10 +32,19 @@ model Location {
   dropoffs   Trip[]    @relation("TripDropoff")
   offices    Office[]
 
-  deletedAt DateTime?
+  deletedAt     DateTime?
+  // The location whose delete removed this one (itself, for the location that was deleted), so restoring it brings back
+  // exactly that subtree. Set exactly when deletedAt is (the Location_deleted_with check).
+  deletedWith   Location?  @relation("LocationDeletion", fields: [deletedWithId], references: [id], onDelete: Restrict)
+  deletedWithId String?
+  deletedRows   Location[] @relation("LocationDeletion")
+
+  // Both names normalized for search (search_normalize), kept up to date by a trigger. Never written by the app.
+  search String @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([parentId])
+  @@index([deletedWithId])
 }

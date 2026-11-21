@@ -12,6 +12,8 @@ CREATE TABLE "Customer" (
     "phone" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "status" "CustomerStatus" NOT NULL DEFAULT 'UNVERIFIED',
+    "locale" "Locale" NOT NULL DEFAULT 'ar',
+    "search" TEXT NOT NULL DEFAULT '',
     "passwordHash" TEXT NOT NULL,
     "verificationHash" TEXT,
     "verificationExpiresAt" TIMESTAMP(3),
@@ -48,6 +50,7 @@ CREATE TABLE "GuestSession" (
     "lastName" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "locale" "Locale" NOT NULL DEFAULT 'ar',
     "tokenHash" TEXT NOT NULL,
     "verificationHash" TEXT,
     "verificationExpiresAt" TIMESTAMP(3),
@@ -84,3 +87,17 @@ CREATE INDEX "GuestSession_phone_idx" ON "GuestSession"("phone");
 
 -- AddForeignKey
 ALTER TABLE "CustomerSession" ADD CONSTRAINT "CustomerSession_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- Search text for staff and admins looking a customer up by name, phone or email (search_normalize).
+CREATE FUNCTION "customer_search"() RETURNS trigger AS $$
+BEGIN
+    NEW."search" := search_normalize(
+        NEW."firstName" || ' ' || NEW."lastName" || ' ' || NEW."phone" || ' ' || NEW."email"
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "Customer_search"
+    BEFORE INSERT OR UPDATE OF "firstName", "lastName", "phone", "email", "search" ON "Customer"
+    FOR EACH ROW EXECUTE FUNCTION "customer_search"();

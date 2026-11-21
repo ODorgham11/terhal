@@ -57,6 +57,7 @@ CREATE TABLE "AdminSession" (
 CREATE TABLE "AuditLog" (
     "id" TEXT NOT NULL,
     "adminId" TEXT,
+    "staffId" TEXT,
     "action" TEXT NOT NULL,
     "entityType" TEXT NOT NULL,
     "entityId" TEXT NOT NULL,
@@ -90,6 +91,9 @@ CREATE INDEX "AuditLog_createdAt_id_idx" ON "AuditLog"("createdAt", "id");
 CREATE INDEX "AuditLog_adminId_createdAt_idx" ON "AuditLog"("adminId", "createdAt");
 
 -- CreateIndex
+CREATE INDEX "AuditLog_staffId_createdAt_idx" ON "AuditLog"("staffId", "createdAt");
+
+-- CreateIndex
 CREATE INDEX "AuditLog_action_createdAt_idx" ON "AuditLog"("action", "createdAt");
 
 -- CreateIndex
@@ -118,3 +122,8 @@ CREATE TRIGGER "AuditLog_append_only_rows"
 CREATE TRIGGER "AuditLog_append_only_truncate"
     BEFORE TRUNCATE ON "AuditLog"
     FOR EACH STATEMENT EXECUTE FUNCTION "audit_log_append_only"();
+
+-- An entry names at most one actor: an admin or a staff member, or neither for the system. Prisma can't express this, so
+-- the database holds it.
+ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_one_actor"
+    CHECK (num_nonnulls("adminId", "staffId") <= 1);

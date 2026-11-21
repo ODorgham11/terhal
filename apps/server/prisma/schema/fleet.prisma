@@ -1,3 +1,26 @@
+// Fixed in code, ordered by size (SEDAN < SUV < MINIVAN < VAN, in contracts). Trip classes are editable, car bodies
+// aren't.
+enum CarBody {
+  SEDAN
+  SUV
+  MINIVAN
+  VAN
+}
+
+// Each kind of change to what the company owes a driver. The sign is fixed per kind (DriverTransaction_sign).
+enum DriverTransactionType {
+  // A completed trip's fee (external drivers only): positive.
+  TRIP_FEE
+  // A completed trip's expenses, all paid by the driver: positive.
+  EXPENSE_REIMBURSEMENT
+  // Cash the driver collected from the customer for the company: negative.
+  CASH_COLLECTED
+  // Money paid to the driver: negative.
+  PAYOUT
+  // A manual correction, either way.
+  ADJUSTMENT
+}
+
 // An outside company the business works with, e.g. a car rental office or another transport operator. Archived
 // instead of deleted, so anything that pointed at it keeps doing so.
 model Office {
@@ -35,20 +58,57 @@ model Driver {
   lastName  String
   phone     String @unique
 
-  amountOwed Decimal @db.Decimal(12, 2)
-  // An external driver may work through an office. Only external drivers can (the Driver_office_is_external check).
-  isExternal Boolean @default(false)
-  office     Office? @relation(fields: [officeId], references: [id], onDelete: Restrict)
-  officeId   String?
+  // What the company owes the driver, negative when the driver holds company cash. The running total of the driver's
+  // ledger, kept by a trigger and never written directly (Driver_amount_owed_from_ledger).
+  amountOwed Decimal @default(0) @db.Decimal(12, 2)
 
-  trips Trip[]
+  licenseNumber    String?
+  licenseExpiresAt DateTime? @db.Date
+  nationalId       String?
+  // An external driver may work through an office. Only external drivers can (the Driver_office_is_external check).
+  isExternal       Boolean   @default(false)
+  office           Office?   @relation(fields: [officeId], references: [id], onDelete: Restrict)
+  officeId         String?
+
+  trips        Trip[]
+  transactions DriverTransaction[]
 
   notes String?
+
+  archivedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([officeId])
+  @@index([archivedAt])
+}
+
+// The driver's ledger: every change to Driver.amountOwed. Append-only.
+model DriverTransaction {
+  id String @id @default(cuid())
+
+  driver   Driver @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  driverId String
+
+  type   DriverTransactionType
+  // Positive when the company owes the driver more.
+  amount Decimal               @db.Decimal(12, 2)
+
+  // The trip it comes from; required for trip fees, reimbursements and cash collected (DriverTransaction_trip).
+  trip   Trip?   @relation(fields: [tripId], references: [id], onDelete: Restrict)
+  tripId String?
+
+  // Who recorded it; empty for the system.
+  staff   Staff?  @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  staffId String?
+
+  note String?
+
+  createdAt DateTime @default(now())
+
+  @@index([driverId, createdAt])
+  @@index([tripId])
 }
 
 model Vehicle {
@@ -59,8 +119,9 @@ model Vehicle {
   year   Int?
   images VehicleImage[]
 
-  plateNumber String @unique
+  plateNumber String  @unique
   color       String
+  body        CarBody
 
   // An external vehicle may come from an office. Only external vehicles can (the Vehicle_office_is_external check).
   isExternal Boolean @default(false)
@@ -69,10 +130,13 @@ model Vehicle {
 
   trips Trip[]
 
+  archivedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([officeId])
+  @@index([archivedAt])
 }
 
 model VehicleImage {
@@ -83,6 +147,9 @@ model VehicleImage {
 
   bucket String
   key    String @unique
+
+  // 0 is the cover. At most 5 images per vehicle (VehicleImage_position).
+  position Int
 
   createdAt DateTime @default(now())
 
