@@ -24,7 +24,7 @@ export const statusConflict = (status: TripStatus, detail = "The trip can't do t
     code: "TRIP_STATUS_CONFLICT",
     status: 409,
     detail: `${detail} It's ${status.toLowerCase().replace("_", " ")}.`,
-    extensions: { status },
+    extensions: { tripStatus: status },
   });
 
 export const loadDoesNotFit = (cause?: unknown) =>

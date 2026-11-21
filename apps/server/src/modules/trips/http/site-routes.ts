@@ -114,7 +114,7 @@ const cancel = createRoute({
     400: invalid,
     ...siteProblems,
     404: notFound,
-    409: problemResponse("CALL_TO_CANCEL, or TRIP_STATUS_CONFLICT (`status`)."),
+    409: problemResponse("CALL_TO_CANCEL, or TRIP_STATUS_CONFLICT (`tripStatus`)."),
   },
 });
 

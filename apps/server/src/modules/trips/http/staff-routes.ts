@@ -50,7 +50,7 @@ import {
 // The dashboard's trip routes. Every one needs `trips`.
 
 const statusConflict = problemResponse(
-  "TRIP_STATUS_CONFLICT (`status`): the trip isn't where this action applies.",
+  "TRIP_STATUS_CONFLICT (`tripStatus`): the trip isn't where this action applies.",
 );
 
 const book = createRoute({
@@ -127,7 +127,7 @@ const update = createRoute({
     ...staffProblems,
     404: notFound,
     409: problemResponse(
-      "TRIP_STATUS_CONFLICT (`status`), or PRICE_REQUEST_OPEN: propose a price instead.",
+      "TRIP_STATUS_CONFLICT (`tripStatus`), or PRICE_REQUEST_OPEN: propose a price instead.",
     ),
     422: problemResponse(
       "OUT_OF_COVERAGE, QUOTE_SAME_PLACE, LOAD_DOES_NOT_FIT, or VEHICLE_TOO_SMALL for the assigned vehicle.",
@@ -191,14 +191,14 @@ const confirm = action(
   "confirm",
   "Confirm a trip",
   "Pending to confirmed: the booking is accepted. Needs a quoted price or an accepted proposal.",
-  problemResponse("TRIP_STATUS_CONFLICT (`status`), or PRICE_NOT_ACCEPTED."),
+  problemResponse("TRIP_STATUS_CONFLICT (`tripStatus`), or PRICE_NOT_ACCEPTED."),
 );
 const start = action(
   "start",
   "Start a trip",
   "Confirmed to in progress. Needs a driver and a vehicle, or an office.",
   problemResponse(
-    "TRIP_STATUS_CONFLICT (`status`), ASSIGNMENT_REQUIRED, or ASSIGNEE_BUSY (`field`): the driver or vehicle is on a trip in progress.",
+    "TRIP_STATUS_CONFLICT (`tripStatus`), ASSIGNMENT_REQUIRED, or ASSIGNEE_BUSY (`field`): the driver or vehicle is on a trip in progress.",
   ),
 );
 const end = action("end", "End a trip", "In progress to awaiting the driver's report.");
@@ -216,7 +216,7 @@ const reopen = action(
   "reopen",
   "Reopen a completed trip",
   "Completed back to awaiting report, until its month's report is generated.",
-  problemResponse("TRIP_STATUS_CONFLICT (`status`), or MONTH_REPORT_GENERATED."),
+  problemResponse("TRIP_STATUS_CONFLICT (`tripStatus`), or MONTH_REPORT_GENERATED."),
 );
 
 const cancel = createRoute({
@@ -253,7 +253,9 @@ const assign = createRoute({
     400: invalid,
     ...staffProblems,
     404: notFound,
-    409: problemResponse("TRIP_STATUS_CONFLICT (`status`), or ASSIGNMENT_CONFLICT (`conflicts`)."),
+    409: problemResponse(
+      "TRIP_STATUS_CONFLICT (`tripStatus`), or ASSIGNMENT_CONFLICT (`conflicts`).",
+    ),
     422: problemResponse(
       "DRIVER_NOT_AVAILABLE, VEHICLE_NOT_AVAILABLE, OFFICE_NOT_AVAILABLE, VEHICLE_TOO_SMALL or ASSIGNMENT_OFFICE_MISMATCH.",
     ),

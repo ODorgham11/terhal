@@ -123,7 +123,8 @@ export const errorCodes = [
   "CUSTOMER_NOT_AVAILABLE",
 
   // Trip lifecycle
-  // The trip isn't in a status this action applies to (someone else may have just moved it). `status` is its current one.
+  // The trip isn't in a status this action applies to (someone else may have just moved it). `tripStatus` is its
+  // current one.
   "TRIP_STATUS_CONFLICT",
   // A confirmed trip can't be cancelled online: the booker has to call.
   "CALL_TO_CANCEL",
