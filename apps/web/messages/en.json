@@ -1,6 +1,9 @@
 {
   "common": {
-    "appName": "Terhal"
+    "appName": "Terhal",
+    "locale": {
+      "switchTo": "Switch to {language}"
+    }
   },
   "errors": {},
   "site": {

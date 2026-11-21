@@ -1,6 +1,9 @@
 {
   "common": {
-    "appName": "ترحال"
+    "appName": "ترحال",
+    "locale": {
+      "switchTo": "التبديل إلى {language}"
+    }
   },
   "errors": {},
   "site": {
