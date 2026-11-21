@@ -10,7 +10,25 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "admin_access",
-        "description": "Set by signing in (httpOnly)."
+        "description": "Set by signing in to the admin panel (httpOnly)."
+      },
+      "staffCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "staff_access",
+        "description": "Set by signing in to the dashboard (httpOnly)."
+      },
+      "customerCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "customer_access",
+        "description": "Set by a customer signing in (httpOnly)."
+      },
+      "guestCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "guest_session",
+        "description": "Set by verifying a guest's contact details (httpOnly)."
       }
     },
     "schemas": {
