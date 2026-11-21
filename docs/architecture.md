@@ -46,6 +46,7 @@ apps/server/src/
   modules/
     identity/       admin invitations, sign in with two-factor, sessions (staff and customers join here)
     audit/          the append-only audit log and the admin panel's view of it
+    analytics/      the dashboard's figures, CSV exports and the monthly XLSX report (reads other modules' tables)
     ...             fleet, trips, pricing, locations, notifications, as they're ported
   platform/         config, db, redis, crypto, email, errors, http, rate limits, logging, jobs, lifecycle
   http/             composition root: global middleware, health, mounts each module's routes under /v1
@@ -152,7 +153,7 @@ What we gave up:
 | Timeouts | Requests get a 503 after 15 seconds. Every outbound call must have a timeout. |
 | Health   | `/health/live` checks only that the process is up. `/health/ready` drives the deploy's healthcheck: it fails while shutting down or when Postgres is unreachable; Redis is reported as `degraded`. |
 | Shutdown | On `SIGTERM` the API fails readiness, stops accepting connections, finishes in-flight requests, then closes Prisma and Redis, inside the container's `stop_grace_period`. The worker stops taking jobs and finishes its current ones. |
-| Jobs     | Processors must be idempotent (BullMQ runs jobs at least once): give jobs deterministic ids, retry with backoff. |
+| Jobs     | Processors must be idempotent (BullMQ runs jobs at least once): give jobs deterministic ids, retry with backoff. Each module with jobs has its own queue (`trips`, `analytics`); schedules are BullMQ job schedulers named after their job, upserted on every worker start, and a cron in business time takes `tz: "Africa/Cairo"`. |
 | Redis down | Rate limits on sign in fail closed: an unreachable Redis must not mean unlimited password guesses. |
 | Client IPs | Rate limits trust only the header named by `CLIENT_IP_HEADER`, which the edge Caddy overwrites. Never publish the server's port. |
 | Neon     | `DATABASE_URL` is the pooled URL (PgBouncer, transaction mode), so no session state: no session advisory locks. Migrations use the direct URL. The API and the database must be in the same region. |

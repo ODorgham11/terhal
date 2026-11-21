@@ -211,7 +211,7 @@ describe("the staff lifecycle", () => {
     });
     // 00:30 on 1 November in Cairo: November's report.
     await prisma.analyticsDocument.create({
-      data: { bucket: "b", key: "reports/2026-11.xlsx", year: 2026, month: 11 },
+      data: { bucket: "b", key: "reports/2026-11.xlsx", year: 2026, month: 11, size: 1 },
     });
     const refused = await act(staff, trip.id, "reopen");
     expect(refused.status).toBe(409);
