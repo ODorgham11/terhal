@@ -69,6 +69,10 @@ export const errorCodes = [
   // Trip classes
   // An active class already has this name, in English or in Arabic. Archived classes don't count.
   "TRIP_CLASS_NAME_TAKEN",
+
+  // Pricing
+  // The route already has a price for this class and car body: change that one instead.
+  "PRICING_EXISTS",
 ] as const;
 
 export type ErrorCode = (typeof errorCodes)[number];

@@ -10,6 +10,7 @@ export * from "./lists";
 export * from "./locale";
 export * from "./locations";
 export * from "./permissions";
+export * from "./pricing";
 export * from "./problem";
 export * from "./search";
 export * from "./staff";

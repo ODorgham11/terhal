@@ -37,6 +37,10 @@ export const auditActions = {
   TRIP_CLASS_UPDATED: "trip_class.updated",
   TRIP_CLASS_ARCHIVED: "trip_class.archived",
   TRIP_CLASS_RESTORED: "trip_class.restored",
+  // Price changes keep the price before and after (P5), one entry per row, bulk uploads included.
+  PRICING_CREATED: "pricing.created",
+  PRICING_UPDATED: "pricing.updated",
+  PRICING_DELETED: "pricing.deleted",
 } as const;
 
 export type AuditAction = (typeof auditActions)[keyof typeof auditActions];
