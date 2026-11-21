@@ -17,7 +17,9 @@ export interface AuditEntry {
 }
 
 // Who a change made in the admin panel or the dashboard is recorded against, with where the request came from.
-export type AuditActor = ({ adminId: string; staffId?: never } | { staffId: string; adminId?: never }) & {
+export type AuditActor = (
+  { adminId: string; staffId?: never } | { staffId: string; adminId?: never }
+) & {
   ipAddress: string | null;
 };
 
