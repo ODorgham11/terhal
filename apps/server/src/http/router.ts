@@ -2,7 +2,7 @@ import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { auditRoutes } from "../modules/audit/index";
-import { adminAuthRoutes } from "../modules/identity/index";
+import { adminAuthRoutes, customerAuthRoutes, guestRoutes } from "../modules/identity/index";
 import { env, origins, type Audience } from "../platform/config/env";
 import {
   ADMIN_COOKIE_AUTH,
@@ -40,7 +40,11 @@ router.use("/v1/staff/*", ...audience("staff"));
 router.use("/v1/site/*", ...audience("site"));
 
 // Every module's routes, versioned. Chained, so the type below carries every route for the web app's RPC client.
-const v1 = createRouter().route("/", adminAuthRoutes).route("/", auditRoutes);
+const v1 = createRouter()
+  .route("/", adminAuthRoutes)
+  .route("/", auditRoutes)
+  .route("/", customerAuthRoutes)
+  .route("/", guestRoutes);
 
 export const routes = router.route("/health", health).route("/v1", v1);
 
