@@ -67,6 +67,8 @@ const schema = z
     CUSTOMER_SECRET: secret,
     // Encrypts admins' two-factor secrets. Changing it breaks every admin's authenticator setup.
     TOTP_ENCRYPTION_KEY: secret,
+    // Signs the drivers' report links. Changing it breaks every live link; staff then make new ones.
+    REPORT_LINK_SECRET: secret,
     // Where uploaded files (vehicle images, monthly reports) are kept. `local` writes them to disk and is only allowed in
     // local development; everywhere else they go to an S3-compatible bucket (Cloudflare R2).
     STORAGE_DRIVER: blankIsUnset(z.enum(["local", "s3"]).default("local")),

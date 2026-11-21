@@ -49,6 +49,7 @@ export default async function setup() {
     STAFF_SECRET: randomBytes(32).toString("base64"),
     CUSTOMER_SECRET: randomBytes(32).toString("base64"),
     TOTP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    REPORT_LINK_SECRET: randomBytes(32).toString("base64"),
     STORAGE_DRIVER: "local",
     STORAGE_LOCAL_DIR: storageDir,
     STORAGE_LOCAL_URL: "https://api.local.terhal.co:8080",
