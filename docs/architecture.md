@@ -136,6 +136,10 @@ What we gave up:
   every session.
 - Customers sign up with a password and confirm their email with a 6-digit code before their first session. A session
   lasts 30 days from its last refresh and 180 days at most, on up to 10 devices. They sign in with their email or phone.
+- Drivers have no accounts either: a trip's report link (`terhal.co/report#<token>`) is their credential for that trip
+  alone. The page sends the token in a `Report-Token` header to `/v1/site/driver/report` (no cookie), limited per IP;
+  the token is a keyed HMAC, so the database holds only its hash and a salt, and it stops working when the driver
+  changes, staff replace it, or 7 days after pickup.
 - Guests book without an account: a session cookie (30 days, never extended) that's only usable once they confirm the
   code emailed to them.
 - Everything security relevant is written to the audit log, in the same transaction as the change it records.
