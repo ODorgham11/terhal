@@ -236,7 +236,25 @@ describe("notifications from trip events", () => {
       where: { id: trip.id },
       data: { driverId: driver.id, vehicleId: vehicle.id },
     });
-    for (const step of ["confirm", "start", "end", "complete", "reopen", "complete"]) {
+    for (const step of ["confirm", "start", "end"]) {
+      expect((await act(staff, trip.id, step)).status).toBe(200);
+    }
+    // Completing a trip with a driver needs its report.
+    const now = new Date();
+    await prisma.tripReport.create({
+      data: {
+        tripId: trip.id,
+        startedAt: now,
+        vehiclePickup: "Garage",
+        startMileage: 100,
+        pickupAt: now,
+        dropoffAt: now,
+        vehicleDropoff: "Garage",
+        endedAt: now,
+        endMileage: 300,
+      },
+    });
+    for (const step of ["complete", "reopen", "complete"]) {
       expect((await act(staff, trip.id, step)).status).toBe(200);
     }
     const thanks = (await notificationsOf(trip.id)).filter(
