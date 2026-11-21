@@ -161,3 +161,6 @@ apps/server/.storage/
 
 # Personal Claude Code settings
 .claude/settings.local.json
+
+# Claude Code: agent worktrees and local settings.
+.claude/
