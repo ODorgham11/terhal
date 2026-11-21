@@ -5,6 +5,8 @@ import { prisma } from "../../../platform/db/prisma";
 export interface AuditEntry {
   // The admin who did it, or null for the system (the seed) and for sign in attempts on emails that aren't admins.
   adminId: string | null;
+  // The staff member who did it, from the dashboard. Never set together with adminId (the AuditLog_one_actor check).
+  staffId?: string | null;
   action: AuditAction;
   // What the event is about, e.g. an Admin, AdminSession, or AdminInvitation, and its id.
   entityType: string;
