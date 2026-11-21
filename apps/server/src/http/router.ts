@@ -12,6 +12,11 @@ import {
   guestRoutes,
   staffAuthRoutes,
 } from "../modules/identity/index";
+import {
+  adminLocationRoutes,
+  siteLocationRoutes,
+  staffLocationRoutes,
+} from "../modules/location/index";
 import { env, origins, type Audience } from "../platform/config/env";
 import {
   ADMIN_COOKIE_AUTH,
@@ -58,7 +63,10 @@ const v1 = createRouter()
   .route("/", auditRoutes)
   .route("/", staffAuthRoutes)
   .route("/", customerAuthRoutes)
-  .route("/", guestRoutes);
+  .route("/", guestRoutes)
+  .route("/", adminLocationRoutes)
+  .route("/", staffLocationRoutes)
+  .route("/", siteLocationRoutes);
 
 export const routes = router.route("/health", health).route("/v1", v1);
 
