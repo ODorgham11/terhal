@@ -60,6 +60,7 @@
               "INVALID_CREDENTIALS",
               "ACCOUNT_NOT_ACTIVE",
               "INVALID_REFRESH_TOKEN",
+              "VERIFICATION_REQUIRED",
               "ACCOUNT_ALREADY_EXISTS",
               "INVITATION_INVALID",
               "INVITATION_EXPIRED",

@@ -17,6 +17,8 @@ export const errorCodes = [
   "INVALID_CREDENTIALS",
   "ACCOUNT_NOT_ACTIVE",
   "INVALID_REFRESH_TOKEN",
+  // A customer or a guest who hasn't confirmed the code sent to them yet.
+  "VERIFICATION_REQUIRED",
 
   // Invitations
   "ACCOUNT_ALREADY_EXISTS",
