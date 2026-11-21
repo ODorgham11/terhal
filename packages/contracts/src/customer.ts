@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CurrentPassword } from "./account";
 import { Email, LinkToken, Name, Password, Phone } from "./fields";
 import { DEFAULT_LOCALE, Locale } from "./locale";
 
@@ -105,3 +106,40 @@ export const Guest = z
 export type Guest = z.infer<typeof Guest>;
 
 export const GuestVerify = z.object({ code: VerificationCode }).meta({ id: "GuestVerify" });
+
+// A signed in customer's own account. Staff and admins can't edit these details: customers own them.
+
+// Their name and language. Only what's sent changes.
+export const UpdateCustomerAccount = z
+  .object({
+    firstName: Name("First name").optional(),
+    lastName: Name("Last name").optional(),
+    locale: Locale.optional(),
+  })
+  .meta({ id: "UpdateCustomerAccount" });
+
+export type UpdateCustomerAccount = z.output<typeof UpdateCustomerAccount>;
+
+// A new email or phone takes the current password, so an open session alone can't take the account, and only replaces
+// the current one once the emailed code is confirmed.
+export const ChangeCustomerEmail = z
+  .object({ email: Email, password: CurrentPassword })
+  .meta({ id: "ChangeCustomerEmail" });
+
+export const ChangeCustomerPhone = z
+  .object({ phone: Phone, password: CurrentPassword })
+  .meta({ id: "ChangeCustomerPhone" });
+
+export const ConfirmContactChange = z
+  .object({ code: VerificationCode })
+  .meta({ id: "ConfirmContactChange" });
+
+export const ContactChangeSent = z
+  .object({
+    sentTo: z.string().meta({
+      description:
+        "Where the code went: the new email for an email change, the current one for a phone change.",
+    }),
+    expiresAt: z.iso.datetime(),
+  })
+  .meta({ id: "ContactChangeSent" });
