@@ -11,6 +11,7 @@ import {
   customerAuthRoutes,
   guestRoutes,
   staffAuthRoutes,
+  teamRoutes,
 } from "../modules/identity/index";
 import { env, origins, type Audience } from "../platform/config/env";
 import {
@@ -57,6 +58,7 @@ const v1 = createRouter()
   .route("/", adminStaffRoutes)
   .route("/", auditRoutes)
   .route("/", staffAuthRoutes)
+  .route("/", teamRoutes)
   .route("/", customerAuthRoutes)
   .route("/", guestRoutes);
 

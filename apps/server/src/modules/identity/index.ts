@@ -10,3 +10,4 @@ export { adminStaffRoutes } from "./http/admin-staff-routes";
 export { customerAuthRoutes } from "./http/customer-routes";
 export { guestRoutes } from "./http/guest-routes";
 export { staffAuthRoutes } from "./http/staff-routes";
+export { teamRoutes } from "./http/team-routes";
