@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Places the platform serves: a tree of governorates, districts and areas, each with a coverage shape. See
-// docs/decisions.md, "Coverage without PostGIS", and docs/domain-api.md, section L.
+// docs/decisions.md, "Coverage without PostGIS", and docs/domains.md, section L.
 
 // Broadest first. A district sits in a governorate; an area in a district or directly in a governorate.
 export const localities = ["GOVERNORATE", "DISTRICT", "AREA"] as const;

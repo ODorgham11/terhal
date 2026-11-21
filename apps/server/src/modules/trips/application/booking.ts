@@ -29,7 +29,7 @@ import {
 import { recordTripEvent, type TripActor } from "./events";
 import { loadDoesNotFit, tripSelect, tripWriteError, type TripRow } from "./shared";
 
-// Booking (docs/domain-api.md, B and R): on the site by a customer or a verified guest, and in the dashboard by staff.
+// Booking (docs/domains.md, B and R): on the site by a customer or a verified guest, and in the dashboard by staff.
 
 type Leg = "outbound" | "return";
 

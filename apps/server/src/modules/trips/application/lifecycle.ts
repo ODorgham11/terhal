@@ -9,7 +9,7 @@ import { onTripCompleted, onTripReopened } from "./hooks";
 import { visibleTo } from "./queries";
 import { lockTrip, statusConflict, toSiteTrip, toTrip, tripNotFound, tripSelect } from "./shared";
 
-// The status lifecycle (docs/domain-api.md, T): one action per route (X9), each a conditional move on the current
+// The status lifecycle (docs/domains.md, T): one action per route (X9), each a conditional move on the current
 // status that writes its event.
 
 export const readTrip = async (id: string) =>

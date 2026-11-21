@@ -68,7 +68,7 @@ The staff dashboard runs the business: trips, fleet, offices, trip classes, pric
 manages locations, with the same create, rename, move, delete and restore as the admin panel; location writes need the
 `pricing` permission. Admins keep full control of locations, admins, the audit log and staff (for support and recovery),
 and a read-only view of operations. Customers are the exception: staff can only view them (`customers` is a view-only
-permission), and suspending or reactivating a customer is admin-panel only. Full spec: [domain-api.md](domain-api.md).
+permission), and suspending or reactivating a customer is admin-panel only. Full spec: [domains.md](domains.md).
 
 ### Price on request (2026-11-21)
 
@@ -284,7 +284,7 @@ column.
 
 ### Fleet and office routes: the details the spec left open (2026-11-21)
 
-How the fleet and office routes ([domain-api.md](domain-api.md), F and O) settle what the answers didn't:
+How the fleet and office routes ([domains.md](domains.md), F and O) settle what the answers didn't:
 
 - **"Upcoming live trip" is any pending, confirmed or in-progress trip**, whatever its pickup time: one past its pickup is
   still unresolved until the background jobs move it on. Awaiting a report doesn't block archiving. A blocked archive is
@@ -321,7 +321,7 @@ How the fleet and office routes ([domain-api.md](domain-api.md), F and O) settle
 
 ### Locations, pricing and quotes: details the spec left open (2026-11-21)
 
-Choices made while building the location, trip class, pricing and quote routes, closest to [domain-api.md](domain-api.md):
+Choices made while building the location, trip class, pricing and quote routes, closest to [domains.md](domains.md):
 
 - **A delete's `expectedCount` is a query parameter** (`DELETE …/locations/{id}?expectedCount=3`), not a body. The
   detail route returns it as `subtreeSize`; a mismatch is `LOCATION_COUNT_MISMATCH` with the current `count`.
@@ -398,7 +398,7 @@ and reactivating restores `ACTIVE`, or `UNVERIFIED` for a customer who never ver
 ### Trips: the details the spec left open (2026-11-21)
 
 Choices made building booking, the lifecycle, price on request, assignment and links, closest to
-[domain-api.md](domain-api.md):
+[domains.md](domains.md):
 
 - **One function changes a trip.** `changeTrip` locks the row, checks the status, updates on the status it found and
   records the `TripEvent` (`from`/`to`, each other changed field's `before`/`after`, a reason); creation and the second

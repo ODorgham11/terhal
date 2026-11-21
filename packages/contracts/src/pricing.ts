@@ -2,7 +2,7 @@ import { z } from "zod";
 import { CarBody } from "./cars";
 import { Locality } from "./locations";
 
-// The price list: a fixed price for one direction of a route, per trip class and car body (docs/domain-api.md, section
+// The price list: a fixed price for one direction of a route, per trip class and car body (docs/domains.md, section
 // P). A quote walks up the location tree to find the most specific row, so "Cairo → Alexandria" covers every place in
 // both unless a more specific row overrides it.
 

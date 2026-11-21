@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Trip classes, e.g. "Economy" and "VIP": what's included in a ride. Prices are set per class (docs/domain-api.md,
+// Trip classes, e.g. "Economy" and "VIP": what's included in a ride. Prices are set per class (docs/domains.md,
 // section C). Archived classes leave quotes and booking; their prices stay and come back on restore.
 
 const ClassName = (label: string) =>

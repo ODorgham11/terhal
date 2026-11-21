@@ -6,7 +6,7 @@ import { Price } from "./pricing";
 import { TripEventAction } from "./trip-events";
 
 // Trips: booking on the site and in the dashboard, the status lifecycle, price on request, assignment and linked return
-// trips (docs/domain-api.md, sections B, T, A and R, and the price-on-request flow under Q3).
+// trips (docs/domains.md, sections B, T, A and R, and the price-on-request flow under Q3).
 
 // --- Rules shared by the API and the site ---
 

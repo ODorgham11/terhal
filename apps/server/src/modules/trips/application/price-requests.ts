@@ -9,7 +9,7 @@ import { changeTrip, type TripActor } from "./events";
 import { findVisible, lockBooking, readTrip } from "./lifecycle";
 import { toSiteTrip, tripSelect } from "./shared";
 
-// Price on request (docs/domain-api.md, Q3 and its follow-ups): staff propose a price for a trip booked without one, and
+// Price on request (docs/domains.md, Q3 and its follow-ups): staff propose a price for a trip booked without one, and
 // the booker accepts it (every proposed leg of the booking at once) or declines it, which cancels the trip.
 
 const notRequested = () =>
