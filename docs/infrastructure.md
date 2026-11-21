@@ -290,6 +290,9 @@ later. The database does not move.
 
 ## 8. Open items
 
+- **Add `STAFF_SECRET` and `CUSTOMER_SECRET` to both `app.env` files**
+  (`/opt/terhal/{staging,main}/app.env`, `openssl rand -base64 32` each)
+  before the next deploy: the server refuses to start without them.
 - **Wipe the staging and production databases before their next deploy.**
   The domain migrations were edited after both had applied them (the schema
   rebuild of 2026-11-21, see `docs/architecture.md`, Migrations), and

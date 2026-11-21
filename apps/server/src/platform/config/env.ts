@@ -60,6 +60,10 @@ const schema = z
     // No defaults for secrets: a missing or short one stops the process instead of running insecurely.
     // Signs admin access tokens. Changing it signs every admin out.
     ADMIN_SECRET: secret,
+    // Signs staff access tokens. Changing it signs every staff member out.
+    STAFF_SECRET: secret,
+    // Signs customer access tokens. Changing it signs every customer out.
+    CUSTOMER_SECRET: secret,
     // Encrypts admins' two-factor secrets. Changing it breaks every admin's authenticator setup.
     TOTP_ENCRYPTION_KEY: secret,
   })
