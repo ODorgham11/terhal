@@ -64,10 +64,12 @@ const tripData = async () => {
     totalPrice: "100.00",
     pickupId: location.id,
     pickupSnapshot: "Cairo",
+    pickupSnapshotAr: "Cairo",
     pickupLatitude: "30.044420",
     pickupLongitude: "31.235712",
     dropoffId: location.id,
     dropoffSnapshot: "Cairo",
+    dropoffSnapshotAr: "Cairo",
     dropoffLatitude: "30.044420",
     dropoffLongitude: "31.235712",
   });

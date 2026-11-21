@@ -1,11 +1,17 @@
-import { Worker } from "bullmq";
+import { Worker, type Processor } from "bullmq";
+import { processTripJob, tripJobs } from "./modules/trips/index";
 import { processors } from "./platform/jobs/processors";
+import { queues, type JobData, type QueueName } from "./platform/jobs/queues";
 import { handleShutdown } from "./platform/lifecycle/shutdown";
 import { logger } from "./platform/logger/logger";
 import { createQueueConnection } from "./platform/redis/connections";
 
 // The worker entry point, the worker container in deploy/compose.yml. No HTTP: it only pulls jobs off the queue Redis.
-const workers = Object.entries(processors).map(([name, processor]) => {
+// One processor per queue.
+const all: { [K in QueueName]: Processor<JobData[K]> } = { ...processors, trips: processTripJob };
+
+// Each queue's payload type is checked above; the Worker itself takes any.
+const workers = (Object.entries(all) as [QueueName, Processor][]).map(([name, processor]) => {
   const worker = new Worker(name, processor, { connection: createQueueConnection() });
 
   worker.on("failed", (job, err) => {
@@ -14,6 +20,13 @@ const workers = Object.entries(processors).map(([name, processor]) => {
 
   return worker;
 });
+
+// Repeatable jobs. The scheduler id is the job's name, so every start replaces the schedule instead of adding one.
+await Promise.all(
+  Object.entries(tripJobs).map(([name, { every }]) =>
+    queues.trips.upsertJobScheduler(name, { every }, { name, data: {} }),
+  ),
+);
 
 logger.info({ queues: workers.map((w) => w.name) }, "worker started");
 

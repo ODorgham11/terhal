@@ -19,3 +19,4 @@ export * from "./search";
 export * from "./staff";
 export * from "./trip-classes";
 export * from "./trip-events";
+export * from "./trips";

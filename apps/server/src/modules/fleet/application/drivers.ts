@@ -7,20 +7,19 @@ import {
 } from "@terhal/contracts";
 import { prisma } from "../../../platform/db/prisma";
 import { recordAudit } from "../../audit/index";
+import { driverTrips } from "../../trips/index";
 import { licenseWarningDate, searchWords } from "../domain/rules";
 import {
   assertNoLiveTrips,
   assertOfficeAvailable,
   auditChanges,
   driverSelect,
-  fleetTripSelect,
   fleetWriteError,
   lockRow,
   matchEveryWord,
   notFound,
   pageArgs,
   toDriver,
-  toFleetTrip,
   toPage,
   type StaffActor,
 } from "./shared";
@@ -165,15 +164,8 @@ export const restoreDriver = async (id: string, actor: StaffActor) => {
   return getDriver(id);
 };
 
-// TODO: go through the trips module's index once it exists; there's no trips module to ask yet.
 // Newest pickup first.
-export const listDriverTrips = async (id: string, { limit, cursor, status }: ListFleetTrips) => {
+export const listDriverTrips = async (id: string, query: ListFleetTrips) => {
   await findDriver(id);
-  const rows = await prisma.trip.findMany({
-    where: { driverId: id, status },
-    orderBy: [{ pickupDate: "desc" }, { id: "desc" }],
-    ...pageArgs(limit, cursor),
-    select: fleetTripSelect,
-  });
-  return toPage(rows, limit, toFleetTrip);
+  return driverTrips(id, query);
 };

@@ -1,6 +1,7 @@
 import type { NearbyOfficesQuery } from "@terhal/contracts";
 import { Prisma } from "../../../../generated/prisma/client";
 import { prisma } from "../../../platform/db/prisma";
+import { resolvePin } from "../../location/index";
 import { officeSelect, toOffice } from "./shared";
 
 // Great-circle distance in meters between a point and a location's center (haversine, as coverage does; see
@@ -14,29 +15,19 @@ const distanceFrom = (latitude: number, longitude: number, alias: string) => Pri
     ))
   END`;
 
-// The most specific live location covering a point: an area before a district before a governorate (L7), then the
-// nearest center. A district or an area covers the circle around its center; a governorate, its outline.
-// TODO: use the location module's coverage once merged.
-const coveringLocation = async (latitude: number, longitude: number) => {
-  const [location] = await prisma.$queryRaw<
-    { id: string; nameEn: string; nameAr: string; locality: "GOVERNORATE" | "DISTRICT" | "AREA" }[]
-  >`
-    SELECT l."id", l."nameEn", l."nameAr", l."locality"
-    FROM (SELECT *, ${distanceFrom(latitude, longitude, "x")} AS "distance" FROM "Location" x
-          WHERE x."deletedAt" IS NULL) l
-    WHERE (l."locality" <> 'GOVERNORATE' AND l."distance" <= l."radius")
-       OR (l."locality" = 'GOVERNORATE' AND l."boundary" @> point(${longitude}::float8, ${latitude}::float8))
-    ORDER BY CASE l."locality" WHEN 'AREA' THEN 0 WHEN 'DISTRICT' THEN 1 ELSE 2 END, l."distance" NULLS LAST
-    LIMIT 1`;
-  return location ?? null;
-};
-
 // Offices for a pickup (O3): live offices whose location is the pin's location, one of its ancestors or one of its live
 // descendants, nearest first (by the distance from the pin to the office location's center; offices placed at a
 // governorate, which has no center, come last), then by name. A pin outside coverage has none.
 export const nearbyOffices = async ({ latitude, longitude }: NearbyOfficesQuery) => {
-  const location = await coveringLocation(latitude, longitude);
-  if (!location) return { location: null, data: [] };
+  // The most specific live location covering the pin (L7), from the locations module.
+  const resolved = await resolvePin({ latitude, longitude });
+  if (!resolved) return { location: null, data: [] };
+  const location = {
+    id: resolved.id,
+    nameEn: resolved.nameEn,
+    nameAr: resolved.nameAr,
+    locality: resolved.locality,
+  };
 
   const ranked = await prisma.$queryRaw<{ id: string; distance: number | null }[]>`
     WITH RECURSIVE

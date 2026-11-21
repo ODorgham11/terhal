@@ -315,9 +315,9 @@ How the fleet and office routes ([domain-api.md](domain-api.md), F and O) settle
 - **Nearby offices** aren't paged and return `{ location, data }`: the place the pin resolved to, then the offices placed
   in it, its ancestors or its live descendants, by distance from the pin to the office location's center; offices placed
   at a governorate (no center) come last. A pin outside coverage gets an empty list, not an error. The pin is resolved
-  by a small query in the fleet module until the locations module's coverage is merged.
-- **Tables of modules that don't exist yet:** the fleet module reads `Trip` and `Location` directly, marked with TODOs to
-  go through the trips and locations modules once they exist.
+  by the locations module's `resolvePin`.
+- **Tables of other modules:** an office's and a driver's trips come from the trips module. Still read directly: live
+  trips when archiving (inside the archive's lock), and an office's location (marked with a TODO).
 
 ### Locations, pricing and quotes: details the spec left open (2026-11-21)
 
@@ -390,10 +390,70 @@ of the change yet.
 ### Customers as staff and admins see them (2026-11-21)
 
 The `customers` module is a read-only view: the list (`customers` or `trips`), a customer with their trip count and the
-total of their completed trips, and their trips (`customers`); admins see the same. It reads the `Trip` table directly
-until a trips module exists to ask. Suspending and reactivating are admin-only and live in identity: both take a reason
-(kept in the audit log), suspending ends sessions at once and cancels a reset link, and reactivating restores `ACTIVE`, or
-`UNVERIFIED` for a customer who never verified.
+total of their completed trips, and their trips (`customers`); admins see the same. Its trips come from the trips
+module's index (they were read from the `Trip` table until that existed). Suspending and reactivating are admin-only and
+live in identity: both take a reason (kept in the audit log), suspending ends sessions at once and cancels a reset link,
+and reactivating restores `ACTIVE`, or `UNVERIFIED` for a customer who never verified.
+
+### Trips: the details the spec left open (2026-11-21)
+
+Choices made building booking, the lifecycle, price on request, assignment and links, closest to
+[domain-api.md](domain-api.md):
+
+- **One function changes a trip.** `changeTrip` locks the row, checks the status, updates on the status it found and
+  records the `TripEvent` (`from`/`to`, each other changed field's `before`/`after`, a reason); creation and the second
+  side of a link use `recordTripEvent`. Both end in `afterTripEvent` (`application/hooks.ts`), the single hook for
+  notifications. `onTripCompleted` and `onTripReopened` are where the driver ledger plugs in, and `onDriverChanged` where
+  a new report link is issued; a new driver already clears the old link's hash. Report token columns never reach an
+  event.
+- **Place snapshots carry both names.** `pickupSnapshot`/`dropoffSnapshot` hold the English name, and
+  `pickupSnapshotAr`/`dropoffSnapshotAr` (added to the trips migration) the Arabic, like the class snapshot. Fleet and
+  customer views still show the English one.
+- **Idempotency.** The `Idempotency-Key` header (8 to 100 characters) is required for site and staff bookings alike. The
+  stored key is a hash of the key with the booker behind the request (customer, guest session or staff member), so two
+  bookers never collide; only the outbound leg carries it. A first booking answers 201, a replay 200 with the same trips.
+- **The pending cap** counts a customer's pending trips, or a guest's across every verified session with the same email,
+  both legs of a return included. Bookings by one booker are serialized with a transaction-level advisory lock (fine
+  behind the pooler), so simultaneous ones can't pass it together.
+- **Pickup times.** The grid is checked in UTC: Cairo's offset is whole hours, so a quarter hour is the same in both. A
+  return must pick up after its outbound (`BEFORE_OUTBOUND`). Staff edits have no time rule.
+- **A return's price** is checked like the outbound's, against `return.expectedPrice` on the site (the quote's
+  `returnPrice`) or set with `return.totalPrice` by staff.
+- **Staff bookings** name a customer by `customerId` (picked from the customer list, searched by phone or email; it must
+  be active). The price is `totalPrice` if given, else the price list's, else on request, which only a customer's trip
+  may be (`PRICE_REQUIRED`). Without a customer the passenger's name and phone are required. A backdated trip stays
+  pending like any other; the expire job skips trips booked after their own pickup time, so staff can confirm it.
+- **Accepting a price** covers every proposed leg of the booking, and `expectedPrice` is their total; `PRICE_CHANGED`
+  carries the current total and each leg's price. **Declining** needs a proposal on that trip. Declining the outbound
+  also cancels its pending return (`trip.cancelled` with reason `PRICE_DECLINED`), declining the return only that one.
+- **Online cancellation** takes the whole booking (the trip, its outbound or return) minus legs that started or were
+  cancelled. If any leg left is confirmed, nothing is cancelled (`CALL_TO_CANCEL`). The optional reason is kept as the
+  event's `note`, with reason `CUSTOMER_REQUEST`. Staff cancel one leg at a time.
+- **Completing doesn't require a report yet**: the driver report isn't built, so the report work decides whether to
+  require one (office trips may complete without, D9 a).
+- **Editing** (B10 a): details while pending or confirmed, `totalPrice` and payment until completed. The price can't be
+  edited while it's requested or proposed (`PRICE_REQUEST_OPEN`). A new pin resolves again, refreshing the place and its
+  names; a new class refreshes its snapshot; a new body must fit the load and the assigned vehicle. An edit of only
+  `paymentMethod`/`paidAt` is a `trip.payment_recorded` event, anything else `trip.updated`.
+- **Assignment** replaces the whole assignment: what's left out is cleared, and a driver without a vehicle (or the
+  reverse) is allowed until starting. Only a newly set driver or vehicle is checked for conflicts, within ±3 hours
+  inclusive; acknowledged clashes are listed in the event. Candidates list every live driver and only the live vehicles
+  that fit. The rows are locked through fleet's `lockAssignees`; the trip views read customers, guests, staff, drivers,
+  vehicles and offices through Prisma relations.
+- **Trip status conflicts** carry the trip's status as `tripStatus`: `status` is the HTTP status in a problem.
+- **Links** join two unlinked trips only, so a booking stays a pair, and the return must pick up later. Unlinking works
+  from either trip; both get an event.
+- **The overview**: today and tomorrow are non-cancelled trips picking up in that Cairo day; unassigned is pending or
+  confirmed without an office and without a driver or a vehicle (the list's `unassigned` filter too); overdue is pending
+  or confirmed past its pickup time; price requests are pending trips with a requested price. The staff list is newest
+  pickup first, and `q` matches the code, passenger name and phone with a contains (no search column, as for fleet).
+- **Jobs** run on one `trips` queue: `expire-pending-trips` every minute, `advance-overdue-trips` every 5 minutes, as
+  BullMQ job schedulers named after the jobs. Expired trips record reason `NOT_CONFIRMED` or `PRICE_NOT_SETTLED`;
+  overdue ones `trip.ended` with reason `OVERDUE`, from confirmed too.
+- **Reopening** is refused by the pickup's Cairo month; the analytics module doesn't exist yet, so `AnalyticsDocument`
+  is read directly.
+- **Rate limits** (X7): booking on the site 10 an hour per IP; site trip reads 120 and changes 30 a minute per booker;
+  dashboard trip reads 240 and changes 120 a minute per staff member.
 
 ---
 

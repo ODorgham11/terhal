@@ -1,4 +1,5 @@
 // Trip classes, the price list and quotes. Booking prices a trip through what's exported here.
+export { savePrice } from "./application/pricing";
 export { priceFor, quote, resolveRoute } from "./application/quotes";
 export { pricingRoutes } from "./http/pricing-routes";
 export { quoteRoutes } from "./http/quote-routes";

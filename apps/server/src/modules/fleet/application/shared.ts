@@ -1,4 +1,4 @@
-import type { Driver, FleetTrip, Office, Vehicle } from "@terhal/contracts";
+import type { Driver, Office, Vehicle } from "@terhal/contracts";
 import { Prisma } from "../../../../generated/prisma/client";
 import type { prisma } from "../../../platform/db/prisma";
 import { violatedCheck, violatedUniqueIndex } from "../../../platform/db/errors";
@@ -234,33 +234,6 @@ export const toOffice = (row: OfficeRow): Office => ({
   archivedAt: instant(row.archivedAt),
   createdAt: row.createdAt.toISOString(),
   updatedAt: row.updatedAt.toISOString(),
-});
-
-export const fleetTripSelect = {
-  id: true,
-  code: true,
-  status: true,
-  pickupDate: true,
-  pickupSnapshot: true,
-  dropoffSnapshot: true,
-  car: true,
-  driver: { select: { id: true, firstName: true, lastName: true } },
-  vehicle: { select: { id: true, plateNumber: true } },
-  office: officeSummarySelect,
-} as const satisfies Prisma.TripSelect;
-
-type FleetTripRow = Prisma.TripGetPayload<{ select: typeof fleetTripSelect }>;
-
-export const toFleetTrip = ({
-  pickupSnapshot,
-  dropoffSnapshot,
-  ...row
-}: FleetTripRow): FleetTrip => ({
-  ...row,
-  pickupDate: row.pickupDate.toISOString(),
-  pickup: pickupSnapshot,
-  dropoff: dropoffSnapshot,
-  office: toOfficeSummary(row.office),
 });
 
 // The fields a change touched, before and after, for the audit log. Dates become ISO strings.
