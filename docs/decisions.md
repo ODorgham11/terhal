@@ -153,6 +153,19 @@ Vehicle images and the monthly analytics workbooks go in a private R2 bucket. Up
 the type from the bytes and the size; reads use short-lived signed URLs. Nothing is stored on the VPS, so moving servers
 stays a redeploy.
 
+### A local folder for files in development (2026-11-21)
+
+The storage provider (`apps/server/src/platform/storage`) has two drivers, picked by `STORAGE_DRIVER`. `s3` talks to any
+S3-compatible bucket (R2 in staging and production) with the AWS SDK, and its read links are presigned. `local` writes to
+a git-ignored folder (`apps/server/.storage`), and its read links point at the API's own `GET /v1/files`, signed with
+HMAC-SHA256 (`STORAGE_SIGNING_SECRET`) and expiring like a presigned link, so code and tests behave the same with either.
+Switching is the flag plus the `S3_` keys. Outside local development the server refuses to start unless the driver is
+`s3` with every key, as it does without `RESEND_KEY`, so files can never land on the VPS's disk.
+
+What we gave up: development doesn't exercise R2 itself (only the s3 driver's configuration and presigning are tested,
+offline), and a developer needs one more secret in `.env`. MinIO in `infra/` was the alternative; it's another container
+for something a folder does.
+
 ---
 
 ## Data model
