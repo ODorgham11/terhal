@@ -334,6 +334,227 @@
           "createdAt",
           "admin"
         ]
+      },
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "UNVERIFIED",
+              "ACTIVE",
+              "SUSPENDED",
+              "DELETED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "phone",
+          "email",
+          "status"
+        ]
+      },
+      "CustomerSignUp": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "phone": {
+            "type": "string",
+            "example": "+201001234567"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 72,
+            "pattern": "[a-z]"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone",
+          "email",
+          "password"
+        ]
+      },
+      "CustomerVerify": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913"
+          }
+        },
+        "required": [
+          "email",
+          "code"
+        ]
+      },
+      "CustomerEmail": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "CustomerSignIn": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The customer's email or phone number.",
+            "example": "01001234567"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "identifier",
+          "password"
+        ]
+      },
+      "CustomerPasswordReset": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "From the emailed link."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 72,
+            "pattern": "[a-z]"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "Guest": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the guest session ends."
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone",
+          "email",
+          "verified",
+          "expiresAt"
+        ]
+      },
+      "GuestStart": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "phone": {
+            "type": "string",
+            "example": "+201001234567"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone",
+          "email"
+        ]
+      },
+      "GuestVerify": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913"
+          }
+        },
+        "required": [
+          "code"
+        ]
       }
     },
     "parameters": {}
@@ -1031,6 +1252,694 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/sign-up": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Create a customer account",
+        "description": "Creates an unverified account and emails a 6-digit code to confirm it with /v1/site/auth/verify. No session yet.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerSignUp"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created; a code is on its way",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ACCOUNT_ALREADY_EXISTS: the email or the phone number is taken.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/verify": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Confirm the account with the emailed code",
+        "description": "Activates the account and signs the customer in. A code lasts 10 minutes and takes 5 tries at most.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerVerify"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verified and signed in",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VERIFICATION_CODE_INVALID, VERIFICATION_CODE_EXPIRED (expired or tried too often: ask for a new one) or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/verify/resend": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Email a new code",
+        "description": "Replaces the previous code. Answers the same whether or not the email has an unverified account.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerEmail"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "A new code is on its way if the account needs one"
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/sign-in": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Sign in with an email or phone number and a password",
+        "description": "Sets the session cookies. An unverified account gets a fresh code and VERIFICATION_REQUIRED.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerSignIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS: the same for an unknown account and a wrong password.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "VERIFICATION_REQUIRED (a new code was emailed: continue with /v1/site/auth/verify) or ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/refresh": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Renew the session cookies",
+        "description": "Uses the refresh cookie and rotates it. Send one refresh at a time.",
+        "security": [
+          {
+            "customerCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "New cookies set",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_REFRESH_TOKEN: sign in again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/sign-out": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Sign out",
+        "description": "Ends the session the refresh cookie belongs to and clears the cookies. Always succeeds.",
+        "security": [
+          {
+            "customerCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Signed out"
+          }
+        }
+      }
+    },
+    "/v1/site/auth/session": {
+      "get": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "The signed in customer",
+        "security": [
+          {
+            "customerCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/password-reset/request": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Email a password reset link",
+        "description": "The link works once, for 1 hour. Answers the same whether or not the email has an account.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerEmail"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "A link is on its way if the email has an account"
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/password-reset/complete": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Set a new password from a reset link",
+        "description": "Signs the customer out everywhere. They then sign in with the new password.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerPasswordReset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password changed"
+          },
+          "400": {
+            "description": "PASSWORD_RESET_INVALID, PASSWORD_RESET_EXPIRED or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/guest": {
+      "post": {
+        "tags": [
+          "Guest"
+        ],
+        "summary": "Continue as a guest",
+        "description": "Starts a 30-day guest session (the cookie) and emails a 6-digit code to confirm it with /v1/site/guest/verify. Ends any guest session the browser already had.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuestStart"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Session started; a code is on its way",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The guest session cookie (httpOnly).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Guest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Guest"
+        ],
+        "summary": "The verified guest",
+        "security": [
+          {
+            "guestCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The guest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Guest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED: no live guest session; start again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "VERIFICATION_REQUIRED: verify the emailed code first.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/guest/verify": {
+      "post": {
+        "tags": [
+          "Guest"
+        ],
+        "summary": "Confirm the guest's details with the emailed code",
+        "description": "A code lasts 10 minutes and takes 5 tries at most. Verifying twice is harmless.",
+        "security": [
+          {
+            "guestCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuestVerify"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Guest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VERIFICATION_CODE_INVALID, VERIFICATION_CODE_EXPIRED (expired or tried too often: ask for a new one) or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED: no live guest session; start again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/guest/verify/resend": {
+      "post": {
+        "tags": [
+          "Guest"
+        ],
+        "summary": "Email a new code",
+        "description": "Replaces the previous code. Does nothing once the guest is verified.",
+        "security": [
+          {
+            "guestCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "A new code is on its way if the guest needs one"
+          },
+          "401": {
+            "description": "UNAUTHENTICATED: no live guest session; start again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/guest/sign-out": {
+      "post": {
+        "tags": [
+          "Guest"
+        ],
+        "summary": "End the guest session",
+        "description": "Ends the session and clears the cookie. Always succeeds.",
+        "security": [
+          {
+            "guestCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Signed out"
           }
         }
       }
