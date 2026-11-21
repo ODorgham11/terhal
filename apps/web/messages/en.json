@@ -71,6 +71,8 @@
       "CANNOT_TARGET_SELF": "You can't do this to your own account.",
       "LAST_ACTIVE_ADMIN": "You can't deactivate the last active admin.",
       "ADMIN_NOT_ACTIVE": "This admin isn't active.",
+      "LAST_TEAM_MANAGER": "Someone active has to keep the team permission.",
+      "ACCOUNT_DELETED": "This account was deleted.",
       "NETWORK_ERROR": "We couldn't reach the server. Check your connection and try again.",
       "UNEXPECTED_RESPONSE": "Something went wrong. Please try again."
     },

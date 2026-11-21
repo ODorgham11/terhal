@@ -42,12 +42,20 @@ export const errorCodes = [
   "TWO_FACTOR_RESET_EXPIRED",
 
   // Managing admins
-  // An admin acting on their own account where only another admin may (deactivating, resetting two-factor).
+  // Acting on your own account where only someone else may: an admin deactivating themselves or resetting their own
+  // two-factor, a staff member changing their own permissions, suspending or deleting themselves.
   "CANNOT_TARGET_SELF",
   // Deactivating the only active admin would leave nobody able to sign in to the admin panel.
   "LAST_ACTIVE_ADMIN",
   // The admin being acted on isn't active. Not ACCOUNT_NOT_ACTIVE, which means the signed in account itself.
   "ADMIN_NOT_ACTIVE",
+
+  // Managing staff and customers
+  // The change would leave no active staff member with the team permission, so nobody in the dashboard could manage the
+  // team again.
+  "LAST_TEAM_MANAGER",
+  // The staff member or customer being acted on was deleted, which is final.
+  "ACCOUNT_DELETED",
 ] as const;
 
 export type ErrorCode = (typeof errorCodes)[number];
