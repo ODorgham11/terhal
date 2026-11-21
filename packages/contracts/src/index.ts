@@ -7,6 +7,7 @@ export * from "./customer";
 export * from "./errors";
 export * from "./fields";
 export * from "./lists";
+export * from "./locale";
 export * from "./permissions";
 export * from "./problem";
 export * from "./search";
