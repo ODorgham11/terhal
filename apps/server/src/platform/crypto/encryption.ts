@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { env } from "../config/env";
 
 // Encrypts small secrets we need to read back later (like two-factor secrets), so a leaked database alone isn't enough
@@ -15,14 +15,6 @@ export const encrypt = (plaintext: string) => {
   return ["v1", iv, cipher.getAuthTag(), ciphertext]
     .map((part) => (typeof part === "string" ? part : part.toString("base64url")))
     .join(".");
-};
-
-// A link token the server can make again but the database alone can't: an HMAC of `message` under a key derived from
-// the encryption key for this `purpose` only. Stored as a hash plus whatever went into `message` (a random salt among
-// it), so a leaked database still opens nothing. Used for the driver report link, which staff can show again.
-export const keyedToken = (purpose: string, message: string) => {
-  const key = createHmac("sha256", env.TOTP_ENCRYPTION_KEY).update(`terhal:${purpose}`).digest();
-  return createHmac("sha256", key).update(message).digest("base64url");
 };
 
 export const decrypt = (value: string) => {

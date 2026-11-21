@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { decrypt, encrypt, keyedToken } from "../../src/platform/crypto/encryption";
+import { decrypt, encrypt } from "../../src/platform/crypto/encryption";
 import { signAccessToken, verifyAccessToken } from "../../src/platform/crypto/jwt";
 import { compare, compareAgainstNothing, hash } from "../../src/platform/crypto/passwords";
-import { generateToken, hashToken } from "../../src/platform/crypto/tokens";
+import { generateToken, hashToken, keyedToken } from "../../src/platform/crypto/tokens";
 import { createTotpSecret, verifyTotp } from "../../src/platform/crypto/totp";
 import { totpCode } from "../support/factories";
 
@@ -18,13 +18,6 @@ describe("encryption", () => {
     const parts = encrypt("secret").split(".");
     parts[3] = Buffer.from("tampered").toString("base64url");
     expect(() => decrypt(parts.join("."))).toThrow();
-  });
-
-  it("makes keyed tokens again from the same message, and different ones per purpose", () => {
-    expect(keyedToken("report-link", "a")).toBe(keyedToken("report-link", "a"));
-    expect(keyedToken("report-link", "a")).not.toBe(keyedToken("report-link", "b"));
-    expect(keyedToken("report-link", "a")).not.toBe(keyedToken("other", "a"));
-    expect(keyedToken("report-link", "a")).toMatch(/^[\w-]{43}$/);
   });
 });
 
@@ -77,5 +70,14 @@ describe("access tokens", () => {
     await expect(verifyAccessToken("admin", token)).rejects.toMatchObject({
       code: "UNAUTHENTICATED",
     });
+  });
+});
+
+describe("keyed tokens", () => {
+  it("makes the same token again from the same secret and message, and a different one otherwise", () => {
+    expect(keyedToken("secret", "a")).toBe(keyedToken("secret", "a"));
+    expect(keyedToken("secret", "a")).not.toBe(keyedToken("secret", "b"));
+    expect(keyedToken("secret", "a")).not.toBe(keyedToken("other", "a"));
+    expect(keyedToken("secret", "a")).toMatch(/^[\w-]{43}$/);
   });
 });

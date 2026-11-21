@@ -1,8 +1,7 @@
 import type { Locale, ReportLink } from "@terhal/contracts";
 import type { Prisma, Trip } from "../../../../generated/prisma/client";
 import { env } from "../../../platform/config/env";
-import { keyedToken } from "../../../platform/crypto/encryption";
-import { generateToken, hashToken } from "../../../platform/crypto/tokens";
+import { generateToken, hashToken, keyedToken } from "../../../platform/crypto/tokens";
 import { prisma } from "../../../platform/db/prisma";
 import { AppError } from "../../../platform/errors/app-error";
 import {
@@ -19,10 +18,8 @@ import { tripNotFound } from "./shared";
 // hash (to find the trip from it) and the salt. Assigning another driver clears the columns (assignment.ts), and a new
 // link is issued straight after (onDriverChanged).
 
-const PURPOSE = "report-link";
-
 const tokenFor = (tripId: string, driverId: string, salt: string) =>
-  keyedToken(PURPOSE, reportTokenMessage(tripId, driverId, salt));
+  keyedToken(env.REPORT_LINK_SECRET, reportTokenMessage(tripId, driverId, salt));
 
 // The columns of a fresh link for this trip and driver; any earlier link stops working.
 export const newReportLink = (trip: { id: string; pickupDate: Date }, driverId: string) => {
