@@ -94,7 +94,18 @@ const forEvent = (event: EventNotice, trip: TripFacts): Planned => {
       return { booker: "TRIP_COMPLETED", staff: null };
     case tripEventActions.REPORT_SUBMITTED:
       return { booker: null, staff: "REPORT_SUBMITTED" };
-    default:
+    // Nobody is told of these. A changed pickup, an unassignment or a start moves the reminders instead.
+    case tripEventActions.UPDATED:
+    case tripEventActions.UNASSIGNED:
+    case tripEventActions.STARTED:
+    case tripEventActions.START_UNDONE:
+    case tripEventActions.ENDED:
+    case tripEventActions.REOPENED:
+    case tripEventActions.REPORT_LINK_ISSUED:
+    case tripEventActions.REPORT_EDITED:
+    case tripEventActions.PAYMENT_RECORDED:
+    case tripEventActions.LINKED:
+    case tripEventActions.UNLINKED:
       return none;
   }
 };
