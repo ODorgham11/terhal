@@ -2,6 +2,7 @@
 // app can use them without Hono. Exported as TypeScript: the server bundles it (tsup) and Next transpiles it.
 export * from "./admin";
 export * from "./audit";
+export * from "./cars";
 export * from "./customer";
 export * from "./errors";
 export * from "./fields";
