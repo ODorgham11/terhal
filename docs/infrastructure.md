@@ -290,6 +290,11 @@ later. The database does not move.
 
 ## 8. Open items
 
+- **Wipe the staging and production databases before their next deploy.**
+  The domain migrations were edited after both had applied them (the schema
+  rebuild of 2026-11-21, see `docs/architecture.md`, Migrations), and
+  `prisma migrate deploy` doesn't re-run an applied migration. Decided to do
+  it later, before the release that brings the new schema.
 - Hostinger renewal on 2026-12-15: decide before then.
 - The repo is public; confirm that is intended for client work.
 - No uptime monitoring or alerting on the VPS yet.
