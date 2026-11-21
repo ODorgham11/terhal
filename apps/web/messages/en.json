@@ -1,0 +1,15 @@
+{
+  "common": {
+    "appName": "Terhal"
+  },
+  "errors": {},
+  "site": {
+    "title": "Terhal"
+  },
+  "staff": {
+    "title": "Staff dashboard"
+  },
+  "admin": {
+    "title": "Admin panel"
+  }
+}
