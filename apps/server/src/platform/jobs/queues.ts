@@ -7,6 +7,12 @@ export interface JobData {
   email: { to: string; subject: string; html: string };
   // The trips module's scheduled jobs (expire-pending-trips, advance-overdue-trips), told apart by the job's name.
   trips: Record<string, never>;
+  // The notifications module's jobs, told apart by the job's name: `deliver` sends one delivery row, `remind` checks a
+  // trip's reminder when it's due, and the scheduled `sweep-notifications` queues what the outbox holds.
+  notifications:
+    | { deliveryId: string }
+    | { tripId: string; kind: string; dueAt: string }
+    | Record<string, never>;
 }
 
 export type QueueName = keyof JobData;
@@ -16,4 +22,5 @@ const connection = createQueueConnection();
 export const queues = {
   email: new Queue<JobData["email"]>("email", { connection }),
   trips: new Queue<JobData["trips"]>("trips", { connection }),
+  notifications: new Queue<JobData["notifications"]>("notifications", { connection }),
 } satisfies { [K in QueueName]: Queue<JobData[K]> };
