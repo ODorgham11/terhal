@@ -121,6 +121,7 @@ const toEvent = (
       staff: { select: { firstName: true; lastName: true } };
       customer: { select: { firstName: true; lastName: true } };
       guestSession: { select: { firstName: true; lastName: true } };
+      driver: { select: { firstName: true; lastName: true } };
     };
   }>,
 ): TripEvent => {
@@ -130,7 +131,9 @@ const toEvent = (
       ? { type: "CUSTOMER", id: row.customerId, name: name(row.customer) }
       : row.guestSessionId
         ? { type: "GUEST", id: row.guestSessionId, name: name(row.guestSession) }
-        : { type: "SYSTEM", id: null, name: row.system ?? "" };
+        : row.driverId
+          ? { type: "DRIVER", id: row.driverId, name: name(row.driver) }
+          : { type: "SYSTEM", id: null, name: row.system ?? "" };
   return {
     id: row.id,
     action: row.action as TripEventAction,
@@ -155,7 +158,12 @@ export const getTrip = async (id: string): Promise<TripDetail> => {
     prisma.tripEvent.findMany({
       where: { tripId: id },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-      include: { staff: actorName, customer: actorName, guestSession: actorName },
+      include: {
+        staff: actorName,
+        customer: actorName,
+        guestSession: actorName,
+        driver: actorName,
+      },
     }),
     row.previousTripId
       ? prisma.trip.findUnique({ where: { id: row.previousTripId }, select: linkSelect })
