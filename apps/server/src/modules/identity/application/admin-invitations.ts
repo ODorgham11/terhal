@@ -10,6 +10,7 @@ import { AppError } from "../../../platform/errors/app-error";
 import { logger } from "../../../platform/logger/logger";
 import { recordAudit } from "../../audit/index";
 import { INVITATION_LIFETIME_MS } from "../domain/policy";
+import { adminInvitationEmail } from "./admin-emails";
 
 const invalid = () =>
   new AppError({
@@ -72,15 +73,6 @@ export const inviteFirstAdmin = async (email: string) => {
   });
 };
 
-const invitationEmail = (link: string, expiresAt: Date) =>
-  [
-    "You've been invited to join Terhal as an admin.",
-    "",
-    `Create your account here: ${link}`,
-    "",
-    `This link can only be used once and expires on ${expiresAt.toUTCString()}. If you weren't expecting this invitation, you can ignore this email.`,
-  ].join("\n");
-
 // Emails the link and records it. Nobody received a link that failed to send, so it's revoked straight away and only a
 // delivered invitation is recorded as sent.
 const deliverInvitation = async (
@@ -93,11 +85,8 @@ const deliverInvitation = async (
   const link = `${origins.admin}/invite?token=${token}`;
 
   try {
-    await sendEmail(
-      email,
-      "You're invited to join Terhal as an admin",
-      invitationEmail(link, expiresAt),
-    );
+    const { subject, text } = adminInvitationEmail(link, expiresAt);
+    await sendEmail(email, subject, text);
   } catch (error) {
     await prisma.adminInvitation.update({
       where: { id: invitationId },
