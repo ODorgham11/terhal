@@ -17,6 +17,7 @@ import {
   siteLocationRoutes,
   staffLocationRoutes,
 } from "../modules/location/index";
+import { tripClassRoutes } from "../modules/pricing/index";
 import { env, origins, type Audience } from "../platform/config/env";
 import {
   ADMIN_COOKIE_AUTH,
@@ -66,7 +67,8 @@ const v1 = createRouter()
   .route("/", guestRoutes)
   .route("/", adminLocationRoutes)
   .route("/", staffLocationRoutes)
-  .route("/", siteLocationRoutes);
+  .route("/", siteLocationRoutes)
+  .route("/", tripClassRoutes);
 
 export const routes = router.route("/health", health).route("/v1", v1);
 
