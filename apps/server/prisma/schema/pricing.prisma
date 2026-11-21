@@ -1,0 +1,21 @@
+// The fixed price for one direction of a route, per trip class and car body. Only an estimate shown to
+// customers and staff while booking; the trip's own totalPrice is what's charged.
+model Pricing {
+  id String @id @default(cuid())
+
+  from   Location @relation("PricingFrom", fields: [fromId], references: [id])
+  fromId String
+  to     Location @relation("PricingTo", fields: [toId], references: [id])
+  toId   String
+
+  class   TripClass @relation(fields: [classId], references: [id])
+  classId String
+  car     CarBody
+
+  price Decimal @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([fromId, toId, classId, car])
+}

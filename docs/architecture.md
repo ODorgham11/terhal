@@ -8,11 +8,11 @@ migration.
 - **Correctness first.** No lost bookings, no double-sold seats, no session that outlives its rules. Postgres handles a
   single company's load easily, so the risk is in query shape and concurrency, not traffic.
 - **Postgres is the source of truth.** Every invariant the database can hold is enforced there (CHECKs, unique and
-  partial indexes, foreign keys, triggers). Redis holds nothing that can't be rebuilt.
+  partial indexes, foreign keys, triggers such as the append-only audit log). Redis holds nothing that can't be rebuilt.
 - **Assume every dependency fails.** Redis, the email provider, the network, a deploy halfway through. Each failure must
   be detected, contained and recoverable without losing data.
-- **Write decisions down.** Significant decisions get a short ADR in [`docs/adr/`](adr/): the context, the decision, and
-  what we gave up.
+- **Write decisions down.** Significant decisions get an entry in [`decisions.md`](decisions.md): the context, the
+  decision, and what we gave up.
 
 ## Non-goals
 
@@ -20,8 +20,8 @@ migration.
 | ------------------ | ------------------------------------------------------------------------------------------------ |
 | Microservices      | One team, one database. They'd turn function calls into network failures and take away transactions. |
 | Multi-tenancy      | Terhal serves one company. Rehletak was the multi-tenant version. |
-| Kubernetes         | One VPS running Docker Compose is enough until it isn't ([ADR 0001](adr/0001-one-vps.md)).        |
-| A generated client | The web app is the only client and ships with the API, so Hono RPC types it ([ADR 0002](adr/0002-rpc-and-openapi.md)). |
+| Kubernetes         | One VPS running Docker Compose is enough until it isn't ([why one VPS](infrastructure.md#why-one-vps-decided-2026-11-02)). |
+| A generated client | The web app is the only client and ships with the API, so Hono RPC types it ([why](#why-rpc-and-not-a-generated-client-decided-2026-11-02)). |
 
 ## Layout
 
@@ -36,7 +36,7 @@ tooling/
   eslint/       the shared, type-aware ESLint config
 infra/          local Postgres and Redis (Docker Compose)
 deploy/         the VPS: one Compose stack per environment, the edge Caddy, bootstrap and deploy scripts
-docs/           this file and the ADRs
+docs/           this file, infrastructure.md (where it runs) and decisions.md (why it's built this way)
 ```
 
 ## The server: a modular monolith
@@ -44,7 +44,9 @@ docs/           this file and the ADRs
 ```
 apps/server/src/
   modules/
-    <module>/       one folder per domain (none yet), see "Adding a module"
+    identity/       admin invitations, sign in with two-factor, sessions (staff and customers join here)
+    audit/          the append-only audit log and the admin panel's view of it
+    ...             fleet, trips, pricing, locations, notifications, as they're ported
   platform/         config, db, redis, crypto, email, errors, http, rate limits, logging, jobs, lifecycle
   http/             composition root: global middleware, health, mounts each module's routes under /v1
   app.ts worker.ts  process entry points
@@ -55,7 +57,7 @@ apps/server/src/
   - `http` declares its routes (`createRoute` from `@hono/zod-openapi`), validates input against
     `@terhal/contracts` schemas and serializes output.
   - `application` holds the use cases. They own transactions.
-  - `domain` holds pure functions and rules. No IO, so they're tested on their own.
+  - `domain` holds pure functions and rules, e.g. session lifetimes. No IO, so they're tested on their own.
 - Modules talk through each other's public `index.ts`, never through each other's tables or internals.
 - `eslint-plugin-boundaries` enforces this in `pnpm lint` (`apps/server/eslint.config.js`):
   - another module is reachable only through its `index.ts`, and a module's own layers never import that `index.ts`;
@@ -78,10 +80,23 @@ apps/server/src/
   - `apps/server/openapi.json` is the committed copy. The contract test fails when the API changes it; after an intended
     change, regenerate it with `pnpm --filter @terhal/server test -u` and commit it with the change, so every API change
     shows up in review.
-  - The web app calls the API through `hc<AppType>` (`apps/web/lib/api.ts`), e.g. `api.v1.admin.session.$get()`.
+  - The web app calls the API through `hc<AppType>` (`apps/web/lib/api.ts`), e.g. `api.v1.admin.auth.session.$get()`.
     Module routers are chained (`.openapi(...).openapi(...)`) so their types carry through.
 - Single resources come back as the object itself; lists as `{ data, nextCursor }`, never a bare array, so fields can be
   added later.
+
+### Why RPC and not a generated client (decided 2026-11-02)
+
+A common way to type an API's clients is to generate them from a committed OpenAPI document, which pays off when clients
+such as mobile apps stay on old versions in the wild. Terhal's only client is its own web app, deployed with the API, and
+it was already typed through Hono RPC. We still wanted API documentation and a reviewable contract, which
+`@hono/zod-openapi` gives from the same route declarations, so there is no generated client package.
+
+What we gave up:
+
+- The web app type checks against the server's source, so server imports can't use an `@/` path alias.
+- Module routers must stay chained for their types to carry through, which constrains how routes are written.
+- Should a second client appear (a mobile app, say), it would need a client generated from the committed document.
 
 ## Errors
 
@@ -99,10 +114,31 @@ apps/server/src/
   JWT secret, so a token from one can never be used as another. The API accepts each audience's routes only from its
   own origin (CORS plus an Origin check on unsafe methods), so a bug on the customer site can't act through an admin's
   session.
-- Auth cookies are httpOnly, Secure, SameSite=Lax and host-only on the API, with paths scoped to the routes that read
-  them.
-- Access tokens live 15 minutes (`platform/crypto/jwt.ts`); admins will sign in with a password and then a TOTP code
-  (`platform/crypto/totp.ts`).
+- Auth cookies are httpOnly, Secure, SameSite=Lax and host-only on the API. Each audience's cookies are scoped to its
+  prefix (`/v1/admin`, `/v1/staff`, `/v1/site`), and the refresh token (and the admin's sign in challenge) only reach
+  `<prefix>/auth`.
+- An access token names its session (`sid`), and every signed in request loads that session and its account in one
+  query. Signing out, revoking a session, resetting a password, a deactivation or a permission change take effect on the
+  next request, not when the token expires.
+- Admins sign in with a password and then a TOTP code; the access token lives 15 minutes, a session at most 12 hours,
+  and every request re-checks the admin is still active.
+- After the first (seeded) admin, every admin is invited by another. Actions that matter most (inviting an admin,
+  changing a password, deactivating an admin, resetting their two-factor) ask for the acting admin's current TOTP code
+  again, used up like a sign in code so it can't be replayed; failures are audited. A forgotten password is reset with
+  an emailed link (15 minutes, single use) plus a current TOTP code, and ends every session; changing it while signed
+  in ends every other session. An admin can list and end their own sessions.
+- Admins manage each other: nobody can deactivate themselves, and the last active admin can't be deactivated (the
+  active admins' rows are locked, so two admins deactivating each other at once can't leave none). An admin who lost
+  their authenticator has it reset by another admin: their sessions end and they're emailed a link (48 hours) to set up
+  a new one, confirmed with their password and a code from it, which signs them in.
+- Staff sign in with a password only. A session lasts 7 days from its last refresh and 30 days at most, on up to 5
+  devices; every request re-checks the staff member is active and reloads their permissions. Resetting a password ends
+  every session.
+- Customers sign up with a password and confirm their email with a 6-digit code before their first session. A session
+  lasts 30 days from its last refresh and 180 days at most, on up to 10 devices. They sign in with their email or phone.
+- Guests book without an account: a session cookie (30 days, never extended) that's only usable once they confirm the
+  code emailed to them.
+- Everything security relevant is written to the audit log, in the same transaction as the change it records.
 
 ## Failure handling
 
@@ -116,8 +152,23 @@ apps/server/src/
 | Redis down | Rate limits on sign in fail closed: an unreachable Redis must not mean unlimited password guesses. |
 | Client IPs | Rate limits trust only the header named by `CLIENT_IP_HEADER`, which the edge Caddy overwrites. Never publish the server's port. |
 | Neon     | `DATABASE_URL` is the pooled URL (PgBouncer, transaction mode), so no session state: no session advisory locks. Migrations use the direct URL. The API and the database must be in the same region. |
-| Migrations | Expand and contract: a deploy never breaks the code that's still running. They run in their own container before the new version starts (`deploy/deploy.sh`), never at boot. |
+| Migrations | Expand and contract once the client's data is in production (see [Migrations](#migrations)): a deploy never breaks the code that's still running. They run in their own container before the new version starts (`deploy/deploy.sh`), never at boot. |
 | Rollback | Because migrations stay backward compatible, a rollback is a redeploy of the previous images (README, "Deploys"). |
+
+## Migrations
+
+- **One migration per domain**, named after it and applied in dependency order: `20261022010000_admin`,
+  `…030000_locations`, `…040000_staff`, `…050000_customers`, `…060000_fleet`, `…070000_trips`, `…080000_pricing`,
+  `…090000_notifications`, `…100000_analytics`. Models live in the matching file under `prisma/schema/`.
+- **Everything a domain's tables need lives in its migration:** tables, indexes and foreign keys as Prisma generates them,
+  then the rules Prisma can't express (CHECK constraints, triggers) at the end, each with a comment saying why. They're
+  named `<Table>_<rule>`, e.g. `Trip_one_booker` or `Location_shape`. No add-on migrations that only add a constraint.
+- **Until the client's data is in production, a schema change is folded into its domain's migration**, not added as a new
+  one. `prisma migrate deploy` never re-runs a migration it has already applied, so after editing one, staging and
+  production have to be wiped before the next deploy (track it under Open items in [infrastructure.md](infrastructure.md)).
+  Once the client's data is live this stops: every change is a new migration, expand and contract.
+- **Check for drift** after every schema change: apply the migrations to an empty database, then
+  `prisma migrate diff --from-config-datasource --to-schema prisma/schema --script` must print an empty migration.
 
 ## Tests
 

@@ -74,6 +74,32 @@ Only Caddy publishes ports. Nothing reaches the server or web containers
 except through it; that is what makes the client IP header trustworthy for
 rate limits.
 
+### Why one VPS (decided 2026-11-02)
+
+Terhal started on Render (API, worker, Redis) and Vercel (web), on free
+plans. Free web services sleep after 15 minutes, the free Key Value instance
+keeps nothing across restarts, and the worker has no free plan, so the parts
+Terhal needs most were the ones being put off. Terhal is single-tenant: one
+company's traffic.
+
+So everything except the database runs in Docker on one VPS: per environment
+(staging, main) a Compose stack with the server, the worker, the web app and
+two Redis containers, behind one shared Caddy that terminates TLS for every
+host. The database stays on Neon, for backups, point-in-time restore and
+branches. GitHub Actions builds the images, pushes them to GHCR and deploys
+over SSH once CI passes (`deploy/`, `.github/workflows/deploy.yml`).
+
+What we gave up:
+
+- Operations are ours: OS updates, the firewall, monitoring, restarts.
+- One box is a single point of failure for the site, the API and the worker.
+- Deploys recreate containers, so there are a few seconds of downtime per
+  deploy.
+
+When an hour of downtime starts to cost real money, add a second box behind a
+load balancer. The server is stateless (sessions in Postgres, limits and
+queues in Redis), so that needs no rewrite.
+
 ---
 
 ## 2. The pieces
@@ -264,6 +290,14 @@ later. The database does not move.
 
 ## 8. Open items
 
+- **Add `STAFF_SECRET` and `CUSTOMER_SECRET` to both `app.env` files**
+  (`/opt/terhal/{staging,main}/app.env`, `openssl rand -base64 32` each)
+  before the next deploy: the server refuses to start without them.
+- **Wipe the staging and production databases before their next deploy.**
+  The domain migrations were edited after both had applied them (the schema
+  rebuild of 2026-11-21, see `docs/architecture.md`, Migrations), and
+  `prisma migrate deploy` doesn't re-run an applied migration. Decided to do
+  it later, before the release that brings the new schema.
 - Hostinger renewal on 2026-12-15: decide before then.
 - The repo is public; confirm that is intended for client work.
 - No uptime monitoring or alerting on the VPS yet.

@@ -5,9 +5,4194 @@
     "version": "1"
   },
   "components": {
-    "schemas": {},
+    "securitySchemes": {
+      "adminCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "admin_access",
+        "description": "Set by signing in to the admin panel (httpOnly)."
+      },
+      "staffCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "staff_access",
+        "description": "Set by signing in to the dashboard (httpOnly)."
+      },
+      "customerCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "customer_access",
+        "description": "Set by a customer signing in (httpOnly)."
+      },
+      "guestCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "guest_session",
+        "description": "Set by verifying a guest's contact details (httpOnly)."
+      }
+    },
+    "schemas": {
+      "AdminInvitationPreview": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "email",
+          "expiresAt"
+        ],
+        "description": "What the invitee sees before accepting."
+      },
+      "Problem": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "BAD_REQUEST",
+              "VALIDATION_FAILED",
+              "NOT_FOUND",
+              "FORBIDDEN",
+              "PAYLOAD_TOO_LARGE",
+              "INTERNAL_ERROR",
+              "SERVICE_UNAVAILABLE",
+              "RATE_LIMITED",
+              "UNTRUSTED_ORIGIN",
+              "UNAUTHENTICATED",
+              "ACCESS_TOKEN_EXPIRED",
+              "INVALID_CREDENTIALS",
+              "ACCOUNT_NOT_ACTIVE",
+              "INVALID_REFRESH_TOKEN",
+              "VERIFICATION_REQUIRED",
+              "ACCOUNT_ALREADY_EXISTS",
+              "INVITATION_INVALID",
+              "INVITATION_EXPIRED",
+              "PASSWORD_RESET_INVALID",
+              "PASSWORD_RESET_EXPIRED",
+              "VERIFICATION_CODE_INVALID",
+              "VERIFICATION_CODE_EXPIRED",
+              "TOTP_SETUP_REQUIRED",
+              "TOTP_CODE_INVALID",
+              "TOTP_CHALLENGE_INVALID",
+              "TWO_FACTOR_RESET_INVALID",
+              "TWO_FACTOR_RESET_EXPIRED",
+              "CANNOT_TARGET_SELF",
+              "LAST_ACTIVE_ADMIN",
+              "ADMIN_NOT_ACTIVE"
+            ],
+            "example": "VALIDATION_FAILED"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Quote it to support."
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code",
+          "detail"
+        ],
+        "additionalProperties": {},
+        "description": "An error. Extra members depend on the code."
+      },
+      "TotpSetup": {
+        "type": "object",
+        "properties": {
+          "uri": {
+            "type": "string",
+            "description": "The otpauth:// link to show as a QR code."
+          },
+          "secret": {
+            "type": "string",
+            "description": "The same secret, for typing in by hand."
+          }
+        },
+        "required": [
+          "uri",
+          "secret"
+        ]
+      },
+      "AdminInvitationToken": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "From the emailed link."
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "Admin": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "email",
+          "status"
+        ]
+      },
+      "AcceptAdminInvitation": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "From the emailed link."
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 72,
+            "pattern": "[a-z]"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913"
+          }
+        },
+        "required": [
+          "token",
+          "firstName",
+          "lastName",
+          "password",
+          "code"
+        ]
+      },
+      "AdminChallenge": {
+        "type": "object",
+        "properties": {
+          "twoFactorRequired": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "twoFactorRequired"
+        ],
+        "description": "Password right; send a code to /auth/verify."
+      },
+      "AdminSignIn": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "AdminVerify": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "RequestAdminPasswordReset": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "CompleteAdminPasswordReset": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "From the emailed link."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 72,
+            "pattern": "[a-z]"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913"
+          }
+        },
+        "required": [
+          "token",
+          "password",
+          "code"
+        ]
+      },
+      "ChangeAdminPassword": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "minLength": 1
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 72,
+            "pattern": "[a-z]"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913",
+            "description": "A current code from your authenticator app."
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword",
+          "code"
+        ]
+      },
+      "AdminSession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ipAddress": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "userAgent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "current": {
+            "type": "boolean",
+            "description": "The session making this request."
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "expiresAt",
+          "ipAddress",
+          "userAgent",
+          "current"
+        ]
+      },
+      "TwoFactorResetToken": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "From the emailed link."
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ConfirmTwoFactorReset": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "From the emailed link."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913"
+          }
+        },
+        "required": [
+          "token",
+          "password",
+          "code"
+        ]
+      },
+      "AdminInvitationSent": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "email",
+          "expiresAt"
+        ]
+      },
+      "InviteAdmin": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913",
+            "description": "A current code from your authenticator app."
+          }
+        },
+        "required": [
+          "email",
+          "code"
+        ]
+      },
+      "AdminInvitation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "invitedBy": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "description": "Null for the first admin's invitation, sent before any admin existed."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "invitedBy",
+          "createdAt",
+          "expiresAt"
+        ],
+        "description": "A pending invitation: not accepted, revoked or expired."
+      },
+      "AdminAccount": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          },
+          "twoFactorEnabled": {
+            "type": "boolean",
+            "description": "False while a two-factor reset waits for the admin to set up a new authenticator."
+          },
+          "lastLoginAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "email",
+          "status",
+          "twoFactorEnabled",
+          "lastLoginAt",
+          "createdAt"
+        ]
+      },
+      "AdminStepUp": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913",
+            "description": "A current code from your authenticator app."
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "StaffInvitationSent": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "email",
+          "expiresAt"
+        ]
+      },
+      "AdminInviteStaff": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/StaffPermissions"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "StaffPermissions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/StaffPermission"
+        },
+        "default": [
+          "trips",
+          "fleet",
+          "pricing",
+          "customers",
+          "team",
+          "analytics"
+        ]
+      },
+      "StaffPermission": {
+        "type": "string",
+        "enum": [
+          "trips",
+          "fleet",
+          "pricing",
+          "customers",
+          "team",
+          "analytics"
+        ]
+      },
+      "AuditLog": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "admin.invitation.sent",
+              "admin.invitation.revoked",
+              "admin.invitation.totp_issued",
+              "admin.invitation.accept_failed",
+              "admin.invitation.accepted",
+              "admin.totp.enabled",
+              "admin.sign_in.password_failed",
+              "admin.sign_in.password_passed",
+              "admin.sign_in.totp_failed",
+              "admin.sign_in.blocked",
+              "admin.sign_in.succeeded",
+              "admin.session.revoked",
+              "admin.sign_out",
+              "admin.staff.invited",
+              "admin.step_up.failed",
+              "admin.password.reset_requested",
+              "admin.password.reset",
+              "admin.password.changed",
+              "admin.account.deactivated",
+              "admin.account.reactivated",
+              "admin.totp.reset",
+              "admin.totp.reset_issued",
+              "admin.totp.reset_confirm_failed"
+            ]
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "entityId": {
+            "type": "string"
+          },
+          "ipAddress": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "before": {},
+          "after": {},
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "admin": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "firstName",
+              "lastName",
+              "email"
+            ],
+            "description": "Null for the system and for sign in attempts on unknown emails."
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "entityType",
+          "entityId",
+          "ipAddress",
+          "createdAt",
+          "admin"
+        ]
+      },
+      "Staff": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED",
+              "DELETED"
+            ]
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffPermission"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "email",
+          "phone",
+          "status",
+          "permissions"
+        ]
+      },
+      "StaffSignIn": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RequestStaffPasswordReset": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "CompleteStaffPasswordReset": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "From the emailed link."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 72,
+            "pattern": "[a-z]"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "StaffInvitationPreview": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffPermission"
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "email",
+          "permissions",
+          "expiresAt"
+        ],
+        "description": "What the invitee sees before accepting."
+      },
+      "AcceptStaffInvitation": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "From the emailed link."
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "phone": {
+            "type": "string",
+            "example": "+201001234567"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 72,
+            "pattern": "[a-z]"
+          }
+        },
+        "required": [
+          "token",
+          "firstName",
+          "lastName",
+          "password"
+        ]
+      },
+      "InviteStaff": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/StaffPermissions"
+          }
+        },
+        "required": [
+          "email",
+          "permissions"
+        ]
+      },
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "UNVERIFIED",
+              "ACTIVE",
+              "SUSPENDED",
+              "DELETED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "phone",
+          "email",
+          "status"
+        ]
+      },
+      "CustomerSignUp": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "phone": {
+            "type": "string",
+            "example": "+201001234567"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 72,
+            "pattern": "[a-z]"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone",
+          "email",
+          "password"
+        ]
+      },
+      "CustomerVerify": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913"
+          }
+        },
+        "required": [
+          "email",
+          "code"
+        ]
+      },
+      "CustomerEmail": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "CustomerSignIn": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The customer's email or phone number.",
+            "example": "01001234567"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "identifier",
+          "password"
+        ]
+      },
+      "CustomerPasswordReset": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "From the emailed link."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 72,
+            "pattern": "[a-z]"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "Guest": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the guest session ends."
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone",
+          "email",
+          "verified",
+          "expiresAt"
+        ]
+      },
+      "GuestStart": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "phone": {
+            "type": "string",
+            "example": "+201001234567"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone",
+          "email"
+        ]
+      },
+      "GuestVerify": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      }
+    },
     "parameters": {}
   },
-  "paths": {},
+  "paths": {
+    "/v1/admin/invitations/lookup": {
+      "get": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Look up an invitation",
+        "description": "What the invitee sees before accepting. Doesn't use the invitation up.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "From the emailed link."
+            },
+            "required": true,
+            "description": "From the emailed link.",
+            "name": "token",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The invitation can be accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminInvitationPreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVITATION_INVALID or INVITATION_EXPIRED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/invitations/totp": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Get the invitee's authenticator secret",
+        "description": "Asking again returns the same secret, so an app that's already set up keeps working.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminInvitationToken"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Show the URI as a QR code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TotpSetup"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVITATION_INVALID or INVITATION_EXPIRED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/invitations/accept": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Create an admin account from an invitation",
+        "description": "Needs a current code from the authenticator set up with /v1/admin/invitations/totp.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptAdminInvitation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created and signed in",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admin"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVITATION_INVALID, INVITATION_EXPIRED, TOTP_SETUP_REQUIRED, TOTP_CODE_INVALID or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ACCOUNT_ALREADY_EXISTS",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/sign-in": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Check email and password",
+        "description": "Sets a 5-minute challenge cookie. Always followed by /v1/admin/auth/verify.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSignIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password right; ask for a code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminChallenge"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS: the same for an unknown email and a wrong password.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE or TOTP_SETUP_REQUIRED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/verify": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Finish signing in with an authenticator code",
+        "description": "Sets the session cookies. The session lasts 12 hours at most, however often it's refreshed.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminVerify"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admin"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "TOTP_CODE_INVALID or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "TOTP_CHALLENGE_INVALID: sign in again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/refresh": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Renew the session cookies",
+        "description": "Uses the refresh cookie and rotates it. Send one refresh at a time.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "New cookies set",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_REFRESH_TOKEN: sign in again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/sign-out": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Sign out",
+        "description": "Ends the session the refresh cookie belongs to and clears the cookies. Always succeeds.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Signed out"
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/session": {
+      "get": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "The signed in admin",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admin"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/password/reset/request": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Email a password reset link",
+        "description": "Always 202, whether or not the email belongs to an active admin. The link lasts 15 minutes, and a new request replaces it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestAdminPasswordReset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "If the email belongs to an active admin, a link is on its way"
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/password/reset/complete": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Choose a new password from a reset link",
+        "description": "Takes a current code from the admin's authenticator too, so the inbox alone isn't enough. Signs the admin out everywhere.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteAdminPasswordReset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password changed"
+          },
+          "400": {
+            "description": "PASSWORD_RESET_INVALID, PASSWORD_RESET_EXPIRED, TOTP_CODE_INVALID or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or TOTP_SETUP_REQUIRED while the admin's two-factor is being reset.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/password": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Change your password",
+        "description": "Takes the current password and a current authenticator code. Signs you out everywhere else; this session stays.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeAdminPassword"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password changed"
+          },
+          "400": {
+            "description": "TOTP_CODE_INVALID or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS: the current password is wrong. UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/sessions": {
+      "get": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "List your sessions",
+        "description": "Your active sessions, newest first, in one page. `current` marks this one.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Your active sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminSession"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "End one of your sessions",
+        "description": "Ending the current session also clears its cookies, like signing out.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Session ended"
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such active session of yours.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/sessions/all/revoke": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Sign out everywhere else",
+        "description": "Ends every session of yours except this one.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Every other session ended"
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/two-factor/setup": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Get a new authenticator secret after a two-factor reset",
+        "description": "Asking again returns the same secret, so an app that's already set up keeps working. Not accepted at sign in until confirmed.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorResetToken"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Show the URI as a QR code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TotpSetup"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "TWO_FACTOR_RESET_INVALID or TWO_FACTOR_RESET_EXPIRED or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/two-factor/confirm": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Confirm the new authenticator and sign in",
+        "description": "Needs the admin's password and a current code from the authenticator set up with /v1/admin/auth/two-factor/setup.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmTwoFactorReset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Two-factor set up and signed in",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admin"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "TWO_FACTOR_RESET_INVALID or TWO_FACTOR_RESET_EXPIRED, TOTP_SETUP_REQUIRED, TOTP_CODE_INVALID or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS: the password is wrong.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/invitations": {
+      "post": {
+        "tags": [
+          "Admin invitations"
+        ],
+        "summary": "Invite an admin",
+        "description": "Emails a link to the admin panel that lasts 48 hours. Inviting the same email again revokes its earlier links.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteAdmin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invitation sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminInvitationSent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "TOTP_CODE_INVALID or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE or TOTP_SETUP_REQUIRED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ACCOUNT_ALREADY_EXISTS: the email already belongs to an admin.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE: the email couldn't be sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Admin invitations"
+        ],
+        "summary": "List pending invitations",
+        "description": "The invitations not yet accepted, revoked or expired, newest first, in one page.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The pending invitations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminInvitation"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/invitations/{id}": {
+      "delete": {
+        "tags": [
+          "Admin invitations"
+        ],
+        "summary": "Revoke a pending invitation",
+        "description": "Its link stops working at once.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revoked"
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: unknown, or no longer pending.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/admins": {
+      "get": {
+        "tags": [
+          "Admins"
+        ],
+        "summary": "List admins",
+        "description": "Every admin, active or not, oldest first, in one page.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The admins",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminAccount"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/admins/{id}/deactivate": {
+      "post": {
+        "tags": [
+          "Admins"
+        ],
+        "summary": "Deactivate an admin",
+        "description": "Takes a current code from your authenticator. Signs the admin out everywhere at once. Deactivating an inactive admin changes nothing.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminStepUp"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Deactivated"
+          },
+          "400": {
+            "description": "CANNOT_TARGET_SELF, TOTP_CODE_INVALID or VALIDATION_FAILED. Deactivate yourself by asking another admin.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE or TOTP_SETUP_REQUIRED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no admin with this id.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "LAST_ACTIVE_ADMIN: nobody else would be able to sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/admins/{id}/reactivate": {
+      "post": {
+        "tags": [
+          "Admins"
+        ],
+        "summary": "Reactivate an admin",
+        "description": "They can sign in again. Reactivating an active admin changes nothing.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Reactivated"
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no admin with this id.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/admins/{id}/reset/two-factor": {
+      "post": {
+        "tags": [
+          "Admins"
+        ],
+        "summary": "Reset an admin's two-factor authentication",
+        "description": "Takes a current code from your authenticator. Their authenticator stops working and every session of theirs ends; they're emailed a link, valid 48 hours, to set up a new one.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminStepUp"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Reset, and the link sent"
+          },
+          "400": {
+            "description": "CANNOT_TARGET_SELF, TOTP_CODE_INVALID or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE or TOTP_SETUP_REQUIRED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no admin with this id.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ADMIN_NOT_ACTIVE: reactivate them first.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE: reset, but the email couldn't be sent. Reset again to send a new link.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/staff/invitations": {
+      "post": {
+        "tags": [
+          "Admin staff"
+        ],
+        "summary": "Invite a staff member",
+        "description": "Emails a link to the dashboard that lasts 7 days, with every permission unless told otherwise. Inviting the same email again revokes the earlier links.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminInviteStaff"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invitation sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffInvitationSent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ACCOUNT_ALREADY_EXISTS: the email already belongs to a staff member.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE: the email couldn't be sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/logs": {
+      "get": {
+        "tags": [
+          "Audit log"
+        ],
+        "summary": "Search the audit log",
+        "description": "Newest first by default. Pass `nextCursor` back as `cursor` for the next page.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "action",
+                "entityType"
+              ],
+              "default": "createdAt"
+            },
+            "required": false,
+            "name": "sort",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            },
+            "required": false,
+            "name": "order",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "admin.invitation.sent",
+                    "admin.invitation.revoked",
+                    "admin.invitation.totp_issued",
+                    "admin.invitation.accept_failed",
+                    "admin.invitation.accepted",
+                    "admin.totp.enabled",
+                    "admin.sign_in.password_failed",
+                    "admin.sign_in.password_passed",
+                    "admin.sign_in.totp_failed",
+                    "admin.sign_in.blocked",
+                    "admin.sign_in.succeeded",
+                    "admin.session.revoked",
+                    "admin.sign_out",
+                    "admin.staff.invited",
+                    "admin.step_up.failed",
+                    "admin.password.reset_requested",
+                    "admin.password.reset",
+                    "admin.password.changed",
+                    "admin.account.deactivated",
+                    "admin.account.reactivated",
+                    "admin.totp.reset",
+                    "admin.totp.reset_issued",
+                    "admin.totp.reset_confirm_failed"
+                  ]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "admin.invitation.sent",
+                      "admin.invitation.revoked",
+                      "admin.invitation.totp_issued",
+                      "admin.invitation.accept_failed",
+                      "admin.invitation.accepted",
+                      "admin.totp.enabled",
+                      "admin.sign_in.password_failed",
+                      "admin.sign_in.password_passed",
+                      "admin.sign_in.totp_failed",
+                      "admin.sign_in.blocked",
+                      "admin.sign_in.succeeded",
+                      "admin.session.revoked",
+                      "admin.sign_out",
+                      "admin.staff.invited",
+                      "admin.step_up.failed",
+                      "admin.password.reset_requested",
+                      "admin.password.reset",
+                      "admin.password.changed",
+                      "admin.account.deactivated",
+                      "admin.account.reactivated",
+                      "admin.totp.reset",
+                      "admin.totp.reset_issued",
+                      "admin.totp.reset_confirm_failed"
+                    ]
+                  }
+                }
+              ]
+            },
+            "required": false,
+            "name": "action",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "adminId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "system",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "entityType",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "entityId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": false,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": false,
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of logs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AuditLog"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/auth/sign-in": {
+      "post": {
+        "tags": [
+          "Staff auth"
+        ],
+        "summary": "Sign in with email and password",
+        "description": "Sets the session cookies. A session lasts 7 days from its last refresh and 30 days at most.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffSignIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Staff"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS: the same for an unknown email and a wrong password.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/auth/refresh": {
+      "post": {
+        "tags": [
+          "Staff auth"
+        ],
+        "summary": "Renew the session cookies",
+        "description": "Uses the refresh cookie and rotates it. Send one refresh at a time.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "New cookies set",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_REFRESH_TOKEN: sign in again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/auth/sign-out": {
+      "post": {
+        "tags": [
+          "Staff auth"
+        ],
+        "summary": "Sign out",
+        "description": "Ends the session the refresh cookie belongs to and clears the cookies. Always succeeds.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Signed out"
+          }
+        }
+      }
+    },
+    "/v1/staff/auth/session": {
+      "get": {
+        "tags": [
+          "Staff auth"
+        ],
+        "summary": "The signed in staff member",
+        "description": "Includes their permissions, so the dashboard can hide what they can't use.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The staff member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Staff"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/auth/password/reset/request": {
+      "post": {
+        "tags": [
+          "Staff auth"
+        ],
+        "summary": "Email a password reset link",
+        "description": "Always accepted, so it never reveals whether the email belongs to staff. The link lasts an hour, and asking again replaces it.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestStaffPasswordReset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "If the email belongs to an active staff member, a link is on its way"
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/auth/password/reset/complete": {
+      "post": {
+        "tags": [
+          "Staff auth"
+        ],
+        "summary": "Choose a new password",
+        "description": "Uses the link up and signs the staff member out everywhere.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteStaffPasswordReset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password changed; sign in with it"
+          },
+          "400": {
+            "description": "PASSWORD_RESET_INVALID, PASSWORD_RESET_EXPIRED or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/invitations/lookup": {
+      "get": {
+        "tags": [
+          "Staff invitations"
+        ],
+        "summary": "Look up an invitation",
+        "description": "What the invitee sees before accepting. Doesn't use the invitation up.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "From the emailed link."
+            },
+            "required": true,
+            "description": "From the emailed link.",
+            "name": "token",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The invitation can be accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffInvitationPreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVITATION_INVALID or INVITATION_EXPIRED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/invitations/accept": {
+      "post": {
+        "tags": [
+          "Staff invitations"
+        ],
+        "summary": "Create a staff account from an invitation",
+        "description": "The account gets the email and the permissions the invitation was sent with.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptStaffInvitation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created and signed in",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Staff"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVITATION_INVALID, INVITATION_EXPIRED or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ACCOUNT_ALREADY_EXISTS",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/invitations": {
+      "post": {
+        "tags": [
+          "Staff invitations"
+        ],
+        "summary": "Invite a colleague",
+        "description": "Needs the team permission. Emails a link that lasts 7 days; inviting the same email again revokes the earlier links.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteStaff"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invitation sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffInvitationSent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE or FORBIDDEN",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ACCOUNT_ALREADY_EXISTS: the email already belongs to a staff member.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE: the email couldn't be sent.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/sign-up": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Create a customer account",
+        "description": "Creates an unverified account and emails a 6-digit code to confirm it with /v1/site/auth/verify. No session yet.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerSignUp"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created; a code is on its way",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ACCOUNT_ALREADY_EXISTS: the email or the phone number is taken.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/verify": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Confirm the account with the emailed code",
+        "description": "Activates the account and signs the customer in. A code lasts 10 minutes and takes 5 tries at most.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerVerify"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verified and signed in",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VERIFICATION_CODE_INVALID, VERIFICATION_CODE_EXPIRED (expired or tried too often: ask for a new one) or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/verify/resend": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Email a new code",
+        "description": "Replaces the previous code. Answers the same whether or not the email has an unverified account.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerEmail"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "A new code is on its way if the account needs one"
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/sign-in": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Sign in with an email or phone number and a password",
+        "description": "Sets the session cookies. An unverified account gets a fresh code and VERIFICATION_REQUIRED.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerSignIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS: the same for an unknown account and a wrong password.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "VERIFICATION_REQUIRED (a new code was emailed: continue with /v1/site/auth/verify) or ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/refresh": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Renew the session cookies",
+        "description": "Uses the refresh cookie and rotates it. Send one refresh at a time.",
+        "security": [
+          {
+            "customerCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "New cookies set",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_REFRESH_TOKEN: sign in again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/sign-out": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Sign out",
+        "description": "Ends the session the refresh cookie belongs to and clears the cookies. Always succeeds.",
+        "security": [
+          {
+            "customerCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Signed out"
+          }
+        }
+      }
+    },
+    "/v1/site/auth/session": {
+      "get": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "The signed in customer",
+        "security": [
+          {
+            "customerCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/password/reset/request": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Email a password reset link",
+        "description": "The link works once, for 1 hour. Answers the same whether or not the email has an account.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerEmail"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "A link is on its way if the email has an account"
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/auth/password/reset/complete": {
+      "post": {
+        "tags": [
+          "Customer auth"
+        ],
+        "summary": "Set a new password from a reset link",
+        "description": "Signs the customer out everywhere. They then sign in with the new password.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerPasswordReset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Password changed"
+          },
+          "400": {
+            "description": "PASSWORD_RESET_INVALID, PASSWORD_RESET_EXPIRED or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/guest": {
+      "post": {
+        "tags": [
+          "Guest"
+        ],
+        "summary": "Continue as a guest",
+        "description": "Starts a 30-day guest session (the cookie) and emails a 6-digit code to confirm it with /v1/site/guest/verify. Ends any guest session the browser already had.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuestStart"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Session started; a code is on its way",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The guest session cookie (httpOnly).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Guest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Guest"
+        ],
+        "summary": "The verified guest",
+        "security": [
+          {
+            "guestCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The guest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Guest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED: no live guest session; start again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "VERIFICATION_REQUIRED: verify the emailed code first.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/guest/verify": {
+      "post": {
+        "tags": [
+          "Guest"
+        ],
+        "summary": "Confirm the guest's details with the emailed code",
+        "description": "A code lasts 10 minutes and takes 5 tries at most. Verifying twice is harmless.",
+        "security": [
+          {
+            "guestCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuestVerify"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Guest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VERIFICATION_CODE_INVALID, VERIFICATION_CODE_EXPIRED (expired or tried too often: ask for a new one) or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED: no live guest session; start again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/guest/verify/resend": {
+      "post": {
+        "tags": [
+          "Guest"
+        ],
+        "summary": "Email a new code",
+        "description": "Replaces the previous code. Does nothing once the guest is verified.",
+        "security": [
+          {
+            "guestCookie": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "A new code is on its way if the guest needs one"
+          },
+          "401": {
+            "description": "UNAUTHENTICATED: no live guest session; start again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/guest/sign-out": {
+      "post": {
+        "tags": [
+          "Guest"
+        ],
+        "summary": "End the guest session",
+        "description": "Ends the session and clears the cookie. Always succeeds.",
+        "security": [
+          {
+            "guestCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Signed out"
+          }
+        }
+      }
+    }
+  },
   "webhooks": {}
 }

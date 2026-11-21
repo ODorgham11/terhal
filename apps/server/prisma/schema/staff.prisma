@@ -1,0 +1,74 @@
+enum StaffStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+// An employee, signing in to the dashboard on dashboard.terhal.co.
+model Staff {
+  id String @id @default(cuid())
+
+  firstName String
+  lastName  String
+  phone     String?
+  status    StaffStatus @default(ACTIVE)
+
+  email String @unique
+
+  passwordHash String
+  permissions  Json
+
+  // Hash of the single-use token in the latest password reset link. Requesting a new link replaces it, so only the newest one works.
+  passwordResetHash      String?   @unique
+  passwordResetExpiresAt DateTime?
+
+  lastLoginAt DateTime?
+
+  sessions      StaffSession[]
+  invitations   StaffInvitation[]
+  trips         Trip[]
+  events        TripEvent[]
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StaffSession {
+  id String @id @default(cuid())
+
+  staff   Staff  @relation(fields: [staffId], references: [id])
+  staffId String
+
+  refreshToken String @unique
+
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  ipAddress String?
+  userAgent String?
+
+  @@index([staffId])
+}
+
+model StaffInvitation {
+  id String @id @default(cuid())
+
+  email     String
+  tokenHash String @unique
+
+  // Empty for invitations sent by an admin, such as the first one, sent before any staff member exists.
+  invitor   Staff?  @relation(fields: [invitorId], references: [id], onDelete: Restrict)
+  invitorId String?
+
+  permissions Json?
+
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  revokedAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}

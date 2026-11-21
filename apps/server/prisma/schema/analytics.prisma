@@ -1,0 +1,12 @@
+model AnalyticsDocument {
+  id String @id @default(cuid())
+
+  bucket String
+  key    String @unique
+  month  Int
+  year   Int
+
+  createdAt DateTime @default(now())
+
+  @@unique([year, month])
+}

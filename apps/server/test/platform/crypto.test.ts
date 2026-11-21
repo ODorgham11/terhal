@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { decrypt, encrypt } from "../../src/platform/crypto/encryption";
+import { signAccessToken, verifyAccessToken } from "../../src/platform/crypto/jwt";
 import { compare, compareAgainstNothing, hash } from "../../src/platform/crypto/passwords";
 import { generateToken, hashToken } from "../../src/platform/crypto/tokens";
 import { createTotpSecret, verifyTotp } from "../../src/platform/crypto/totp";
-import { totpCode } from "../support/totp";
+import { totpCode } from "../support/factories";
 
 describe("encryption", () => {
   it("round trips, with a fresh IV each time", () => {
@@ -52,5 +53,22 @@ describe("totp", () => {
     const secret = createTotpSecret();
     const wrong = String((Number(totpCode(secret)) + 1) % 1_000_000).padStart(6, "0");
     expect(verifyTotp(secret, wrong, null)).toBeNull();
+  });
+});
+
+describe("access tokens", () => {
+  it("are only accepted by the audience they were issued to", async () => {
+    const token = await signAccessToken("customer", "someone", "a-session");
+
+    await expect(verifyAccessToken("customer", token)).resolves.toEqual({
+      subject: "someone",
+      sessionId: "a-session",
+    });
+    await expect(verifyAccessToken("staff", token)).rejects.toMatchObject({
+      code: "UNAUTHENTICATED",
+    });
+    await expect(verifyAccessToken("admin", token)).rejects.toMatchObject({
+      code: "UNAUTHENTICATED",
+    });
   });
 });

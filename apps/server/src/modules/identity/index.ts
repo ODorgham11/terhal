@@ -1,0 +1,12 @@
+// Accounts and sessions for every audience: admins (invitations, sign in with two-factor, password and two-factor resets,
+// managing each other), staff (invitations, sign in, password resets), customers (sign up, verification, password
+// resets) and guests (a verified session without an account).
+export { inviteFirstAdmin } from "./application/admin-invitations";
+export { adminAccountRoutes } from "./http/admin-account-routes";
+export { adminInvitationRoutes } from "./http/admin-invitation-routes";
+export { adminManagementRoutes } from "./http/admin-management-routes";
+export { adminAuthRoutes } from "./http/admin-routes";
+export { adminStaffRoutes } from "./http/admin-staff-routes";
+export { customerAuthRoutes } from "./http/customer-routes";
+export { guestRoutes } from "./http/guest-routes";
+export { staffAuthRoutes } from "./http/staff-routes";

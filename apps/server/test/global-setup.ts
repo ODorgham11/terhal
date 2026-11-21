@@ -40,6 +40,8 @@ export default async function setup() {
     RESEND_EMAIL: "",
     // Fresh secrets every run.
     ADMIN_SECRET: randomBytes(32).toString("base64"),
+    STAFF_SECRET: randomBytes(32).toString("base64"),
+    CUSTOMER_SECRET: randomBytes(32).toString("base64"),
     TOTP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
   });
 

@@ -1,7 +1,7 @@
 # Terhal
 
 pnpm workspace + Turborepo. Read [docs/architecture.md](docs/architecture.md) before adding a module, a job or a
-migration.
+migration, and [docs/decisions.md](docs/decisions.md) before changing something that looks odd.
 
 | Path                 | What                                                                                      |
 | -------------------- | ----------------------------------------------------------------------------------------- |
@@ -12,7 +12,7 @@ migration.
 | `tooling/eslint`     | Shared ESLint config (type-aware `typescript-eslint`)                                     |
 | `infra`              | Local Postgres, Redis (cache) and Redis (queue)                                           |
 | `deploy`             | Docker Compose stacks, Caddy and scripts for the VPS                                      |
-| `docs`               | Architecture and decision records                                                         |
+| `docs`               | Architecture, infrastructure and the decision log                                         |
 
 Everything except the database runs in Docker on one VPS, behind Caddy. The database is Neon (one branch per
 environment: `production` for `main`, and `staging`).
@@ -106,6 +106,12 @@ OpenAPI document at `/v1/openapi.json`. `apps/server/openapi.json` is the commit
 when the API changes it; after an intended change, regenerate it with `pnpm --filter @terhal/server test -u` and commit
 it with the change.
 
+### The first admin
+
+Set `ADMIN_EMAIL` in `apps/server/.env` and run `pnpm --filter @terhal/server db:seed`. With `RESEND_KEY` empty the
+invitation email, link included, is printed to the console. The seed only works while no admin exists; every admin after
+the first is invited by an admin.
+
 ## Checks
 
 ```sh
@@ -169,6 +175,8 @@ On Windows, run these in Git Bash, not PowerShell.
    `VPS_SSH_KEY` (the contents of `terhal-deploy`) and `VPS_KNOWN_HOSTS` (`ssh-keyscan -t ed25519 <vps>`). For an ARM
    box, set the repository variable `VPS_PLATFORM` to `linux/arm64`. Then delete the key files from your machine.
 7. **Push to the branch** (or re-run its last Deploy run).
+
+Seed the first admin from your machine against the Neon branch, as in [The first admin](#the-first-admin).
 
 A green Deploy step isn't proof by itself: the run's last step, Check the API, is. `docs/infrastructure.md` records what
 is deployed where and what went wrong setting it up.

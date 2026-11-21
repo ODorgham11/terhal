@@ -4,10 +4,14 @@ import { env } from "../config/env";
 import { AppError } from "../errors/app-error";
 
 // Who a token was issued to. Each audience has its own secret, so a token from one can never be used as another.
-// Staff join as a second audience once their auth is built.
-export type Audience = "admin";
+// Guests have no access tokens: their session is an opaque token checked against the database on every request.
+export type Audience = "admin" | "staff" | "customer";
 
-const secrets = { admin: () => env.ADMIN_SECRET } satisfies Record<Audience, () => string>;
+const secrets = {
+  admin: () => env.ADMIN_SECRET,
+  staff: () => env.STAFF_SECRET,
+  customer: () => env.CUSTOMER_SECRET,
+} satisfies Record<Audience, () => string>;
 
 // 15 minutes: access tokens are checked without a session lookup, so they're kept short.
 export const ACCESS_TOKEN_LIFETIME = 15 * 60;
@@ -19,19 +23,24 @@ const challengeAudience = "admin-challenge";
 
 const now = () => Math.floor(Date.now() / 1000);
 
-export const signAccessToken = (audience: Audience, subject: string) =>
+// `sid` is the session the token was issued for. Every signed in request checks that session is still live, so signing
+// out, revoking a session or resetting a password cuts the token off at once instead of when it expires.
+export const signAccessToken = (audience: Audience, subject: string, sessionId: string) =>
   sign(
-    { sub: subject, aud: audience, iat: now(), exp: now() + ACCESS_TOKEN_LIFETIME },
+    { sub: subject, sid: sessionId, aud: audience, iat: now(), exp: now() + ACCESS_TOKEN_LIFETIME },
     secrets[audience](),
     "HS256",
   );
 
-// The subject, or a 401: ACCESS_TOKEN_EXPIRED tells the client to refresh, UNAUTHENTICATED to sign in again.
+// The subject and its session, or a 401: ACCESS_TOKEN_EXPIRED tells the client to refresh, UNAUTHENTICATED to sign in
+// again.
 export const verifyAccessToken = async (audience: Audience, token: string) => {
   try {
     const payload = await verify(token, secrets[audience](), { alg: "HS256", aud: audience });
-    if (typeof payload.sub !== "string") throw new Error("Missing subject.");
-    return payload.sub;
+    if (typeof payload.sub !== "string" || typeof payload.sid !== "string") {
+      throw new Error("Missing subject or session.");
+    }
+    return { subject: payload.sub, sessionId: payload.sid };
   } catch (error) {
     if (error instanceof JwtTokenExpired) {
       throw new AppError({
