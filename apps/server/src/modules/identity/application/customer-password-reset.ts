@@ -5,7 +5,7 @@ import { prisma } from "../../../platform/db/prisma";
 import { sendEmail } from "../../../platform/email/email";
 import { AppError } from "../../../platform/errors/app-error";
 import { logger } from "../../../platform/logger/logger";
-import { PASSWORD_RESET_LIFETIME_MS } from "../domain/policy";
+import { CUSTOMER_PASSWORD_RESET_LIFETIME_MS } from "../domain/policy";
 import { customerInactive } from "./customers";
 
 const resetInvalid = () =>
@@ -45,7 +45,7 @@ export const requestPasswordReset = async (email: string) => {
     where: { id: customer.id },
     data: {
       passwordResetHash: hashToken(token),
-      passwordResetExpiresAt: new Date(Date.now() + PASSWORD_RESET_LIFETIME_MS),
+      passwordResetExpiresAt: new Date(Date.now() + CUSTOMER_PASSWORD_RESET_LIFETIME_MS),
     },
   });
 

@@ -70,7 +70,7 @@ export const customerSessionsToRevoke = <T>(activeOldestFirst: T[]) =>
   );
 
 // How long a customer's password reset link works.
-export const PASSWORD_RESET_LIFETIME_MS = 60 * 60 * 1000;
+export const CUSTOMER_PASSWORD_RESET_LIFETIME_MS = 60 * 60 * 1000;
 
 // A guest session lasts long enough to follow a booking through to the trip. It never slides.
 export const GUEST_SESSION_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
