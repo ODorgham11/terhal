@@ -178,7 +178,7 @@ describe("assignment", () => {
     });
   });
 
-  it("revokes the report link when the driver changes", async () => {
+  it("replaces the report link when the driver changes, and drops it when the driver goes", async () => {
     const { trip } = await bookedTrip(site, world);
     const first = await fleet();
     const second = await fleet();
@@ -187,16 +187,27 @@ describe("assignment", () => {
       data: {
         driverId: first.driver.id,
         reportTokenHash: "hash",
+        reportTokenSalt: "salt",
         reportTokenExpiresAt: pickupIn(200),
       },
     });
     await assign(trip.id, { driverId: second.driver.id });
+    const reassigned = await prisma.trip.findUniqueOrThrow({ where: { id: trip.id } });
+    expect(reassigned.reportTokenHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(reassigned.reportTokenSalt).not.toBe("salt");
+    // Seven days after the pickup.
+    expect(reassigned.reportTokenExpiresAt?.getTime()).toBe(
+      reassigned.pickupDate.getTime() + 7 * 24 * 60 * 60 * 1000,
+    );
+    // The secret never reaches the history.
+    expect(JSON.stringify((await events(trip.id)).at(-1)?.data)).not.toMatch(/hash|salt/);
+
+    await assign(trip.id, { vehicleId: second.vehicle.id });
     expect(await prisma.trip.findUniqueOrThrow({ where: { id: trip.id } })).toMatchObject({
       reportTokenHash: null,
+      reportTokenSalt: null,
       reportTokenExpiresAt: null,
     });
-    // The secret never reaches the history.
-    expect(JSON.stringify((await events(trip.id)).at(-1)?.data)).not.toContain("hash");
   });
 
   it("never lets an assignment and an archive both win", async () => {

@@ -97,7 +97,17 @@ describe("a trip", () => {
 describe("a notification", () => {
   it("goes to exactly one of a customer, a guest and a staff member", async () => {
     const { customer, guest, staff } = await people();
-    const message = { title: "Trip confirmed", body: "See you soon." };
+    let n = 0;
+    const message = () => {
+      n += 1;
+      return {
+        kind: "NEW_BOOKING" as const,
+        locale: "en" as const,
+        dedupeKey: `test.${String(n)}`,
+        title: "New booking",
+        body: "See you soon.",
+      };
+    };
 
     for (const recipient of [
       { customerId: customer.id },
@@ -105,15 +115,15 @@ describe("a notification", () => {
       { staffId: staff.id },
     ]) {
       await expect(
-        prisma.notification.create({ data: { ...message, ...recipient } }),
+        prisma.notification.create({ data: { ...message(), ...recipient } }),
       ).resolves.toBeDefined();
     }
-    await expect(prisma.notification.create({ data: message })).rejects.toThrow(
+    await expect(prisma.notification.create({ data: message() })).rejects.toThrow(
       /Notification_one_recipient/,
     );
     await expect(
       prisma.notification.create({
-        data: { ...message, guestSessionId: guest.id, staffId: staff.id },
+        data: { ...message(), guestSessionId: guest.id, staffId: staff.id },
       }),
     ).rejects.toThrow(/Notification_one_recipient/);
   });

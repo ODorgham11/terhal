@@ -3,6 +3,7 @@ import { prisma } from "../../../platform/db/prisma";
 import { AppError } from "../../../platform/errors/app-error";
 import { validationFailed } from "../../../platform/errors/validation";
 import { resolveRoute } from "../../pricing/index";
+import { reportLinkExpiry } from "../domain/report";
 import { EDITABLE_STATUSES, PRICE_EDITABLE_STATUSES } from "../domain/rules";
 import { changeTrip, type TripFields } from "./events";
 import { readTrip } from "./lifecycle";
@@ -39,6 +40,11 @@ export const updateTrip = async (id: string, staffId: string, input: UpdateTrip)
     paymentMethod: input.paymentMethod,
     paidAt: input.paidAt === undefined ? undefined : input.paidAt && new Date(input.paidAt),
   };
+
+  // The report link expires 7 days after the pickup, so it moves with it.
+  if (set.pickupDate && trip.reportTokenHash) {
+    set.reportTokenExpiresAt = reportLinkExpiry(set.pickupDate as Date);
+  }
 
   // A new pin resolves again, against the other end (covered, not the same place), and takes the new place's names.
   if (input.pickup ?? input.dropoff) {

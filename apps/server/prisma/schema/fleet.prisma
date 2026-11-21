@@ -9,7 +9,7 @@ enum CarBody {
 
 // Each kind of change to what the company owes a driver. The sign is fixed per kind (DriverTransaction_sign).
 enum DriverTransactionType {
-  // A completed trip's fee (external drivers only): positive.
+  // A completed trip's fee (every driver, paid per trip): positive.
   TRIP_FEE
   // A completed trip's expenses, all paid by the driver: positive.
   EXPENSE_REIMBURSEMENT
@@ -72,6 +72,7 @@ model Driver {
 
   trips        Trip[]
   transactions DriverTransaction[]
+  tripEvents   TripEvent[]
 
   notes String?
 

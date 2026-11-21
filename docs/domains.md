@@ -493,10 +493,11 @@ pins (a different hotel, say) but not the class or body. a) As stated **(Recomme
 
 | Method | Path | Audience | Permission |
 | --- | --- | --- | --- |
-| POST | `/v1/staff/trips/{id}/report-link` (issue or rotate; returns the link once) | staff | `trips` |
-| GET | `/v1/site/driver/report` (token in header) | driver link | — |
+| GET | `/v1/staff/trips/{id}/report-link?locale` (the link, its WhatsApp message and `wa.me` link; built: shown again, see decisions.md) | staff | `trips` |
+| POST | `/v1/staff/trips/{id}/report-link?locale` (replace the link) | staff | `trips` |
+| GET | `/v1/site/driver/report` (token in the `Report-Token` header) | driver link | — |
 | POST | `/v1/site/driver/report/start`, `/end` (if T3 b or d) | driver link | — |
-| PUT | `/v1/site/driver/report` (save or submit) | driver link | — |
+| PUT | `/v1/site/driver/report` (submit, once) | driver link | — |
 | GET | `/v1/staff/trips/{id}/report` | staff | `trips` |
 | PUT | `/v1/staff/trips/{id}/report` (staff fill or correct) | staff | `trips` |
 
@@ -770,6 +771,7 @@ Confirm: a) yes **(Recommended)**.
 | GET | `/v1/staff/analytics/reports/{year}/{month}` (signed download URL) | staff | `analytics` |
 | POST | `/v1/staff/analytics/reports/{year}/{month}/regenerate` | staff | `analytics` |
 | GET | `/v1/staff/exports/trips.csv?from&to&status…` | staff | `analytics` or `trips` |
+| GET | `/v1/staff/exports/{drivers,vehicles,customers,pricing}.csv` (Y4 b) | staff | `analytics` |
 
 **Y1. Metrics on the analytics page.**
 - a) For a date range (by pickup date, Cairo days): trips, revenue, average fare, cancellation rate, by status; a
@@ -990,8 +992,13 @@ Anything not listed takes the recommended option.
 - **D5 b:** every expense is assumed paid by the driver; there's no `paidBy`.
 - D6 a.
 - **D7 b:** the report locks for the driver once submitted; after that only staff can edit it.
-- **D8 a:** a ledger. Internal drivers get reimbursements and have cash collected deducted, but no trip fee.
+- **D8 a:** a ledger. ~~Internal drivers get reimbursements and have cash collected deducted, but no trip fee.~~
+  Changed 2026-11-21: every driver, internal or external, gets the `DRIVER_FEE` they enter as a trip fee, netted against
+  the cash they collected (drivers are paid per trip).
 - D9 a.
+- **As built** (decisions.md, "The driver report"): staff can show the link again and replace it; a trip with a driver
+  needs its report to complete (office trips don't); the report carries the cash collected; reopening reverses the
+  ledger with adjustments.
 
 **F. Fleet**
 - F1 a, F2 a, F3 b.
@@ -1007,12 +1014,19 @@ Anything not listed takes the recommended option.
 
 **M. Team:** M1 a. **M2 b:** anyone with `team` can grant any permission. M3 a.
 
-**N. Notifications:** N1 as in the table, N2 a, N3 a, N4 a, N5 a, N6 a.
+**N. Notifications:** N1 as in the table, N2 a, N3 a, N4 a, N5 a, N6 a. As built, N1 also carries Q3's price notices
+(the proposal and its reminder to the booker; requested, accepted and declined to staff). The cases the table leaves open
+are in [decisions.md](decisions.md#notifications-the-details-the-spec-left-open-2026-11-21).
 
 **Y. Analytics**
 - Y1 a, Y2 a.
 - **Y3 a, generated on the 1st** of each month (Cairo time), for the previous month.
 - **Y4 a, plus b:** CSV exports of drivers, vehicles, customers and pricing.
+- As built (details in [decisions.md](decisions.md), "Analytics: the details the spec left open"): the range is Cairo
+  calendar days (`from` and `to` as `YYYY-MM-DD`, both included); costs and margin count completed trips' report
+  expenses, office fees included; weeks start on Sunday; the trips CSV fails with `EXPORT_TOO_LARGE` over 50,000
+  rows; regenerating is only for months that are over (`REPORT_MONTH_NOT_OVER`) and replaces the month's workbook in
+  place.
 
 ### Agreed schema changes
 
@@ -1038,7 +1052,8 @@ Folded into the domain migrations:
   - `Trip.priceState`, a nullable `totalPrice`, `Trip_price_state` and `Trip_priced_before_confirmed` (Q3);
   - `Trip.paymentMethod` and `Trip.paidAt` (B8);
   - `Trip.idempotencyKey` (B9);
-  - the report token's hash and expiry (D1);
+  - the report token's hash and expiry (D1), and as built its salt, `TripReport.cashCollected` and
+    `TripEvent.driverId` (see decisions.md, "The driver report");
   - `ExpenseType.OFFICE_FEE` (O1);
   - a nullable stop address or pin, with `TripStop_address_or_pin` (D4);
   - CHECKs for car fit (B4), report chronology and mileage (D3) and positive amounts (X3);

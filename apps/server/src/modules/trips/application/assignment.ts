@@ -15,7 +15,7 @@ import { onDriverChanged } from "./hooks";
 import { readTrip } from "./lifecycle";
 import { conflictSelect, toConflict, tripNotFound } from "./shared";
 
-// Assigning a driver, a vehicle or an office (docs/domain-api.md, A).
+// Assigning a driver, a vehicle or an office (docs/domains.md, A).
 
 const unavailable = (
   code: "DRIVER_NOT_AVAILABLE" | "VEHICLE_NOT_AVAILABLE" | "OFFICE_NOT_AVAILABLE",
@@ -122,6 +122,7 @@ export const assignTrip = async (id: string, staffId: string, input: AssignTrip)
         // The report link belongs to the driver it was sent to.
         ...(wanted.driverId !== current.driverId && {
           reportTokenHash: null,
+          reportTokenSalt: null,
           reportTokenExpiresAt: null,
         }),
       }),

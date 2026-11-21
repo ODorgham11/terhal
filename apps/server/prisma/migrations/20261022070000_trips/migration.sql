@@ -56,6 +56,7 @@ CREATE TABLE "Trip" (
     "paidAt" TIMESTAMP(3),
     "idempotencyKey" TEXT,
     "reportTokenHash" TEXT,
+    "reportTokenSalt" TEXT,
     "reportTokenExpiresAt" TIMESTAMP(3),
     "notes" TEXT,
     "pickupId" TEXT NOT NULL,
@@ -81,6 +82,7 @@ CREATE TABLE "TripEvent" (
     "staffId" TEXT,
     "customerId" TEXT,
     "guestSessionId" TEXT,
+    "driverId" TEXT,
     "system" TEXT,
     "tripId" TEXT NOT NULL,
     "action" TEXT NOT NULL,
@@ -102,6 +104,7 @@ CREATE TABLE "TripReport" (
     "vehicleDropoff" TEXT NOT NULL,
     "endedAt" TIMESTAMP(3) NOT NULL,
     "endMileage" INTEGER NOT NULL,
+    "cashCollected" DECIMAL(12,2) NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -177,6 +180,9 @@ CREATE INDEX "TripEvent_customerId_idx" ON "TripEvent"("customerId");
 CREATE INDEX "TripEvent_guestSessionId_idx" ON "TripEvent"("guestSessionId");
 
 -- CreateIndex
+CREATE INDEX "TripEvent_driverId_idx" ON "TripEvent"("driverId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "TripReport_tripId_key" ON "TripReport"("tripId");
 
 -- CreateIndex
@@ -228,6 +234,9 @@ ALTER TABLE "TripEvent" ADD CONSTRAINT "TripEvent_customerId_fkey" FOREIGN KEY (
 ALTER TABLE "TripEvent" ADD CONSTRAINT "TripEvent_guestSessionId_fkey" FOREIGN KEY ("guestSessionId") REFERENCES "GuestSession"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "TripEvent" ADD CONSTRAINT "TripEvent_driverId_fkey" FOREIGN KEY ("driverId") REFERENCES "Driver"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "TripEvent" ADD CONSTRAINT "TripEvent_tripId_fkey" FOREIGN KEY ("tripId") REFERENCES "Trip"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -243,9 +252,10 @@ ALTER TABLE "TripExpense" ADD CONSTRAINT "TripExpense_reportId_fkey" FOREIGN KEY
 ALTER TABLE "Trip" ADD CONSTRAINT "Trip_one_booker"
     CHECK (num_nonnulls("customerId", "guestSessionId", "staffId") = 1);
 
--- A trip event's actor is exactly one of a staff member, a customer, a guest and the system (a background job, named in "system").
+-- A trip event's actor is exactly one of a staff member, a customer, a guest, the driver (through the report link) and the
+-- system (a background job, named in "system").
 ALTER TABLE "TripEvent" ADD CONSTRAINT "TripEvent_one_actor"
-    CHECK (num_nonnulls("staffId", "customerId", "guestSessionId", "system") = 1);
+    CHECK (num_nonnulls("staffId", "customerId", "guestSessionId", "driverId", "system") = 1);
 
 -- A trip's price is empty exactly while it's requested, and a trip can't go past pending until its price is one the
 -- booker has seen and accepted (quoted at booking, or a proposal they accepted).
@@ -264,9 +274,11 @@ ALTER TABLE "TripExpense" ADD CONSTRAINT "TripExpense_amount_positive"
 ALTER TABLE "Trip" ADD CONSTRAINT "Trip_paid_with_method"
     CHECK ("paidAt" IS NULL OR "paymentMethod" IS NOT NULL);
 
--- The driver's report link: a token hash and its expiry, together.
-ALTER TABLE "Trip" ADD CONSTRAINT "Trip_report_token"
-    CHECK (("reportTokenHash" IS NULL) = ("reportTokenExpiresAt" IS NULL));
+-- The driver's report link: a token hash, its salt and its expiry, all or none.
+ALTER TABLE "Trip" ADD CONSTRAINT "Trip_report_token" CHECK (
+    ("reportTokenHash" IS NULL) = ("reportTokenSalt" IS NULL)
+    AND ("reportTokenHash" IS NULL) = ("reportTokenExpiresAt" IS NULL)
+);
 
 -- Passengers and luggage must fit the car body. The same limits are carCapacity in @terhal/contracts; a test keeps the
 -- two in step. PLACEHOLDER numbers until the client gives the real ones.
@@ -313,6 +325,9 @@ ALTER TABLE "TripReport" ADD CONSTRAINT "TripReport_chronology"
     CHECK ("startedAt" <= "pickupAt" AND "pickupAt" <= "dropoffAt" AND "dropoffAt" <= "endedAt");
 ALTER TABLE "TripReport" ADD CONSTRAINT "TripReport_mileage"
     CHECK ("startMileage" >= 0 AND "endMileage" >= "startMileage");
+-- Cash collected is zero or more, below the same cap as other amounts.
+ALTER TABLE "TripReport" ADD CONSTRAINT "TripReport_cash_collected"
+    CHECK ("cashCollected" >= 0 AND "cashCollected" <= 1000000);
 
 -- A stop is an address or a pin (both coordinates), exactly one of them, and ends after it starts.
 ALTER TABLE "TripStop" ADD CONSTRAINT "TripStop_address_or_pin" CHECK (

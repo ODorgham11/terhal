@@ -9,7 +9,7 @@ import {
 import { problemResponse } from "../../../platform/http/router";
 import { getClientIp } from "../../../platform/rate-limit/rate-limit";
 
-// Who may do what (domain-api.md, X6): reads need `fleet` or `trips` (booking and assignment pick drivers, vehicles and
+// Who may do what (domains.md, X6): reads need `fleet` or `trips` (booking and assignment pick drivers, vehicles and
 // offices), writes need `fleet`.
 export const canRead = [requireStaff, requireAnyPermission("fleet", "trips")];
 export const canWrite = [requireStaff, requirePermission("fleet")];

@@ -61,6 +61,24 @@ describe("the staff lifecycle", () => {
     });
     expect((await act(staff, trip.id, "start")).status).toBe(200);
     expect((await act(staff, trip.id, "end")).status).toBe(200);
+    const unreported = await act(staff, trip.id, "complete");
+    expect(unreported.status).toBe(409);
+    expect((await problem(unreported)).code).toBe("REPORT_REQUIRED");
+
+    const now = new Date();
+    await prisma.tripReport.create({
+      data: {
+        tripId: trip.id,
+        startedAt: now,
+        vehiclePickup: "Garage",
+        startMileage: 100,
+        pickupAt: now,
+        dropoffAt: now,
+        vehicleDropoff: "Garage",
+        endedAt: now,
+        endMileage: 300,
+      },
+    });
     const completed = await act(staff, trip.id, "complete");
     expect(await json<TripBody>(completed)).toMatchObject({ status: "COMPLETED" });
 
@@ -193,7 +211,7 @@ describe("the staff lifecycle", () => {
     });
     // 00:30 on 1 November in Cairo: November's report.
     await prisma.analyticsDocument.create({
-      data: { bucket: "b", key: "reports/2026-11.xlsx", year: 2026, month: 11 },
+      data: { bucket: "b", key: "reports/2026-11.xlsx", year: 2026, month: 11, size: 1 },
     });
     const refused = await act(staff, trip.id, "reopen");
     expect(refused.status).toBe(409);

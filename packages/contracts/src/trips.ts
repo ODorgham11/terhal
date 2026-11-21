@@ -6,7 +6,7 @@ import { Price } from "./pricing";
 import { TripEventAction } from "./trip-events";
 
 // Trips: booking on the site and in the dashboard, the status lifecycle, price on request, assignment and linked return
-// trips (docs/domain-api.md, sections B, T, A and R, and the price-on-request flow under Q3).
+// trips (docs/domains.md, sections B, T, A and R, and the price-on-request flow under Q3).
 
 // --- Rules shared by the API and the site ---
 
@@ -314,7 +314,9 @@ export type StaffBooking = z.infer<typeof StaffBooking>;
 
 export const TripEventActor = z
   .object({
-    type: z.enum(["STAFF", "CUSTOMER", "GUEST", "SYSTEM"]),
+    type: z
+      .enum(["STAFF", "CUSTOMER", "GUEST", "DRIVER", "SYSTEM"])
+      .meta({ description: "DRIVER: the assigned driver, through the trip's report link." }),
     id: z.string().nullable(),
     name: z.string().meta({ description: "A person's name, or the job's for the system." }),
   })

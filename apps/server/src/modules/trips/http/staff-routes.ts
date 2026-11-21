@@ -205,7 +205,8 @@ const end = action("end", "End a trip", "In progress to awaiting the driver's re
 const complete = action(
   "complete",
   "Complete a trip",
-  "Awaiting report to completed, once staff have reviewed the report.",
+  "Awaiting report to completed, once staff have reviewed the report. A trip with a driver needs its report (an office trip doesn't). Writes the driver's ledger entries: an external driver's fee, the expenses they paid (not office fees), less the cash they collected.",
+  problemResponse("TRIP_STATUS_CONFLICT (`tripStatus`), or REPORT_REQUIRED."),
 );
 const unstart = action(
   "unstart",
@@ -215,7 +216,7 @@ const unstart = action(
 const reopen = action(
   "reopen",
   "Reopen a completed trip",
-  "Completed back to awaiting report, until its month's report is generated.",
+  "Completed back to awaiting report, until its month's report is generated. Whatever completing wrote to the driver's ledger is reversed with an adjustment.",
   problemResponse("TRIP_STATUS_CONFLICT (`tripStatus`), or MONTH_REPORT_GENERATED."),
 );
 
@@ -346,8 +347,8 @@ export const staffTripRoutes = createRouter()
     return c.json(await proposePrice(id(c), staffActor(c), input), 200);
   })
   .openapi(confirm, async (c) => c.json(await confirmTrip(id(c), staffId(c)), 200))
-  .openapi(start, async (c) => c.json(await startTrip(id(c), staffId(c)), 200))
-  .openapi(end, async (c) => c.json(await endTrip(id(c), staffId(c)), 200))
+  .openapi(start, async (c) => c.json(await startTrip(id(c), { staffId: staffId(c) }), 200))
+  .openapi(end, async (c) => c.json(await endTrip(id(c), { staffId: staffId(c) }), 200))
   .openapi(complete, async (c) => c.json(await completeTrip(id(c), staffId(c)), 200))
   .openapi(cancel, async (c) =>
     c.json(await cancelTrip(id(c), staffId(c), c.req.valid("json")), 200),
