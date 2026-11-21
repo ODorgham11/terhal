@@ -770,6 +770,7 @@ Confirm: a) yes **(Recommended)**.
 | GET | `/v1/staff/analytics/reports/{year}/{month}` (signed download URL) | staff | `analytics` |
 | POST | `/v1/staff/analytics/reports/{year}/{month}/regenerate` | staff | `analytics` |
 | GET | `/v1/staff/exports/trips.csv?from&to&status…` | staff | `analytics` or `trips` |
+| GET | `/v1/staff/exports/{drivers,vehicles,customers,pricing}.csv` (Y4 b) | staff | `analytics` |
 
 **Y1. Metrics on the analytics page.**
 - a) For a date range (by pickup date, Cairo days): trips, revenue, average fare, cancellation rate, by status; a
@@ -1013,6 +1014,11 @@ Anything not listed takes the recommended option.
 - Y1 a, Y2 a.
 - **Y3 a, generated on the 1st** of each month (Cairo time), for the previous month.
 - **Y4 a, plus b:** CSV exports of drivers, vehicles, customers and pricing.
+- As built (details in [decisions.md](decisions.md), "Analytics: the details the spec left open"): the range is Cairo
+  calendar days (`from` and `to` as `YYYY-MM-DD`, both included); costs and margin count completed trips' report
+  expenses, office fees included; weeks start on Saturday; the trips CSV fails with `EXPORT_TOO_LARGE` over 50,000
+  rows; regenerating is only for months that are over (`REPORT_MONTH_NOT_OVER`) and replaces the month's workbook in
+  place.
 
 ### Agreed schema changes
 
