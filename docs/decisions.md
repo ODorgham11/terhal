@@ -529,8 +529,8 @@ didn't:
   not cancelled that has a price. Expenses are those on completed trips' reports, office fees included (O1 b), so the
   margin (revenue − expenses) compares like with like; an unfinished trip's costs show once it's completed.
   `unpaid` is completed trips without `paidAt` (B8). Driver balances are the ledger's totals now, whatever the range.
-- **Buckets.** The trend lists every bucket in the range, empty ones too. Weeks start on Saturday, as Egyptian
-  calendars do; a bucket at either end holds only the range's days. Top routes are the 10 busiest governorate pairs
+- **Buckets.** The trend lists every bucket in the range, empty ones too. Weeks start on Sunday, the first day of
+  Egypt's working week (the client's choice, 2026-11-21); a bucket at either end holds only the range's days. Top routes are the 10 busiest governorate pairs
   (each end's root in the location tree); the busiest drivers and vehicles are capped at 50.
 - **Money stays exact.** Postgres sums the decimals and returns text; the margin and the average are computed in
   piastres with `bigint`, never floats.

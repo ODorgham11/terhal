@@ -1022,7 +1022,7 @@ are in [decisions.md](decisions.md#notifications-the-details-the-spec-left-open-
 - **Y4 a, plus b:** CSV exports of drivers, vehicles, customers and pricing.
 - As built (details in [decisions.md](decisions.md), "Analytics: the details the spec left open"): the range is Cairo
   calendar days (`from` and `to` as `YYYY-MM-DD`, both included); costs and margin count completed trips' report
-  expenses, office fees included; weeks start on Saturday; the trips CSV fails with `EXPORT_TOO_LARGE` over 50,000
+  expenses, office fees included; weeks start on Sunday; the trips CSV fails with `EXPORT_TOO_LARGE` over 50,000
   rows; regenerating is only for months that are over (`REPORT_MONTH_NOT_OVER`) and replaces the month's workbook in
   place.
 
