@@ -20,10 +20,10 @@ const sessionEnded = () =>
 
 // Refresh tokens are opaque random strings; the session row is what makes them valid. Only the hash is stored, so a
 // leaked database can't be used to hijack sessions.
-const issueTokens = async (staffId: string) => {
+const issueTokens = async (staffId: string, sessionId: string) => {
   const refreshToken = generateToken();
   return {
-    accessToken: await signAccessToken("staff", staffId),
+    accessToken: await signAccessToken("staff", staffId, sessionId),
     refreshToken,
     refreshTokenHash: hashToken(refreshToken),
   };
@@ -32,11 +32,12 @@ const issueTokens = async (staffId: string) => {
 // Starts a session for a staff member who has signed in (or just accepted an invitation), keeping at most a few active
 // at once: the oldest are revoked to make way.
 export const createStaffSession = async (staff: Staff, { ipAddress, userAgent }: RequestInfo) => {
-  const { accessToken, refreshToken, refreshTokenHash } = await issueTokens(staff.id);
+  const refreshToken = generateToken();
+  const refreshTokenHash = hashToken(refreshToken);
   const now = new Date();
   const expiresAt = staffSessionExpiry(now, now);
 
-  await prisma.$transaction(async (tx) => {
+  const sessionId = await prisma.$transaction(async (tx) => {
     const activeSessions = await tx.staffSession.findMany({
       where: { staffId: staff.id, revokedAt: null, expiresAt: { gt: now } },
       orderBy: { createdAt: "asc" },
@@ -52,11 +53,14 @@ export const createStaffSession = async (staff: Staff, { ipAddress, userAgent }:
       });
     }
 
-    await tx.staffSession.create({
+    const session = await tx.staffSession.create({
       data: { staffId: staff.id, refreshToken: refreshTokenHash, expiresAt, ipAddress, userAgent },
     });
+
+    return session.id;
   });
 
+  const accessToken = await signAccessToken("staff", staff.id, sessionId);
   return { staff: toStaffResponse(staff), session: { accessToken, refreshToken, expiresAt } };
 };
 
@@ -89,7 +93,7 @@ export const refreshStaffSession = async (
     throw staffInactive();
   }
 
-  const tokens = await issueTokens(session.staff.id);
+  const tokens = await issueTokens(session.staff.id, session.id);
   // Never extended past the session's absolute lifetime.
   const expiresAt = staffSessionExpiry(now, session.createdAt);
 

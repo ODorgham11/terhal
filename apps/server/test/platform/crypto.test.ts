@@ -58,9 +58,12 @@ describe("totp", () => {
 
 describe("access tokens", () => {
   it("are only accepted by the audience they were issued to", async () => {
-    const token = await signAccessToken("customer", "someone");
+    const token = await signAccessToken("customer", "someone", "a-session");
 
-    await expect(verifyAccessToken("customer", token)).resolves.toBe("someone");
+    await expect(verifyAccessToken("customer", token)).resolves.toEqual({
+      subject: "someone",
+      sessionId: "a-session",
+    });
     await expect(verifyAccessToken("staff", token)).rejects.toMatchObject({
       code: "UNAUTHENTICATED",
     });

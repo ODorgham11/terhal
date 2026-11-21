@@ -20,10 +20,10 @@ const sessionEnded = () =>
 
 // Refresh tokens are opaque random strings; the session row is what makes them valid. Only the hash is stored, so a
 // leaked database can't be used to hijack sessions.
-const issueTokens = async (customerId: string) => {
+const issueTokens = async (customerId: string, sessionId: string) => {
   const refreshToken = generateToken();
   return {
-    accessToken: await signAccessToken("customer", customerId),
+    accessToken: await signAccessToken("customer", customerId, sessionId),
     refreshToken,
     refreshTokenHash: hashToken(refreshToken),
   };
@@ -34,11 +34,12 @@ export const createCustomerSession = async (
   customer: Customer,
   { ipAddress, userAgent }: RequestInfo,
 ) => {
-  const { accessToken, refreshToken, refreshTokenHash } = await issueTokens(customer.id);
+  const refreshToken = generateToken();
+  const refreshTokenHash = hashToken(refreshToken);
   const now = new Date();
   const expiresAt = customerSessionExpiry(now, now);
 
-  await prisma.$transaction(async (tx) => {
+  const sessionId = await prisma.$transaction(async (tx) => {
     const activeSessions = await tx.customerSession.findMany({
       where: { customerId: customer.id, revokedAt: null, expiresAt: { gt: now } },
       orderBy: { createdAt: "asc" },
@@ -54,7 +55,7 @@ export const createCustomerSession = async (
       });
     }
 
-    await tx.customerSession.create({
+    const session = await tx.customerSession.create({
       data: {
         customerId: customer.id,
         refreshToken: refreshTokenHash,
@@ -63,8 +64,11 @@ export const createCustomerSession = async (
         userAgent,
       },
     });
+
+    return session.id;
   });
 
+  const accessToken = await signAccessToken("customer", customer.id, sessionId);
   return {
     customer: toCustomerResponse(customer),
     session: { accessToken, refreshToken, expiresAt },
@@ -100,7 +104,7 @@ export const refreshCustomerSession = async (
     throw customerInactive();
   }
 
-  const tokens = await issueTokens(session.customer.id);
+  const tokens = await issueTokens(session.customer.id, session.id);
   // Never extended past the session's absolute lifetime.
   const expiresAt = customerSessionExpiry(now, session.createdAt);
 

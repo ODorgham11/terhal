@@ -22,10 +22,10 @@ const sessionEnded = () =>
 
 // Refresh tokens are opaque random strings; the session row is what makes them valid. Only the hash is stored, so a
 // leaked database can't be used to hijack sessions.
-const issueTokens = async (adminId: string) => {
+const issueTokens = async (adminId: string, sessionId: string) => {
   const refreshToken = generateToken();
   return {
-    accessToken: await signAccessToken("admin", adminId),
+    accessToken: await signAccessToken("admin", adminId, sessionId),
     refreshToken,
     refreshTokenHash: hashToken(refreshToken),
   };
@@ -38,11 +38,12 @@ export const createSession = async (
   via: "invitation" | "password_and_totp",
   { ipAddress, userAgent }: RequestInfo,
 ) => {
-  const { accessToken, refreshToken, refreshTokenHash } = await issueTokens(admin.id);
+  const refreshToken = generateToken();
+  const refreshTokenHash = hashToken(refreshToken);
   const now = new Date();
   const expiresAt = sessionExpiry(now, now);
 
-  await prisma.$transaction(async (tx) => {
+  const sessionId = await prisma.$transaction(async (tx) => {
     const activeSessions = await tx.adminSession.findMany({
       where: { adminId: admin.id, revokedAt: null, expiresAt: { gt: now } },
       orderBy: { createdAt: "asc" },
@@ -88,8 +89,11 @@ export const createSession = async (
       },
       tx,
     );
+
+    return session.id;
   });
 
+  const accessToken = await signAccessToken("admin", admin.id, sessionId);
   return { admin: toAdminResponse(admin), session: { accessToken, refreshToken, expiresAt } };
 };
 
@@ -134,7 +138,7 @@ export const refreshSession = async (
     throw inactive();
   }
 
-  const tokens = await issueTokens(session.admin.id);
+  const tokens = await issueTokens(session.admin.id, session.id);
   // Never extended past the session's absolute lifetime.
   const expiresAt = sessionExpiry(now, session.createdAt);
 
