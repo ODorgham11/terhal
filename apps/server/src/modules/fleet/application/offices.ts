@@ -7,12 +7,12 @@ import {
 import { prisma } from "../../../platform/db/prisma";
 import { AppError } from "../../../platform/errors/app-error";
 import { recordAudit } from "../../audit/index";
-import { LIVE_TRIP_STATUSES, searchWords } from "../domain/rules";
+import { liveOfficeTrips } from "../../trips/index";
+import { searchWords } from "../domain/rules";
 import {
   assertNoLiveTrips,
   auditChanges,
   driverSelect,
-  fleetTripSelect,
   fleetWriteError,
   lockRow,
   matchEveryWord,
@@ -20,7 +20,6 @@ import {
   officeSelect,
   pageArgs,
   toDriver,
-  toFleetTrip,
   toOffice,
   toPage,
   toVehicle,
@@ -46,7 +45,6 @@ export const listOffices = async ({ limit, cursor, q, archived }: ListOffices) =
 };
 
 // The office with its live drivers and vehicles, and the trips handed to it that are still live (soonest first).
-// TODO: read trips through the trips module's index once it exists.
 export const getOffice = async (id: string) => {
   const office = await prisma.office.findUnique({ where: { id }, select: officeSelect });
   if (!office) throw notFound("office");
@@ -62,12 +60,7 @@ export const getOffice = async (id: string) => {
       orderBy: [{ make: "asc" }, { model: "asc" }, { plateNumber: "asc" }],
       select: vehicleSelect,
     }),
-    prisma.trip.findMany({
-      where: { officeId: id, status: { in: [...LIVE_TRIP_STATUSES] } },
-      orderBy: [{ pickupDate: "asc" }, { id: "asc" }],
-      take: 100,
-      select: fleetTripSelect,
-    }),
+    liveOfficeTrips(id),
   ]);
 
   const now = new Date();
@@ -75,7 +68,7 @@ export const getOffice = async (id: string) => {
     ...toOffice(office),
     drivers: drivers.map((driver) => toDriver(driver, now)),
     vehicles: await Promise.all(vehicles.map(toVehicle)),
-    trips: trips.map(toFleetTrip),
+    trips,
   };
 };
 
