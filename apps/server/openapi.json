@@ -137,7 +137,12 @@
               "ASSIGNMENT_CONFLICT",
               "TRIP_ALREADY_LINKED",
               "TRIP_LINK_INVALID",
-              "TRIP_NOT_LINKED"
+              "TRIP_NOT_LINKED",
+              "REPORT_LINK_INVALID",
+              "REPORT_LINK_EXPIRED",
+              "REPORT_LINK_UNAVAILABLE",
+              "REPORT_ALREADY_SUBMITTED",
+              "REPORT_REQUIRED"
             ],
             "example": "VALIDATION_FAILED"
           },
@@ -5248,8 +5253,10 @@
               "STAFF",
               "CUSTOMER",
               "GUEST",
+              "DRIVER",
               "SYSTEM"
-            ]
+            ],
+            "description": "DRIVER: the assigned driver, through the trip's report link."
           },
           "id": {
             "type": [
@@ -5690,6 +5697,633 @@
           "returnTripId"
         ],
         "description": "Make that trip this one's return."
+      },
+      "DriverTrip": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "TRH-7K3Q9P"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TripStatus"
+          },
+          "pickupDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pickup": {
+            "$ref": "#/components/schemas/TripPlace"
+          },
+          "dropoff": {
+            "$ref": "#/components/schemas/TripPlace"
+          },
+          "clientName": {
+            "type": "string"
+          },
+          "clientPhone": {
+            "type": "string"
+          },
+          "passengers": {
+            "type": "integer"
+          },
+          "largeLuggage": {
+            "type": "integer"
+          },
+          "mediumLuggage": {
+            "type": "integer"
+          },
+          "smallLuggage": {
+            "type": "integer"
+          },
+          "car": {
+            "$ref": "#/components/schemas/CarBody"
+          },
+          "class": {
+            "type": "object",
+            "properties": {
+              "nameEn": {
+                "type": "string"
+              },
+              "nameAr": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "nameEn",
+              "nameAr"
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "driver": {
+            "type": "object",
+            "properties": {
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "firstName",
+              "lastName"
+            ]
+          },
+          "vehicle": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "make": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              },
+              "plateNumber": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "make",
+              "model",
+              "color",
+              "plateNumber"
+            ]
+          },
+          "startedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the trip was started (by the driver or staff), to prefill the report."
+          },
+          "endedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the trip was ended, to prefill the report."
+          },
+          "linkExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "report": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "startedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "vehiclePickup": {
+                "type": "string"
+              },
+              "startMileage": {
+                "type": "integer"
+              },
+              "pickupAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "dropoffAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "vehicleDropoff": {
+                "type": "string"
+              },
+              "endedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "endMileage": {
+                "type": "integer"
+              },
+              "cashCollected": {
+                "type": "string",
+                "example": "1500.00"
+              },
+              "stops": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "latitude": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "longitude": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "startedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "endedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "notes": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "address",
+                    "latitude",
+                    "longitude",
+                    "startedAt",
+                    "endedAt",
+                    "notes"
+                  ]
+                }
+              },
+              "expenses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "$ref": "#/components/schemas/ExpenseType"
+                    },
+                    "amount": {
+                      "type": "string",
+                      "example": "120.00"
+                    },
+                    "notes": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type",
+                    "amount",
+                    "notes"
+                  ]
+                }
+              },
+              "submittedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "startedAt",
+              "vehiclePickup",
+              "startMileage",
+              "pickupAt",
+              "dropoffAt",
+              "vehicleDropoff",
+              "endedAt",
+              "endMileage",
+              "cashCollected",
+              "stops",
+              "expenses",
+              "submittedAt",
+              "updatedAt"
+            ],
+            "description": "The submitted report. Once there is one, it can't be changed through the link."
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "pickupDate",
+          "pickup",
+          "dropoff",
+          "clientName",
+          "clientPhone",
+          "passengers",
+          "largeLuggage",
+          "mediumLuggage",
+          "smallLuggage",
+          "car",
+          "class",
+          "notes",
+          "driver",
+          "vehicle",
+          "startedAt",
+          "endedAt",
+          "linkExpiresAt",
+          "report"
+        ]
+      },
+      "ExpenseType": {
+        "type": "string",
+        "enum": [
+          "INTERCITY_TOLL",
+          "FUEL",
+          "CAR_MAINTENANCE",
+          "DRIVER_FEE",
+          "OFFICE_FEE",
+          "OTHER"
+        ],
+        "description": "DRIVER_FEE is an external driver's fee for the trip; OFFICE_FEE is what an office is paid for it (staff only, never reimbursed to the driver)."
+      },
+      "SubmitReport": {
+        "type": "object",
+        "properties": {
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vehiclePickup": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "startMileage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9999999
+          },
+          "pickupAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dropoffAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vehicleDropoff": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "endedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endMileage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9999999
+          },
+          "cashCollected": {
+            "type": "string",
+            "example": "1500.00",
+            "description": "EGP collected from the customer; 0 when none."
+          },
+          "stops": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportStop"
+            },
+            "maxItems": 20
+          },
+          "expenses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportExpense"
+            },
+            "maxItems": 30
+          }
+        },
+        "required": [
+          "startedAt",
+          "vehiclePickup",
+          "startMileage",
+          "pickupAt",
+          "dropoffAt",
+          "vehicleDropoff",
+          "endedAt",
+          "endMileage",
+          "cashCollected",
+          "stops",
+          "expenses"
+        ]
+      },
+      "ReportStop": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "startedAt",
+          "endedAt"
+        ]
+      },
+      "ReportExpense": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/ExpenseType"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/Price"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "type",
+          "amount"
+        ]
+      },
+      "ReportLink": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The link to copy and send to the driver.",
+            "example": "https://terhal.co/report#3q2-..."
+          },
+          "whatsappUrl": {
+            "type": "string",
+            "description": "A wa.me click-to-chat link to the driver's phone, with the message prefilled."
+          },
+          "message": {
+            "type": "string",
+            "description": "The prefilled message, with the link in it."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "driver": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "firstName",
+              "lastName",
+              "phone"
+            ]
+          }
+        },
+        "required": [
+          "url",
+          "whatsappUrl",
+          "message",
+          "expiresAt",
+          "driver"
+        ]
+      },
+      "TripReport": {
+        "type": "object",
+        "properties": {
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vehiclePickup": {
+            "type": "string"
+          },
+          "startMileage": {
+            "type": "integer"
+          },
+          "pickupAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dropoffAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vehicleDropoff": {
+            "type": "string"
+          },
+          "endedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endMileage": {
+            "type": "integer"
+          },
+          "cashCollected": {
+            "type": "string",
+            "example": "1500.00"
+          },
+          "stops": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "latitude": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "longitude": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "notes": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "address",
+                "latitude",
+                "longitude",
+                "startedAt",
+                "endedAt",
+                "notes"
+              ]
+            }
+          },
+          "expenses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "type": {
+                  "$ref": "#/components/schemas/ExpenseType"
+                },
+                "amount": {
+                  "type": "string",
+                  "example": "120.00"
+                },
+                "notes": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "amount",
+                "notes"
+              ]
+            }
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "startedAt",
+          "vehiclePickup",
+          "startMileage",
+          "pickupAt",
+          "dropoffAt",
+          "vehicleDropoff",
+          "endedAt",
+          "endMileage",
+          "cashCollected",
+          "stops",
+          "expenses",
+          "submittedAt",
+          "updatedAt"
+        ]
       }
     },
     "parameters": {}
@@ -18996,7 +19630,7 @@
           "Trips"
         ],
         "summary": "Complete a trip",
-        "description": "Awaiting report to completed, once staff have reviewed the report. Needs `trips`.",
+        "description": "Awaiting report to completed, once staff have reviewed the report. A trip with a driver needs its report (an office trip doesn't). Writes the driver's ledger entries: an external driver's fee, the expenses they paid (not office fees), less the cash they collected. Needs `trips`.",
         "security": [
           {
             "staffCookie": []
@@ -19055,7 +19689,7 @@
             }
           },
           "409": {
-            "description": "TRIP_STATUS_CONFLICT (`tripStatus`): the trip isn't where this action applies.",
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`), or REPORT_REQUIRED.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19277,7 +19911,7 @@
           "Trips"
         ],
         "summary": "Reopen a completed trip",
-        "description": "Completed back to awaiting report, until its month's report is generated. Needs `trips`.",
+        "description": "Completed back to awaiting report, until its month's report is generated. Whatever completing wrote to the driver's ledger is reversed with an adjustment. Needs `trips`.",
         "security": [
           {
             "staffCookie": []
@@ -19733,6 +20367,708 @@
           },
           "409": {
             "description": "TRIP_NOT_LINKED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/driver/report": {
+      "get": {
+        "tags": [
+          "Driver report"
+        ],
+        "summary": "Open a trip's report link",
+        "description": "For the driver, with the token from the link's fragment in `Report-Token`. The trip as the driver needs it, when it was started and ended (to prefill the report), and the report once submitted.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 200,
+              "description": "The token from the report link's fragment, after `#`."
+            },
+            "required": true,
+            "description": "The token from the report link's fragment, after `#`.",
+            "name": "report-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverTrip"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "REPORT_LINK_INVALID (no such link, or it was replaced), or REPORT_LINK_EXPIRED (7 days after pickup).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Driver report"
+        ],
+        "summary": "Submit the report",
+        "description": "The whole report, every field required; drafts stay in the browser. Once submitted it's locked for the driver (`REPORT_ALREADY_SUBMITTED`); staff can still correct it until the trip is completed.\n\nA trip still in progress is ended by it. Office fees can't be entered by the driver. Cash collected on an unpaid trip records it as paid in cash to the driver.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 200,
+              "description": "The token from the report link's fragment, after `#`."
+            },
+            "required": true,
+            "description": "The token from the report link's fragment, after `#`.",
+            "name": "report-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitReport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The trip, with its report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverTrip"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "REPORT_LINK_INVALID (no such link, or it was replaced), or REPORT_LINK_EXPIRED (7 days after pickup).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "REPORT_ALREADY_SUBMITTED, or TRIP_STATUS_CONFLICT (`tripStatus`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/driver/report/start": {
+      "post": {
+        "tags": [
+          "Driver report"
+        ],
+        "summary": "Start the trip",
+        "description": "Confirmed to in progress, by the driver. The event names the driver.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 200,
+              "description": "The token from the report link's fragment, after `#`."
+            },
+            "required": true,
+            "description": "The token from the report link's fragment, after `#`.",
+            "name": "report-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverTrip"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "REPORT_LINK_INVALID (no such link, or it was replaced), or REPORT_LINK_EXPIRED (7 days after pickup).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`), ASSIGNMENT_REQUIRED, or ASSIGNEE_BUSY (`field`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/site/driver/report/end": {
+      "post": {
+        "tags": [
+          "Driver report"
+        ],
+        "summary": "End the trip",
+        "description": "In progress to awaiting the report, by the driver.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 200,
+              "description": "The token from the report link's fragment, after `#`."
+            },
+            "required": true,
+            "description": "The token from the report link's fragment, after `#`.",
+            "name": "report-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The trip",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverTrip"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "REPORT_LINK_INVALID (no such link, or it was replaced), or REPORT_LINK_EXPIRED (7 days after pickup).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/report-link": {
+      "get": {
+        "tags": [
+          "Driver report"
+        ],
+        "summary": "Get the report link",
+        "description": "The driver's report link, to copy, and a WhatsApp chat with the driver with a message in `locale` prefilled. It's made when the driver is assigned, so this shows the same link every time. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "en"
+              ],
+              "default": "ar",
+              "description": "The language of the prefilled WhatsApp message. Arabic by default."
+            },
+            "required": false,
+            "description": "The language of the prefilled WhatsApp message. Arabic by default.",
+            "name": "locale",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The link",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportLink"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "REPORT_LINK_UNAVAILABLE: the trip has no driver.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Driver report"
+        ],
+        "summary": "Make a new report link",
+        "description": "Replaces the link: the one sent before stops working. Until the trip is completed or cancelled. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ar",
+                "en"
+              ],
+              "default": "ar",
+              "description": "The language of the prefilled WhatsApp message. Arabic by default."
+            },
+            "required": false,
+            "description": "The language of the prefilled WhatsApp message. Arabic by default.",
+            "name": "locale",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The new link",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportLink"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "REPORT_LINK_UNAVAILABLE (no driver), or TRIP_STATUS_CONFLICT (`tripStatus`).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/trips/{id}/report": {
+      "get": {
+        "tags": [
+          "Driver report"
+        ],
+        "summary": "Get the report",
+        "description": "With its stops and expenses. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripReport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip, or it has no report yet.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Driver report"
+        ],
+        "summary": "Fill in or correct the report",
+        "description": "Replaces the whole report, while the trip awaits it (also after reopening). Staff can enter office fees. Needs `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitReport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without `trips`.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no such trip (or not one of yours).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "TRIP_STATUS_CONFLICT (`tripStatus`): the trip isn't awaiting its report.",
             "content": {
               "application/problem+json": {
                 "schema": {
