@@ -7,3 +7,4 @@ export * from "./fields";
 export * from "./lists";
 export * from "./permissions";
 export * from "./problem";
+export * from "./staff";
