@@ -80,7 +80,7 @@ apps/server/src/
   - `apps/server/openapi.json` is the committed copy. The contract test fails when the API changes it; after an intended
     change, regenerate it with `pnpm --filter @terhal/server test -u` and commit it with the change, so every API change
     shows up in review.
-  - The web app calls the API through `hc<AppType>` (`apps/web/lib/api.ts`), e.g. `api.v1.admin.auth.session.$get()`.
+  - The web app calls the API through `hc<AppType>` (`apps/web/lib/api`), e.g. `api.v1.admin.auth.session.$get()`.
     Module routers are chained (`.openapi(...).openapi(...)`) so their types carry through.
 - Single resources come back as the object itself; lists as `{ data, nextCursor }`, never a bare array, so fields can be
   added later.
@@ -169,6 +169,160 @@ What we gave up:
   Once the client's data is live this stops: every change is a new migration, expand and contract.
 - **Check for drift** after every schema change: apply the migrations to an empty database, then
   `prisma migrate diff --from-config-datasource --to-schema prisma/schema --script` must print an empty migration.
+
+## Web app
+
+`apps/web` is one Next.js app serving three hosts. `proxy.ts` rewrites each host onto its section (`app/site`,
+`app/staff`, `app/admin`), and each section's `layout.tsx` wraps its pages in that host's providers and a bare shell
+(`components/AppShell.tsx`: the host's name and the locale switcher).
+
+```
+apps/web/
+  app/            the root layout (fonts, <html lang dir>, next-intl) and one folder per host
+  components/
+    ui/           the UI kit
+    session/      RequireAdmin, RequireStaff, RequireCustomer, RequireGuest
+    providers/    QueryProvider and each host's providers
+  i18n/           locales, the request config that reads the locale cookie
+  lib/
+    api/          the RPC client, refresh-and-retry, ApiError, error messages
+    forms/        useZodForm, localized validation messages
+    session/      session hooks, sign-in routes, sign out
+  messages/       ar.json and en.json
+  eslint/         the logical-classes rule
+```
+
+### Localization and direction
+
+- **Arabic is the default, English the other.** The locale is the `NEXT_LOCALE` cookie, not a URL prefix: next-intl runs
+  without its routing, and `i18n/request.ts` reads the cookie on every request. The root layout sets `<html lang dir>`
+  from it (`dir="rtl"` for Arabic).
+- **The locale switcher** (`components/LocaleSwitcher.tsx`) writes the cookie in the browser and calls
+  `router.refresh()`, so it works the same on every host. The cookie is host-only: each host remembers its own choice.
+- **Messages** live in `messages/{ar,en}.json`, one namespace per area: `common` (shared words, field names, the UI kit's
+  own text), `errors` (API error codes and validation), `site`, `staff`, `admin`. Keys are typed from `en.json`
+  (`global.d.ts`), so a misspelled key fails the type check, and `messages/check.ts` fails it when one language has a key
+  the other doesn't.
+- **Use them** with `useTranslations("staff")` in client components and `await getTranslations("staff")` in server
+  ones. Dates and numbers go through next-intl's `useFormatter()` (time zone `Africa/Cairo`).
+- **The font** is IBM Plex Sans Arabic for both languages (`next/font`, self-hosted).
+- **Logical CSS only.** Use `ms-/me-/ps-/pe-/start-/end-/text-start/text-end/rounded-s/border-e`, never
+  `ml-/mr-/pl-/pr-/left-/right-/text-left/text-right/rounded-l/border-r`, and `gap` instead of `space-x-`. `pnpm lint`
+  fails on a physical class anywhere in the app's TypeScript (`eslint/logical-classes.mjs`). For the rare thing that has
+  to move along the x axis (a switch's thumb, a slide-in), pair `ltr:` and `rtl:` variants.
+- Text that must stay left to right inside Arabic (codes, phone numbers, emails, plates) gets `dir="ltr"`.
+
+### Icons
+
+Tabler (`@tabler/icons-react`), imported one by one. An icon that points along the reading direction (next, back, a
+chevron on a link) goes through `DirectionalIcon`, which mirrors it in Arabic. Pick it as it reads in English:
+
+```tsx
+<DirectionalIcon icon={IconChevronRight} className="size-4" />   // "next": points left in Arabic
+```
+
+Icons with a real direction (north, sort order, undo) and every other icon are used as they are. Decorative icons get
+`aria-hidden`; the button around them carries the label.
+
+### The UI kit
+
+`components/ui/` is built on Radix (the `radix-ui` package) where behavior is hard to get right (Dialog, Drawer,
+DropdownMenu, Tabs, Toast) and on native elements everywhere else (Select, Checkbox, Radio, Switch), so
+`register("field")` works on them as is. Colors are theme tokens (`bg-surface`, `text-muted`, `border-border`,
+`bg-primary`...) defined as CSS variables in `app/globals.css`, with a dark theme that follows the system. Never use raw
+palette colors (`bg-neutral-100`) in pages.
+
+| Component | Use |
+| --- | --- |
+| `Button` | `variant` primary, secondary, ghost, danger, link; `size` sm, md, lg, icon; `loading`; `asChild` to style a `<Link>` |
+| `Field` | label, `hint`, `error`; any control inside gets the id and aria attributes |
+| `Input`, `Textarea`, `Select`, `PhoneInput` | text-like controls; `Input` takes `startAdornment`/`endAdornment` |
+| `Checkbox`, `RadioGroup` + `Radio`, `Switch` | carry their own label |
+| `CodeInput` | the 6-digit code, controlled (`value`, `onChange`, `onComplete`); digits stay left to right |
+| `Form`, `FormField`, `FormError` | react-hook-form wiring (see Forms) |
+| `Card` (+ `CardHeader`, `CardContent`, `CardFooter`), `PageHeader`, `EmptyState` | page structure |
+| `Dialog`, `Drawer`, `DropdownMenu`, `Tabs` | Radix underneath; the Drawer slides in from the inline end |
+| `Table` (+ `TableEmpty`, `TableLoading`), `Pagination` + `useCursorPages` | lists, paged by the API's `nextCursor` |
+| `Badge`, `Alert`, `toast` + `Toaster`, `Spinner`, `Skeleton`, `QrCode` | status and feedback |
+
+Each file starts with an example. Components take translated text from the page; the few words of their own (Close,
+Next, Loading) are under `common.ui`.
+
+### Calling the API
+
+`lib/api` wraps the Hono RPC client (`hc<AppType>`) with `credentials: "include"`. Use the client for the page's host:
+`adminApi`, `staffApi` or `siteApi`. `call()` returns the typed body of a success, or throws an `ApiError` carrying
+`code`, `status`, the validation `errors` and the `requestId`:
+
+```tsx
+const sessions = useQuery({ queryKey: ["sessions"], queryFn: () => call(adminApi.auth.sessions.$get()) });
+const errorMessage = useErrorMessage();
+// ...
+toast.error(errorMessage(error));   // every ErrorCode has a message in both languages (errors.codes)
+```
+
+- **Refresh and retry.** On a 401 `ACCESS_TOKEN_EXPIRED`, the client calls that audience's `…/auth/refresh` once and
+  replays the request. Requests that expire together share one refresh (the API rotates the refresh token, so racing
+  refreshes would fail). A refused refresh reports the audience signed out (`onSignedOut`), which the host's providers
+  turn into a signed-out session; an unreachable API is not signed out.
+- A failure that never got an answer is `NETWORK_ERROR`; a non-problem response (a proxy's 502) is
+  `UNEXPECTED_RESPONSE`. TanStack Query retries those and 5xx once, never a 4xx.
+
+### Forms
+
+`useZodForm(schema, options)` is react-hook-form validating against a `@terhal/contracts` schema; `onSubmit` gets the
+schema's output (trimmed, normalized), exactly what the API takes. `<Form>` turns a thrown `ApiError` into field errors
+(for `VALIDATION_FAILED`) or a form error shown by `<FormError>`:
+
+```tsx
+const fields = useTranslations("common.fields");
+const form = useZodForm(StaffSignIn, { defaultValues: { email: "", password: "" } });
+
+<Form form={form} onSubmit={(json) => call(staffApi.auth["sign-in"].$post({ json })).then(() => router.replace("/"))}>
+  <FormError />
+  <FormField name="email" label={fields("email")}>
+    <Input type="email" autoComplete="email" {...form.register("email")} />
+  </FormField>
+  <Button type="submit" loading={form.formState.isSubmitting}>{t("signIn")}</Button>
+</Form>
+```
+
+**Validation messages are rebuilt, not translated.** The contracts' zod messages are English, and a message set on a
+schema wins over any zod error map. So `lib/forms/issues.ts` ignores the message and builds one from the issue: its code
+(`invalid_type` is required, `too_small` with its `minimum`, `invalid_format` with its `format` or regex `pattern`), and
+the field's name from `common.fields`. The API's `VALIDATION_FAILED` issues go through the same function. When a
+contract gains a field, add its name to `common.fields`; when it gains a regex, add the pattern to `issues.ts` (until
+then it reads "{field} isn't valid.").
+
+### Sessions
+
+Auth cookies are httpOnly and host-only on the API, so the Next server can't see them: sessions are checked in the
+browser, through each audience's session route, cached by TanStack Query.
+
+- `useAdminSession()`, `useStaffSession()`, `useCustomerSession()`, `useGuest()` return
+  `{ status: "loading" | "signed-in" | "signed-out" | "unverified" | "error" }`, with `user` once signed in.
+- Guards render their children only for a signed-in user and send everyone else to the host's sign-in route
+  (`lib/session/routes.ts`) with `?next=` (read it back with `safeNext`):
+
+  ```tsx
+  <RequireStaff permission="team">{(staff) => <TeamPage me={staff} />}</RequireStaff>
+  ```
+
+  They decide what the page shows, not who may do what: the API checks every request.
+- `useSignOut("admin")` ends the session on the API, drops every cached query and goes to sign in.
+
+### Adding a page
+
+1. Create it under the host's folder: `app/staff/trips/page.tsx` is `dashboard.terhal.co/trips`. Links are written as
+   the browser sees them (`/trips`), never with the section.
+2. Add its strings to both `messages/en.json` and `messages/ar.json`, under the host's namespace.
+3. If it needs a signed-in user, wrap its content in the host's guard (in the page, or in a `layout.tsx` for a group of
+   pages; the sign-in pages stay outside it).
+4. Fetch with `useQuery` + `call()`, write with `useMutation` or `<Form>`, and show failures with `useErrorMessage()`.
+5. Build it from `components/ui`; check it in both languages.
+
+The rules: **logical CSS only**, and **every user-visible string goes through messages, in both languages**, including
+`aria-label`s, placeholders and toasts.
 
 ## Tests
 
