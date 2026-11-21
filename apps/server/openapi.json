@@ -365,6 +365,43 @@
           "current"
         ]
       },
+      "TwoFactorResetToken": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "From the emailed link."
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ConfirmTwoFactorReset": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "From the emailed link."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "example": "482913"
+          }
+        },
+        "required": [
+          "token",
+          "password",
+          "code"
+        ]
+      },
       "AdminInvitationSent": {
         "type": "object",
         "properties": {
@@ -1861,6 +1898,146 @@
         }
       }
     },
+    "/v1/admin/auth/two-factor/setup": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Get a new authenticator secret after a two-factor reset",
+        "description": "Asking again returns the same secret, so an app that's already set up keeps working. Not accepted at sign in until confirmed.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorResetToken"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Show the URI as a QR code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TotpSetup"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "TWO_FACTOR_RESET_INVALID or TWO_FACTOR_RESET_EXPIRED or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/auth/two-factor/confirm": {
+      "post": {
+        "tags": [
+          "Admin auth"
+        ],
+        "summary": "Confirm the new authenticator and sign in",
+        "description": "Needs the admin's password and a current code from the authenticator set up with /v1/admin/auth/two-factor/setup.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmTwoFactorReset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Two-factor set up and signed in",
+            "headers": {
+              "Set-Cookie": {
+                "description": "The access and refresh cookies (httpOnly; the web app never reads them).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admin"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "TWO_FACTOR_RESET_INVALID or TWO_FACTOR_RESET_EXPIRED, TOTP_SETUP_REQUIRED, TOTP_CODE_INVALID or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS: the password is wrong.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/invitations": {
       "post": {
         "tags": [
@@ -2332,6 +2509,116 @@
           },
           "429": {
             "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/admins/{id}/reset/two-factor": {
+      "post": {
+        "tags": [
+          "Admins"
+        ],
+        "summary": "Reset an admin's two-factor authentication",
+        "description": "Takes a current code from your authenticator. Their authenticator stops working and every session of theirs ends; they're emailed a link, valid 48 hours, to set up a new one.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminStepUp"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Reset, and the link sent"
+          },
+          "400": {
+            "description": "CANNOT_TARGET_SELF, TOTP_CODE_INVALID or VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE or TOTP_SETUP_REQUIRED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no admin with this id.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ADMIN_NOT_ACTIVE: reactivate them first.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED: see the Retry-After header.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE: reset, but the email couldn't be sent. Reset again to send a new link.",
             "content": {
               "application/problem+json": {
                 "schema": {

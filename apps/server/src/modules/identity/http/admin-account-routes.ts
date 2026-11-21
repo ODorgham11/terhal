@@ -1,10 +1,14 @@
 import { createRoute } from "@hono/zod-openapi";
 import {
+  Admin,
   AdminSession,
   ChangeAdminPassword,
   CompleteAdminPasswordReset,
+  ConfirmTwoFactorReset,
   IdParam,
   RequestAdminPasswordReset,
+  TotpSetup,
+  TwoFactorResetToken,
   page,
 } from "@terhal/contracts";
 import type { Context } from "hono";
@@ -14,6 +18,7 @@ import {
   currentAdminId,
   currentAdminSessionId,
   requireAdmin,
+  setAdminSession,
 } from "../../../platform/http/authenticate";
 import { body, createRouter, json, problemResponse } from "../../../platform/http/router";
 import {
@@ -27,13 +32,25 @@ import {
   completeAdminPasswordReset,
   requestAdminPasswordReset,
 } from "../application/admin-password";
-import { listSessions, revokeOtherSessions, revokeOwnSession } from "../application/sessions";
+import { confirmTwoFactorReset, startTwoFactorSetup } from "../application/admin-two-factor-reset";
+import {
+  createSession,
+  listSessions,
+  revokeOtherSessions,
+  revokeOwnSession,
+} from "../application/sessions";
 import { requestInfo } from "./request-info";
 
 const MINUTE = 60 * 1000;
 
 const tags = ["Admin auth"];
 const security = [{ [ADMIN_COOKIE_AUTH]: [] }];
+const sessionCookies = {
+  "Set-Cookie": {
+    description: "The access and refresh cookies (httpOnly; the web app never reads them).",
+    schema: { type: "string" as const },
+  },
+};
 const rateLimited = problemResponse("RATE_LIMITED: see the Retry-After header.");
 const perAdmin = (scope: string) => (c: Context) =>
   createRateLimitKey(scope, "user", currentAdminId(c));
@@ -172,6 +189,59 @@ const revokeOthers = createRoute({
   },
 });
 
+const resetUnusable = "TWO_FACTOR_RESET_INVALID or TWO_FACTOR_RESET_EXPIRED";
+
+// After another admin resets their two-factor, the emailed link leads here: the same two steps as accepting an invitation.
+const twoFactorSetup = createRoute({
+  method: "post",
+  path: "/admin/auth/two-factor/setup",
+  tags,
+  summary: "Get a new authenticator secret after a two-factor reset",
+  description:
+    "Asking again returns the same secret, so an app that's already set up keeps working. Not accepted at sign in until confirmed.",
+  middleware: [
+    rateLimit({ limit: 20, windowMs: 60 * MINUTE, key: ipKey("admin:two-factor:setup") }),
+  ] as const,
+  request: body(TwoFactorResetToken),
+  responses: {
+    200: { description: "Show the URI as a QR code", ...json(TotpSetup) },
+    400: problemResponse(`${resetUnusable} or VALIDATION_FAILED`),
+    403: problemResponse("ACCOUNT_NOT_ACTIVE"),
+    429: rateLimited,
+  },
+});
+
+const twoFactorConfirm = createRoute({
+  method: "post",
+  path: "/admin/auth/two-factor/confirm",
+  tags,
+  summary: "Confirm the new authenticator and sign in",
+  description:
+    "Needs the admin's password and a current code from the authenticator set up with /v1/admin/auth/two-factor/setup.",
+  middleware: [
+    rateLimit({ limit: 10, windowMs: 15 * MINUTE, key: ipKey("admin:two-factor:confirm") }),
+    rateLimit({
+      limit: 5,
+      windowMs: 15 * MINUTE,
+      key: bodyKey("admin:two-factor:confirm", "identifier", "token"),
+    }),
+  ] as const,
+  request: body(ConfirmTwoFactorReset),
+  responses: {
+    200: {
+      description: "Two-factor set up and signed in",
+      headers: sessionCookies,
+      ...json(Admin),
+    },
+    400: problemResponse(
+      `${resetUnusable}, TOTP_SETUP_REQUIRED, TOTP_CODE_INVALID or VALIDATION_FAILED`,
+    ),
+    401: problemResponse("INVALID_CREDENTIALS: the password is wrong."),
+    403: problemResponse("ACCOUNT_NOT_ACTIVE"),
+    429: rateLimited,
+  },
+});
+
 export const adminAccountRoutes = createRouter()
   .openapi(requestPasswordReset, async (c) => {
     await requestAdminPasswordReset(c.req.valid("json").email, requestInfo(c).ipAddress);
@@ -207,4 +277,16 @@ export const adminAccountRoutes = createRouter()
       requestInfo(c).ipAddress,
     );
     return c.body(null, 204);
+  })
+  .openapi(twoFactorSetup, async (c) => {
+    const { token } = c.req.valid("json");
+    return c.json(await startTwoFactorSetup(token, requestInfo(c).ipAddress), 200);
+  })
+  .openapi(twoFactorConfirm, async (c) => {
+    const request = requestInfo(c);
+    const confirmed = await confirmTwoFactorReset(c.req.valid("json"), request.ipAddress);
+    const { admin, session } = await createSession(confirmed, "two_factor_reset", request);
+
+    setAdminSession(c, session);
+    return c.json(admin, 200);
   });

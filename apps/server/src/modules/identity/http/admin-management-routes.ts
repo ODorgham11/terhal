@@ -9,6 +9,7 @@ import {
 import { body, createRouter, json, problemResponse } from "../../../platform/http/router";
 import { createRateLimitKey, rateLimit } from "../../../platform/rate-limit/rate-limit";
 import { deactivateAdmin, listAdmins, reactivateAdmin } from "../application/admin-management";
+import { resetTwoFactor } from "../application/admin-two-factor-reset";
 import { requestInfo } from "./request-info";
 
 const MINUTE = 60 * 1000;
@@ -87,6 +88,34 @@ const reactivate = createRoute({
   },
 });
 
+// For an admin who lost their authenticator: they're emailed a link to set up a new one, then confirm it with their
+// password at /v1/admin/auth/two-factor/setup and /confirm.
+const resetTwoFactorRoute = createRoute({
+  method: "post",
+  path: "/admin/admins/{id}/reset/two-factor",
+  tags,
+  summary: "Reset an admin's two-factor authentication",
+  description:
+    "Takes a current code from your authenticator. Their authenticator stops working and every session of theirs ends; they're emailed a link, valid 48 hours, to set up a new one.",
+  middleware: [
+    requireAdmin,
+    rateLimit({ limit: 10, windowMs: 60 * MINUTE, key: perAdmin("admin:admins:reset-two-factor") }),
+  ] as const,
+  security,
+  request: { params: IdParam, ...body(AdminStepUp) },
+  responses: {
+    204: { description: "Reset, and the link sent" },
+    400: problemResponse("CANNOT_TARGET_SELF, TOTP_CODE_INVALID or VALIDATION_FAILED"),
+    ...signedIn,
+    403: problemResponse("ACCOUNT_NOT_ACTIVE or TOTP_SETUP_REQUIRED"),
+    404: notFound,
+    409: problemResponse("ADMIN_NOT_ACTIVE: reactivate them first."),
+    503: problemResponse(
+      "SERVICE_UNAVAILABLE: reset, but the email couldn't be sent. Reset again to send a new link.",
+    ),
+  },
+});
+
 export const adminManagementRoutes = createRouter()
   .openapi(list, async (c) => {
     return c.json(await listAdmins(), 200);
@@ -102,5 +131,14 @@ export const adminManagementRoutes = createRouter()
   })
   .openapi(reactivate, async (c) => {
     await reactivateAdmin(c.req.valid("param").id, currentAdminId(c), requestInfo(c).ipAddress);
+    return c.body(null, 204);
+  })
+  .openapi(resetTwoFactorRoute, async (c) => {
+    await resetTwoFactor(
+      c.req.valid("param").id,
+      c.req.valid("json").code,
+      currentAdminId(c),
+      requestInfo(c).ipAddress,
+    );
     return c.body(null, 204);
   });
