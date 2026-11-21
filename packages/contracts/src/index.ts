@@ -12,3 +12,4 @@ export * from "./permissions";
 export * from "./problem";
 export * from "./search";
 export * from "./staff";
+export * from "./trip-events";
