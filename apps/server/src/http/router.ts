@@ -23,6 +23,7 @@ import {
 } from "../platform/http/authenticate";
 import { requireOrigin } from "../platform/http/origin";
 import { createRouter } from "../platform/http/router";
+import { LOCAL_FILES_PATH, serveLocalFile } from "../platform/storage/index";
 import { notFound, onError } from "./errors";
 import { health } from "./health";
 import { accessLog, bodyLimit, requestContext, requestId, timeout } from "./middleware";
@@ -36,6 +37,14 @@ router.use(requestContext);
 router.use(accessLog);
 router.use(timeout);
 router.use(bodyLimit);
+// The local storage driver's file links are loaded by the frontends (other origins of the same site) in <img> tags, so
+// they're readable across the site. Registered before secureHeaders so it has the last word on the way out.
+if (env.STORAGE_DRIVER === "local") {
+  router.use(LOCAL_FILES_PATH, async (c, next) => {
+    await next();
+    c.res.headers.set("Cross-Origin-Resource-Policy", "same-site");
+  });
+}
 router.use(secureHeaders());
 
 // The customer site, the staff dashboard and the admin panel are separate origins, and each may only call its own
@@ -47,6 +56,10 @@ const audience = (name: Audience) =>
 router.use("/v1/admin/*", ...audience("admin"));
 router.use("/v1/staff/*", ...audience("staff"));
 router.use("/v1/site/*", ...audience("site"));
+
+// The local storage driver's signed links (a bucket serves its own). Outside the versioned routes: it's not part of the
+// API's contract, and the link itself is the credential.
+if (env.STORAGE_DRIVER === "local") router.get(LOCAL_FILES_PATH, serveLocalFile);
 
 // Every module's routes, versioned. Chained, so the type below carries every route for the web app's RPC client.
 const v1 = createRouter()
