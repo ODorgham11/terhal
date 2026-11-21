@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Email, LinkToken, Name, Password, Phone } from "./fields";
+import { Locale } from "./locale";
 import { StaffPermission, StaffPermissions, staffPermissions } from "./permissions";
 
 const InvitationToken = LinkToken("Invitation token");
@@ -14,6 +15,7 @@ export const Staff = z
     phone: z.string().nullable(),
     status: z.enum(["ACTIVE", "SUSPENDED", "DELETED"]),
     permissions: z.array(StaffPermission),
+    locale: Locale,
   })
   .meta({ id: "Staff" });
 

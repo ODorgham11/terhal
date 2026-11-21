@@ -1,8 +1,15 @@
 import { z } from "zod";
 import { Email, LinkToken, Name, Password, Phone } from "./fields";
+import { DEFAULT_LOCALE, Locale } from "./locale";
 
 // Customers (accounts on the customer site) and guests (booking without one). Both confirm their contact details with a
 // 6-digit code that's emailed to them for now.
+
+// The language their emails are sent in. The API can't read the site's locale cookie (it's on another host), so the site
+// sends the visitor's language with sign up and guest start.
+const AccountLocale = Locale.default(DEFAULT_LOCALE).meta({
+  description: "The language emails are sent in: the site's current language. Arabic by default.",
+});
 
 const VerificationCode = z
   .string({ error: "Verification code is required." })
@@ -20,6 +27,7 @@ export const Customer = z
     phone: z.string(),
     email: z.string(),
     status: CustomerStatus,
+    locale: Locale,
   })
   .meta({ id: "Customer" });
 
@@ -32,10 +40,11 @@ export const CustomerSignUp = z
     phone: Phone,
     email: Email,
     password: Password,
+    locale: AccountLocale,
   })
   .meta({ id: "CustomerSignUp" });
 
-export type CustomerSignUp = z.infer<typeof CustomerSignUp>;
+export type CustomerSignUp = z.output<typeof CustomerSignUp>;
 
 export const CustomerVerify = z
   .object({ email: Email, code: VerificationCode })
@@ -75,10 +84,11 @@ export const GuestStart = z
     lastName: Name("Last name"),
     phone: Phone,
     email: Email,
+    locale: AccountLocale,
   })
   .meta({ id: "GuestStart" });
 
-export type GuestStart = z.infer<typeof GuestStart>;
+export type GuestStart = z.output<typeof GuestStart>;
 
 export const Guest = z
   .object({
@@ -86,6 +96,7 @@ export const Guest = z
     lastName: z.string(),
     phone: z.string(),
     email: z.string(),
+    locale: Locale,
     verified: z.boolean(),
     expiresAt: z.iso.datetime().meta({ description: "When the guest session ends." }),
   })

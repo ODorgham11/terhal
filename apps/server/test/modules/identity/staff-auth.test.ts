@@ -203,6 +203,7 @@ describe("signing in", () => {
       phone: null,
       status: "ACTIVE",
       permissions: ["trips"],
+      locale: "ar",
     });
     expect(
       (await prisma.staff.findUniqueOrThrow({ where: { id: created.id } })).lastLoginAt,

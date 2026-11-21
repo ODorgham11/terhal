@@ -20,6 +20,7 @@ export const toStaffResponse = (staff: Staff): StaffResponse => ({
   phone: staff.phone,
   status: staff.status,
   permissions: permissionsOf(staff.permissions),
+  locale: staff.locale,
 });
 
 // The signed in staff member. requireStaff has already checked they exist and are active.

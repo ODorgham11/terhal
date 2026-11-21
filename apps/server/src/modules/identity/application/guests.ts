@@ -15,6 +15,7 @@ const toGuestResponse = (session: GuestSession): GuestResponse => ({
   lastName: session.lastName,
   phone: session.phone,
   email: session.email,
+  locale: session.locale,
   verified: session.verifiedAt !== null,
   expiresAt: session.expiresAt.toISOString(),
 });

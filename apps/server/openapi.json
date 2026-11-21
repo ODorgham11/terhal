@@ -728,6 +728,9 @@
             "items": {
               "$ref": "#/components/schemas/StaffPermission"
             }
+          },
+          "locale": {
+            "$ref": "#/components/schemas/Locale"
           }
         },
         "required": [
@@ -737,7 +740,15 @@
           "email",
           "phone",
           "status",
-          "permissions"
+          "permissions",
+          "locale"
+        ]
+      },
+      "Locale": {
+        "type": "string",
+        "enum": [
+          "ar",
+          "en"
         ]
       },
       "StaffSignIn": {
@@ -894,6 +905,9 @@
               "SUSPENDED",
               "DELETED"
             ]
+          },
+          "locale": {
+            "$ref": "#/components/schemas/Locale"
           }
         },
         "required": [
@@ -902,7 +916,8 @@
           "lastName",
           "phone",
           "email",
-          "status"
+          "status",
+          "locale"
         ]
       },
       "CustomerSignUp": {
@@ -932,6 +947,15 @@
             "minLength": 8,
             "maxLength": 72,
             "pattern": "[a-z]"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "default": "ar",
+            "description": "The language emails are sent in: the site's current language. Arabic by default."
           }
         },
         "required": [
@@ -1028,6 +1052,9 @@
           "email": {
             "type": "string"
           },
+          "locale": {
+            "$ref": "#/components/schemas/Locale"
+          },
           "verified": {
             "type": "boolean"
           },
@@ -1042,6 +1069,7 @@
           "lastName",
           "phone",
           "email",
+          "locale",
           "verified",
           "expiresAt"
         ]
@@ -1067,6 +1095,15 @@
             "type": "string",
             "maxLength": 75,
             "example": "someone@terhal.co"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "default": "ar",
+            "description": "The language emails are sent in: the site's current language. Arabic by default."
           }
         },
         "required": [

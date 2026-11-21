@@ -20,7 +20,14 @@ const alreadyExists = () =>
   });
 
 // Creates an unverified account and emails it a code. The customer has no session until they enter the code.
-export const signUp = async ({ firstName, lastName, phone, email, password }: CustomerSignUp) => {
+export const signUp = async ({
+  firstName,
+  lastName,
+  phone,
+  email,
+  password,
+  locale,
+}: CustomerSignUp) => {
   const existing = await prisma.customer.findFirst({
     where: { OR: [{ email }, { phone }] },
     select: { id: true },
@@ -37,6 +44,7 @@ export const signUp = async ({ firstName, lastName, phone, email, password }: Cu
         lastName,
         phone,
         email,
+        locale,
         passwordHash: await hash(password),
         status: "UNVERIFIED",
         ...columns,
