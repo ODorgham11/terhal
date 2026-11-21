@@ -18,6 +18,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
     "db:seed": "prisma db seed",
+    "db:seed:governorates": "tsx prisma/seed-governorates.ts",
     "lint": "eslint .",
     "test:watch": "vitest"
   },
