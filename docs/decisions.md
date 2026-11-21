@@ -112,6 +112,33 @@ A refresh token used a second time after rotation is rejected but doesn't end th
 cookies can't be read by page scripts and only reach `/…/auth`, so theft needs the device itself, and detection would
 sign people out when a refresh response is lost on a bad connection. Revisit for customers' long sessions after launch.
 
+### The web app's foundations (2026-11-21)
+
+How the web app is built before its pages; details in [architecture.md, Web app](architecture.md#web-app).
+
+- **Font: IBM Plex Sans Arabic, for both languages.** It draws Arabic and Latin to one design, so a page mixing them
+  (an English name in an Arabic sentence, an email, a code) keeps one rhythm and x-height, and it's one family to load.
+  A pair (an Arabic face plus Inter, say) was the alternative; two designs side by side look stitched together, and it
+  doubles what's downloaded. Self-hosted through `next/font`.
+- **Radix (the `radix-ui` package) for the hard parts of the UI kit**: Dialog, Drawer, DropdownMenu, Tabs, Toast. Focus
+  trapping, keyboard handling and positioning are easy to get subtly wrong, and Radix handles right-to-left through its
+  `DirectionProvider` (arrow keys, menus opening toward the inline end). It's the most used headless library and ships
+  each primitive separately, so only what's imported is bundled. Everything else is native elements (`<select>`,
+  checkboxes, radios, a checkbox with `role="switch"`), which are accessible already and work with react-hook-form's
+  `register` without adapters. Base UI was the alternative; it's newer and less proven. `tailwind-merge` comes along so a
+  page's `className` reliably overrides a component's.
+- **Validation messages are rebuilt from each zod issue, not translated.** The contracts' messages are English and stay
+  that way (they're the API's too, and its OpenAPI document). A message written on a schema wins over zod's error maps,
+  so configuring zod can't localize them. `lib/forms/issues.ts` builds the sentence from the issue's code, its numbers
+  (`minimum`, `maximum`), its format or regex pattern, and the field's name, and the API's `VALIDATION_FAILED` issues go
+  through the same function. Cost: a new regex in the contracts needs its pattern added there for a precise message (it
+  falls back to "{field} isn't valid."), and a new field needs its name in `common.fields`. Keying translations by the
+  English text was rejected: rewording a message in the contracts would silently break the Arabic.
+- **The locale cookie is written in the browser** and the page refreshed, rather than by a server action, so it behaves
+  the same on every host with nothing to route through `proxy.ts`. It's host-only: each host remembers its own language.
+- **Physical-direction classes fail the lint**, through a small local ESLint rule (`apps/web/eslint/logical-classes.mjs`)
+  that checks every string in the app, since classes are assembled in `cn()` calls and maps as often as in `className`.
+
 ---
 
 ## Infrastructure

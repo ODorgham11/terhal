@@ -1,0 +1,106 @@
+{
+  "common": {
+    "appName": "Terhal",
+    "locale": {
+      "switchTo": "Switch to {language}"
+    },
+    "ui": {
+      "loading": "Loading…",
+      "close": "Close",
+      "optional": "Optional",
+      "previous": "Previous",
+      "next": "Next",
+      "pagination": "Pagination",
+      "noResults": "Nothing to show yet.",
+      "dismiss": "Dismiss",
+      "notifications": "Notifications",
+      "codeDigit": "Digit {position} of {length}",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
+    },
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone number",
+      "identifier": "Email or phone number",
+      "password": "Password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "code": "Code",
+      "permissions": "Permissions"
+    },
+    "session": {
+      "unreachableTitle": "We couldn't reach the server",
+      "unreachableDescription": "Check your connection and try again.",
+      "retry": "Try again",
+      "forbiddenTitle": "You don't have access to this page",
+      "forbiddenDescription": "Ask a colleague who manages the team to give you access.",
+      "signOut": "Sign out"
+    }
+  },
+  "errors": {
+    "codes": {
+      "BAD_REQUEST": "Something about that request wasn't right. Please try again.",
+      "VALIDATION_FAILED": "Please check the highlighted fields.",
+      "NOT_FOUND": "We couldn't find what you're looking for.",
+      "FORBIDDEN": "You don't have permission to do this.",
+      "PAYLOAD_TOO_LARGE": "That's too large to upload.",
+      "INTERNAL_ERROR": "Something went wrong on our side. Please try again.",
+      "SERVICE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "RATE_LIMITED": "Too many attempts. Please wait a few minutes and try again.",
+      "UNTRUSTED_ORIGIN": "This request was blocked for your security. Reload the page and try again.",
+      "UNAUTHENTICATED": "Please sign in to continue.",
+      "ACCESS_TOKEN_EXPIRED": "Your session has expired. Please sign in again.",
+      "INVALID_CREDENTIALS": "The email or password is incorrect.",
+      "ACCOUNT_NOT_ACTIVE": "This account isn't active.",
+      "INVALID_REFRESH_TOKEN": "Your session has ended. Please sign in again.",
+      "VERIFICATION_REQUIRED": "Please confirm the code we sent you first.",
+      "ACCOUNT_ALREADY_EXISTS": "An account with these details already exists.",
+      "INVITATION_INVALID": "This invitation link isn't valid. It may have been used or revoked.",
+      "INVITATION_EXPIRED": "This invitation has expired. Ask for a new one.",
+      "PASSWORD_RESET_INVALID": "This password reset link isn't valid. It may have been used already.",
+      "PASSWORD_RESET_EXPIRED": "This password reset link has expired. Request a new one.",
+      "VERIFICATION_CODE_INVALID": "That code isn't right. Please check it and try again.",
+      "VERIFICATION_CODE_EXPIRED": "That code has expired. Request a new one.",
+      "TOTP_SETUP_REQUIRED": "Set up your authenticator app to continue.",
+      "TOTP_CODE_INVALID": "That authenticator code isn't right. Enter the current one.",
+      "TOTP_CHALLENGE_INVALID": "Your sign in timed out. Please enter your email and password again.",
+      "TWO_FACTOR_RESET_INVALID": "This two-factor reset link isn't valid. It may have been used already.",
+      "TWO_FACTOR_RESET_EXPIRED": "This two-factor reset link has expired. Ask another admin for a new one.",
+      "CANNOT_TARGET_SELF": "You can't do this to your own account.",
+      "LAST_ACTIVE_ADMIN": "You can't deactivate the last active admin.",
+      "ADMIN_NOT_ACTIVE": "This admin isn't active.",
+      "NETWORK_ERROR": "We couldn't reach the server. Check your connection and try again.",
+      "UNEXPECTED_RESPONSE": "Something went wrong. Please try again."
+    },
+    "validation": {
+      "required": "This field is required.",
+      "requiredField": "{field} is required.",
+      "tooShort": "Must contain at least {min, plural, one {# character} other {# characters}}.",
+      "tooShortField": "{field} must contain at least {min, plural, one {# character} other {# characters}}.",
+      "tooLong": "Must contain {max, plural, one {# character} other {# characters}} at most.",
+      "tooLongField": "{field} must contain {max, plural, one {# character} other {# characters}} at most.",
+      "tooFew": "Choose at least {min}.",
+      "tooMany": "Choose {max} at most.",
+      "email": "Please enter a valid email address.",
+      "phone": "Please enter a valid phone number.",
+      "code": "Please enter the 6-digit code.",
+      "passwordLowercase": "Password must contain at least one lowercase letter.",
+      "passwordUppercase": "Password must contain at least one uppercase letter.",
+      "passwordNumber": "Password must contain at least one number.",
+      "option": "Please choose one of the options.",
+      "invalid": "This value isn't valid.",
+      "invalidField": "{field} isn't valid."
+    }
+  },
+  "site": {
+    "title": "Terhal"
+  },
+  "staff": {
+    "title": "Staff dashboard"
+  },
+  "admin": {
+    "title": "Admin panel"
+  }
+}
