@@ -463,10 +463,12 @@ Choices made building the report link, the report routes and the ledger on compl
 
 - **Staff can show the link again.** The spec said only the token's hash is stored and the link is shown once, but the
   dashboard also needs to show it again ("Send report link" after it was issued on assignment) without breaking the
-  link the driver already has. So the token is an HMAC of the trip, the driver and a random salt under a key derived
-  from `TOTP_ENCRYPTION_KEY` (`keyedToken`, purpose `report-link`). The trip stores the hash (to find the trip from a
-  token), the salt and the expiry (`Trip_report_token`: all three or none). A leaked database alone still opens nothing;
-  changing that key breaks every live link, like it breaks authenticators. `GET …/report-link` shows the link,
+  link the driver already has. So the token is an HMAC of the trip, the driver and a random salt under its own secret,
+  `REPORT_LINK_SECRET` (`keyedToken`). The trip stores the hash (to find the trip from a token), the salt and the expiry
+  (`Trip_report_token`: all three or none). A leaked database alone still opens nothing. Changing the secret breaks every
+  live link and nothing else; staff then make new ones. It was first derived from `TOTP_ENCRYPTION_KEY`, but that tied
+  the links to the admins' authenticators: rotating one would have broken the other, and that key can't be rotated
+  without re-encrypting every two-factor secret (2026-11-21). `GET …/report-link` shows the link,
   `POST …/report-link` replaces it (the old one stops working, `trip.report_link_issued`).
 - **Issued on assignment** (`onDriverChanged`), with no event of its own: the assignment's event says the driver
   changed. Removing the driver removes the link. The expiry (7 days after pickup) moves when staff move the pickup.

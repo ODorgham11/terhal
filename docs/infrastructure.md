@@ -183,7 +183,7 @@ breaking the other. Sends admin invitations and other account emails.
 
 | Secret | Where |
 |---|---|
-| Staging `app.env` (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `RESEND_KEY`, `ADMIN_SECRET`, `TOTP_ENCRYPTION_KEY`, the three URLs) | `/opt/terhal/staging/app.env` on the VPS (mode 600, owner `deploy`). One backup, in Omar's password manager |
+| Staging `app.env` (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `RESEND_KEY`, `ADMIN_SECRET`, `STAFF_SECRET`, `CUSTOMER_SECRET`, `TOTP_ENCRYPTION_KEY`, `REPORT_LINK_SECRET`, the storage keys, the three URLs) | `/opt/terhal/staging/app.env` on the VPS (mode 600, owner `deploy`). One backup, in Omar's password manager |
 | Production `app.env` (the same variables, with its own values) | `/opt/terhal/main/app.env` on the VPS (mode 600, owner `deploy`). One backup, in Omar's password manager |
 | Deploy SSH key, host, known-hosts | GitHub environment secrets, `staging` and `main` |
 | VPS root password | Password manager (password login over SSH is off) |
@@ -191,10 +191,10 @@ breaking the other. Sends admin invitations and other account emails.
 | Production admin login + 2FA | Password manager + authenticator app (a separate entry from staging's) |
 
 Rules:
-- Production gets its **own** `ADMIN_SECRET` and `TOTP_ENCRYPTION_KEY`,
-  never staging's.
+- Production gets its **own** value of every secret, never staging's.
 - Never change `TOTP_ENCRYPTION_KEY` once admins exist; it breaks every
-  authenticator setup.
+  authenticator setup. `REPORT_LINK_SECRET` can be changed at any time: it
+  only breaks the drivers' live report links, and staff make new ones.
 - No secret goes in git, in a `NEXT_PUBLIC_` variable, or in a screenshot.
 
 ---
@@ -290,8 +290,9 @@ later. The database does not move.
 
 ## 8. Open items
 
-- **Add `STAFF_SECRET` and `CUSTOMER_SECRET` to both `app.env` files**
-  (`/opt/terhal/{staging,main}/app.env`, `openssl rand -base64 32` each)
+- **Add `STAFF_SECRET`, `CUSTOMER_SECRET` and `REPORT_LINK_SECRET` to both
+  `app.env` files** (`/opt/terhal/{staging,main}/app.env`,
+  `openssl rand -base64 32` each)
   before the next deploy: the server refuses to start without them.
 - **Create the Cloudflare R2 buckets and keys, then set them in both
   `app.env` files before the next deploy**: outside local development the
