@@ -258,23 +258,27 @@ export interface CustomerActor {
 
 export const currentCustomerId = (c: Context) => (c.get("customer") as CustomerActor).customerId;
 
+// The signed in customer behind the access cookie, or a 401 (403 when the account isn't active).
+const authenticateCustomer = async (c: Context): Promise<CustomerActor> => {
+  const { subject, sessionId } = await accessToken(c, "customer");
+  const session = await prisma.customerSession.findUnique({
+    where: { id: sessionId },
+    select: {
+      customerId: true,
+      revokedAt: true,
+      expiresAt: true,
+      customer: { select: { status: true } },
+    },
+  });
+
+  if (!session || !isLive(session, session.customerId, subject)) throw unauthenticated();
+  if (session.customer.status !== "ACTIVE") throw notActive("customer");
+  return { customerId: subject, sessionId };
+};
+
 export const requireCustomer = createMiddleware<{ Variables: { customer: CustomerActor } }>(
   async (c, next) => {
-    const { subject, sessionId } = await accessToken(c, "customer");
-    const session = await prisma.customerSession.findUnique({
-      where: { id: sessionId },
-      select: {
-        customerId: true,
-        revokedAt: true,
-        expiresAt: true,
-        customer: { select: { status: true } },
-      },
-    });
-
-    if (!session || !isLive(session, session.customerId, subject)) throw unauthenticated();
-    if (session.customer.status !== "ACTIVE") throw notActive("customer");
-
-    c.set("customer", { customerId: subject, sessionId });
+    c.set("customer", await authenticateCustomer(c));
     await next();
   },
 );
@@ -286,26 +290,52 @@ export interface GuestActor {
 export const currentGuestSessionId = (c: Context) => (c.get("guest") as GuestActor).guestSessionId;
 
 // A guest whose session is verified, unexpired and not revoked.
+const authenticateGuest = async (c: Context): Promise<GuestActor> => {
+  const token = guestToken(c);
+  if (!token) throw unauthenticated();
+
+  const session = await prisma.guestSession.findUnique({
+    where: { tokenHash: hashToken(token) },
+    select: { id: true, verifiedAt: true, expiresAt: true, revokedAt: true },
+  });
+
+  if (!session || session.revokedAt || session.expiresAt <= new Date()) throw unauthenticated();
+  if (!session.verifiedAt) {
+    throw new AppError({
+      code: "VERIFICATION_REQUIRED",
+      status: 403,
+      detail: "Please verify your contact details first.",
+    });
+  }
+  return { guestSessionId: session.id };
+};
+
 export const requireGuest = createMiddleware<{ Variables: { guest: GuestActor } }>(
   async (c, next) => {
-    const token = guestToken(c);
-    if (!token) throw unauthenticated();
-
-    const session = await prisma.guestSession.findUnique({
-      where: { tokenHash: hashToken(token) },
-      select: { id: true, verifiedAt: true, expiresAt: true, revokedAt: true },
-    });
-
-    if (!session || session.revokedAt || session.expiresAt <= new Date()) throw unauthenticated();
-    if (!session.verifiedAt) {
-      throw new AppError({
-        code: "VERIFICATION_REQUIRED",
-        status: 403,
-        detail: "Please verify your contact details first.",
-      });
-    }
-
-    c.set("guest", { guestSessionId: session.id });
+    c.set("guest", await authenticateGuest(c));
     await next();
   },
 );
+
+// Who is booking on the customer site: a signed in customer or a verified guest.
+export type Booker = { customerId: string } | { guestSessionId: string };
+
+// For routes open to a customer or a verified guest. A customer's access cookie wins when both are there (someone who
+// booked as a guest and then signed in); without one, the guest session is checked.
+export const requireBooker = createMiddleware<{
+  Variables: { customer?: CustomerActor; guest?: GuestActor };
+}>(async (c, next) => {
+  if (getCookie(c, sessionCookieNames.customer.accessCookie)) {
+    c.set("customer", await authenticateCustomer(c));
+  } else {
+    c.set("guest", await authenticateGuest(c));
+  }
+  await next();
+});
+
+export const currentBooker = (c: Context): Booker => {
+  const customer = c.get("customer") as CustomerActor | undefined;
+  return customer
+    ? { customerId: customer.customerId }
+    : { guestSessionId: currentGuestSessionId(c) };
+};
