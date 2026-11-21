@@ -80,6 +80,7 @@
       "OUT_OF_COVERAGE": "We don't serve this place yet.",
       "TRIP_CLASS_NAME_TAKEN": "Another active class already has this name.",
       "PRICING_EXISTS": "This route already has a price for this class and car. Change that price instead.",
+      "QUOTE_SAME_PLACE": "The pickup and the drop-off are in the same place. Choose a different drop-off.",
       "NETWORK_ERROR": "We couldn't reach the server. Check your connection and try again.",
       "UNEXPECTED_RESPONSE": "Something went wrong. Please try again."
     },

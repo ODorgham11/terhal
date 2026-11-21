@@ -12,6 +12,7 @@ export * from "./locations";
 export * from "./permissions";
 export * from "./pricing";
 export * from "./problem";
+export * from "./quotes";
 export * from "./search";
 export * from "./staff";
 export * from "./trip-classes";

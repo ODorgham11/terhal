@@ -73,6 +73,10 @@ export const errorCodes = [
   // Pricing
   // The route already has a price for this class and car body: change that one instead.
   "PRICING_EXISTS",
+
+  // Quotes
+  // The pickup and the drop-off resolve to the same place, so the trip isn't bookable. `leg` says which trip.
+  "QUOTE_SAME_PLACE",
 ] as const;
 
 export type ErrorCode = (typeof errorCodes)[number];
