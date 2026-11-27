@@ -8,6 +8,7 @@ import {
   IconChevronRight,
   IconCircleCheck,
   IconCopy,
+  IconPencil,
   IconDotsVertical,
   IconLink,
   IconPlayerPlay,
@@ -23,6 +24,7 @@ import { RequireStaff } from "@/components/session/RequireSession";
 import { useRoute, useTripDates } from "@/components/staff/trips/format";
 import { TripStatusBadge } from "@/components/staff/trips/TripStatusBadge";
 import { AssignDialog } from "@/components/staff/trips/detail/AssignDialog";
+import { EditTripDrawer } from "@/components/staff/trips/detail/EditTripDrawer";
 import { CancelTripDialog } from "@/components/staff/trips/detail/CancelTripDialog";
 import { ConfirmDialog } from "@/components/staff/ConfirmDialog";
 import { LinkReturnDialog } from "@/components/staff/trips/detail/LinkReturnDialog";
@@ -54,6 +56,7 @@ import { toast } from "@/components/ui/Toast";
 import { call, isApiError, staffApi, useErrorMessage } from "@/lib/api";
 
 type DialogName =
+  | "edit"
   | "price"
   | "confirm"
   | "assign"
@@ -117,6 +120,8 @@ function Loaded({ trip, staff }: { trip: TripDetail; staff: Staff }) {
   const changed = useTripChanged();
   const [dialog, setDialog] = useState<DialogName | null>(null);
   const open = (name: DialogName) => () => setDialog(name);
+  // Details change while pending or confirmed; the price, payment and brand until the trip is completed.
+  const editable = trip.status !== "COMPLETED" && trip.status !== "CANCELLED";
   const dialogProps = (name: DialogName) => ({
     open: dialog === name,
     onOpenChange: (next: boolean) => setDialog(next ? name : null),
@@ -220,6 +225,12 @@ function Loaded({ trip, staff }: { trip: TripDetail; staff: Staff }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
+              {editable && (
+                <DropdownMenuItem onSelect={open("edit")}>
+                  <IconPencil aria-hidden className="size-4" stroke={1.75} />
+                  {t("actions.edit")}
+                </DropdownMenuItem>
+              )}
               {assignable && !unassigned && (
                 <DropdownMenuItem onSelect={open("assign")}>
                   <IconUserPlus aria-hidden className="size-4" stroke={1.75} />
@@ -301,6 +312,7 @@ function Loaded({ trip, staff }: { trip: TripDetail; staff: Staff }) {
       />
       <AssignDialog trip={trip} {...dialogProps("assign")} />
       <CancelTripDialog trip={trip} {...dialogProps("cancel")} />
+      <EditTripDrawer trip={trip} {...dialogProps("edit")} />
       <ReportLinkDialog trip={trip} {...dialogProps("reportLink")} />
       <LinkReturnDialog trip={trip} {...dialogProps("linkReturn")} />
       <ConfirmDialog
