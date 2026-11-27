@@ -31,7 +31,23 @@
       "permissions": "Permissions",
       "confirmPassword": "Confirm password",
       "totalPrice": "Total price",
-      "note": "Note"
+      "note": "Note",
+      "licenseNumber": "Licence number",
+      "licenseExpiresAt": "Licence expiry",
+      "nationalId": "National ID",
+      "office": "Office",
+      "notes": "Notes",
+      "amount": "Amount",
+      "make": "Make",
+      "model": "Model",
+      "year": "Year",
+      "plateNumber": "Plate number",
+      "color": "Colour",
+      "body": "Body",
+      "officeName": "Office name",
+      "contact": "Contact person",
+      "address": "Address",
+      "area": "Area"
     },
     "session": {
       "unreachableTitle": "We couldn't reach the server",
@@ -643,6 +659,256 @@
       "analytics": {
         "name": "Analytics",
         "description": "Revenue, costs and monthly reports."
+      }
+    },
+    "locationPicker": {
+      "clear": "Clear",
+      "placeholder": "Search an area, district or governorate",
+      "searching": "Searching…",
+      "noResults": "No places match."
+    },
+    "locations": {
+      "localities": {
+        "GOVERNORATE": "Governorate",
+        "DISTRICT": "District",
+        "AREA": "Area"
+      }
+    },
+    "fleet": {
+      "loadingTrips": "Loading trips…",
+      "noUpcoming": "No trips coming up.",
+      "kinds": {
+        "internal": "Internal",
+        "external": "Freelance",
+        "office": "Office"
+      },
+      "balance": {
+        "settled": "Settled",
+        "owed": "Owed {amount}",
+        "owes": "Owes {amount}"
+      },
+      "licence": {
+        "none": "No licence on file",
+        "expired": "Expired",
+        "expiresIn": "Expires in {days, plural, one {# day} other {# days}}",
+        "valid": "Valid",
+        "until": "Until {date}"
+      },
+      "drivers": {
+        "title": "Drivers",
+        "description": "Internal drivers, freelancers and partner-office drivers.",
+        "add": "Add driver",
+        "search": "Search name, phone or licence",
+        "type": "Type",
+        "allTypes": "All types",
+        "externalOrOffice": "Freelance or office",
+        "licenceExpiring": "Licence expiring",
+        "columns": {
+          "driver": "Driver",
+          "type": "Type",
+          "office": "Office",
+          "licence": "Licence",
+          "balance": "Balance"
+        },
+        "empty": "No drivers here",
+        "emptyHint": "Add a driver, or change the filters.",
+        "menu": "Actions for {name}",
+        "open": "Open driver"
+      },
+      "driverForm": {
+        "addTitle": "Add driver",
+        "editTitle": "Edit driver",
+        "description": "Drivers get trips assigned and fill in their reports from a link.",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add driver",
+        "saved": "Driver saved",
+        "added": "Driver added",
+        "kind": "Works as",
+        "kindHints": {
+          "internal": "On the company's payroll.",
+          "external": "A freelancer paid per trip.",
+          "office": "Works through a partner office."
+        },
+        "chooseOffice": "Choose an office"
+      },
+      "payment": {
+        "title": "Record a payment",
+        "kind": "Kind",
+        "kinds": {
+          "payment": "Payment",
+          "adjustment": "Adjustment"
+        },
+        "direction": "Direction",
+        "directions": {
+          "driverPaidUs": "Driver paid us",
+          "wePaidDriver": "We paid driver",
+          "raise": "We owe more",
+          "lower": "We owe less"
+        },
+        "after": "Balance after: {balance}",
+        "noteRequired": "Say why the balance is being corrected.",
+        "notePlaceholder": "e.g. Handed in at the Nasr City office.",
+        "cancel": "Cancel",
+        "record": "Record",
+        "recorded": "Recorded"
+      },
+      "driver": {
+        "breadcrumb": "Breadcrumb",
+        "archived": "Archived",
+        "subtitle": "{kind} driver · Joined {date}",
+        "recordPayment": "Record payment",
+        "upcoming": "Upcoming trips",
+        "notes": "Notes",
+        "balance": {
+          "title": "Balance",
+          "settled": "Nothing owed either way",
+          "companyOwes": "The company owes {name}",
+          "driverOwes": "{name} owes the company",
+          "settledHint": "The ledger is even.",
+          "owedHint": "Fees and expenses are more than the cash they collected. Record a payment when they're paid.",
+          "owesHint": "They collected more cash than their fees and expenses. Record a payment when they hand it in.",
+          "cashCollected": "Cash collected",
+          "earned": "Fees + expenses",
+          "payments": "Payments"
+        },
+        "ledger": {
+          "title": "Ledger",
+          "date": "Date",
+          "entry": "Entry",
+          "trip": "Trip",
+          "by": "By",
+          "amount": "Amount",
+          "empty": "No entries yet.",
+          "hint": "Plus means the company owes {name} more; minus means less. Trip entries are added when a trip is completed.",
+          "system": "System",
+          "entries": {
+            "tripFee": "Trip fee",
+            "expenses": "Expenses reimbursed",
+            "cashCollected": "Cash collected",
+            "payout": "Paid to driver",
+            "handedIn": "Cash handed in",
+            "adjustment": "Adjustment"
+          }
+        },
+        "profile": {
+          "title": "Profile",
+          "noOffice": "None"
+        },
+        "month": {
+          "title": "This month",
+          "trips": "Trips completed",
+          "kilometres": "Kilometres",
+          "fees": "Fees earned"
+        }
+      },
+      "vehicles": {
+        "title": "Vehicles",
+        "description": "Company cars, freelancers' cars and partner-office cars.",
+        "add": "Add vehicle",
+        "search": "Search make, model or plate",
+        "body": "Body",
+        "allBodies": "All bodies",
+        "type": "Type",
+        "allTypes": "All types",
+        "externalOrOffice": "Freelance or office",
+        "columns": {
+          "vehicle": "Vehicle",
+          "body": "Body",
+          "type": "Type",
+          "office": "Office",
+          "photos": "Photos"
+        },
+        "empty": "No vehicles here",
+        "emptyHint": "Add a vehicle, or change the filters.",
+        "noPhotos": "No photos yet",
+        "photoCount": "{count, plural, one {# photo} other {# photos}}",
+        "menu": "Actions for {name}",
+        "open": "Open vehicle"
+      },
+      "vehicleForm": {
+        "addTitle": "Add vehicle",
+        "editTitle": "Edit vehicle",
+        "description": "Trips booked for this body or a smaller one can be assigned to it.",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add vehicle",
+        "saved": "Vehicle saved",
+        "added": "Vehicle added",
+        "bodyHint": "Decides how many passengers and bags it takes.",
+        "kind": "Belongs to",
+        "chooseOffice": "Choose an office"
+      },
+      "vehicle": {
+        "breadcrumb": "Breadcrumb",
+        "archived": "Archived",
+        "trips": "Upcoming trips",
+        "details": "Details",
+        "noOffice": "None",
+        "fits": "Fits",
+        "passengers": "Passengers",
+        "largeBags": "Large bags",
+        "mediumBags": "Medium bags",
+        "smallBags": "Small bags",
+        "alsoServes": "It can also take trips booked as {bodies}.",
+        "photos": {
+          "title": "Photos",
+          "count": "{count} of {limit}",
+          "photoAlt": "Photo {number}",
+          "cover": "Cover photo",
+          "makeCover": "Make cover",
+          "remove": "Remove photo",
+          "removed": "Photo removed",
+          "none": "No photos yet",
+          "moveEarlier": "Move earlier",
+          "moveLater": "Move later",
+          "uploading": "Uploading…",
+          "add": "Add photos",
+          "hint": "The first photo is the cover. JPEG, PNG or WebP, up to 5 MB each, {limit} photos at most.",
+          "wrongType": "{name} isn't a JPEG, PNG or WebP image.",
+          "tooBig": "{name} is larger than 5 MB."
+        }
+      },
+      "offices": {
+        "title": "Partner offices",
+        "description": "Companies that take trips we hand to them, with their own drivers and cars.",
+        "add": "Add office",
+        "search": "Search offices",
+        "columns": {
+          "office": "Office",
+          "contact": "Contact",
+          "area": "Area",
+          "address": "Address"
+        },
+        "empty": "No offices here",
+        "emptyHint": "Add a partner office to hand trips to."
+      },
+      "officeForm": {
+        "addTitle": "Add office",
+        "editTitle": "Edit office",
+        "description": "Trips can be handed to a partner office, with or without one of its drivers.",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add office",
+        "saved": "Office saved",
+        "added": "Office added",
+        "areaHint": "Used to suggest the nearest office for a pickup."
+      },
+      "office": {
+        "breadcrumb": "Breadcrumb",
+        "archived": "Archived",
+        "since": "Partner since {date}",
+        "liveTrips": "Live trips",
+        "noTrips": "No live trips with this office.",
+        "noDriver": "Driver not picked yet",
+        "drivers": "Drivers",
+        "addDriver": "Add driver",
+        "noDrivers": "No drivers yet.",
+        "vehicles": "Vehicles",
+        "addVehicle": "Add vehicle",
+        "noVehicles": "No vehicles yet.",
+        "contactTitle": "Contact",
+        "notes": "Notes"
       }
     }
   },

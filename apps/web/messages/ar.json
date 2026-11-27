@@ -31,7 +31,23 @@
       "permissions": "الصلاحيات",
       "confirmPassword": "تأكيد كلمة المرور",
       "totalPrice": "السعر الإجمالي",
-      "note": "ملاحظة"
+      "note": "ملاحظة",
+      "licenseNumber": "رقم الرخصة",
+      "licenseExpiresAt": "انتهاء الرخصة",
+      "nationalId": "الرقم القومي",
+      "office": "المكتب",
+      "notes": "ملاحظات",
+      "amount": "المبلغ",
+      "make": "الشركة المصنعة",
+      "model": "الطراز",
+      "year": "السنة",
+      "plateNumber": "رقم اللوحة",
+      "color": "اللون",
+      "body": "الفئة",
+      "officeName": "اسم المكتب",
+      "contact": "مسؤول التواصل",
+      "address": "العنوان",
+      "area": "المنطقة"
     },
     "session": {
       "unreachableTitle": "تعذّر الاتصال بالخادم",
@@ -643,6 +659,256 @@
       "analytics": {
         "name": "التحليلات",
         "description": "الإيرادات والتكاليف والتقارير الشهرية."
+      }
+    },
+    "locationPicker": {
+      "clear": "مسح",
+      "placeholder": "ابحث عن منطقة أو حي أو محافظة",
+      "searching": "جارٍ البحث…",
+      "noResults": "لا توجد أماكن مطابقة."
+    },
+    "locations": {
+      "localities": {
+        "GOVERNORATE": "محافظة",
+        "DISTRICT": "حي",
+        "AREA": "منطقة"
+      }
+    },
+    "fleet": {
+      "loadingTrips": "جارٍ تحميل الرحلات…",
+      "noUpcoming": "لا توجد رحلات قادمة.",
+      "kinds": {
+        "internal": "داخلي",
+        "external": "مستقل",
+        "office": "مكتب"
+      },
+      "balance": {
+        "settled": "لا مستحقات",
+        "owed": "مستحق له {amount}",
+        "owes": "عليه {amount}"
+      },
+      "licence": {
+        "none": "لا توجد رخصة مسجلة",
+        "expired": "منتهية",
+        "expiresIn": "تنتهي خلال {days, plural, one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}}",
+        "valid": "سارية",
+        "until": "حتى {date}"
+      },
+      "drivers": {
+        "title": "السائقون",
+        "description": "السائقون الداخليون والمستقلون وسائقو المكاتب الشريكة.",
+        "add": "إضافة سائق",
+        "search": "ابحث بالاسم أو الهاتف أو الرخصة",
+        "type": "النوع",
+        "allTypes": "كل الأنواع",
+        "externalOrOffice": "مستقل أو مكتب",
+        "licenceExpiring": "رخصة قاربت على الانتهاء",
+        "columns": {
+          "driver": "السائق",
+          "type": "النوع",
+          "office": "المكتب",
+          "licence": "الرخصة",
+          "balance": "الرصيد"
+        },
+        "empty": "لا يوجد سائقون هنا",
+        "emptyHint": "أضف سائقًا أو غيّر عوامل التصفية.",
+        "menu": "إجراءات {name}",
+        "open": "فتح السائق"
+      },
+      "driverForm": {
+        "addTitle": "إضافة سائق",
+        "editTitle": "تعديل السائق",
+        "description": "يُعيَّن للسائقين رحلات ويملؤون تقاريرهم من رابط.",
+        "cancel": "إلغاء",
+        "save": "حفظ التغييرات",
+        "add": "إضافة السائق",
+        "saved": "تم حفظ السائق",
+        "added": "تمت إضافة السائق",
+        "kind": "يعمل كـ",
+        "kindHints": {
+          "internal": "على رواتب الشركة.",
+          "external": "مستقل يُدفع له عن كل رحلة.",
+          "office": "يعمل عبر مكتب شريك."
+        },
+        "chooseOffice": "اختر مكتبًا"
+      },
+      "payment": {
+        "title": "تسجيل دفعة",
+        "kind": "النوع",
+        "kinds": {
+          "payment": "دفعة",
+          "adjustment": "تسوية"
+        },
+        "direction": "الاتجاه",
+        "directions": {
+          "driverPaidUs": "السائق دفع لنا",
+          "wePaidDriver": "دفعنا للسائق",
+          "raise": "نستحق له أكثر",
+          "lower": "نستحق له أقل"
+        },
+        "after": "الرصيد بعدها: {balance}",
+        "noteRequired": "اذكر سبب تصحيح الرصيد.",
+        "notePlaceholder": "مثلًا: سلّمها في مكتب مدينة نصر.",
+        "cancel": "إلغاء",
+        "record": "تسجيل",
+        "recorded": "تم التسجيل"
+      },
+      "driver": {
+        "breadcrumb": "مسار التنقل",
+        "archived": "مؤرشف",
+        "subtitle": "سائق {kind} · انضم {date}",
+        "recordPayment": "تسجيل دفعة",
+        "upcoming": "الرحلات القادمة",
+        "notes": "ملاحظات",
+        "balance": {
+          "title": "الرصيد",
+          "settled": "لا مستحقات على أي طرف",
+          "companyOwes": "الشركة مدينة لـ{name}",
+          "driverOwes": "{name} مدين للشركة",
+          "settledHint": "الحساب متوازن.",
+          "owedHint": "أجوره ومصروفاته أكثر من النقدية التي حصّلها. سجّل دفعة عند السداد له.",
+          "owesHint": "حصّل نقدية أكثر من أجوره ومصروفاته. سجّل دفعة عند تسليمها.",
+          "cashCollected": "النقدية المحصلة",
+          "earned": "الأجور + المصروفات",
+          "payments": "المدفوعات"
+        },
+        "ledger": {
+          "title": "كشف الحساب",
+          "date": "التاريخ",
+          "entry": "البند",
+          "trip": "الرحلة",
+          "by": "بواسطة",
+          "amount": "المبلغ",
+          "empty": "لا توجد بنود بعد.",
+          "hint": "الموجب يعني أن الشركة مدينة لـ{name} بأكثر، والسالب بأقل. تُضاف بنود الرحلة عند إتمامها.",
+          "system": "النظام",
+          "entries": {
+            "tripFee": "أجر رحلة",
+            "expenses": "مصروفات مستردة",
+            "cashCollected": "نقدية محصلة",
+            "payout": "دُفع للسائق",
+            "handedIn": "نقدية سُلّمت",
+            "adjustment": "تسوية"
+          }
+        },
+        "profile": {
+          "title": "الملف",
+          "noOffice": "لا يوجد"
+        },
+        "month": {
+          "title": "هذا الشهر",
+          "trips": "رحلات مكتملة",
+          "kilometres": "الكيلومترات",
+          "fees": "الأجور المكتسبة"
+        }
+      },
+      "vehicles": {
+        "title": "السيارات",
+        "description": "سيارات الشركة والمستقلين والمكاتب الشريكة.",
+        "add": "إضافة سيارة",
+        "search": "ابحث بالشركة أو الطراز أو اللوحة",
+        "body": "الفئة",
+        "allBodies": "كل الفئات",
+        "type": "النوع",
+        "allTypes": "كل الأنواع",
+        "externalOrOffice": "مستقل أو مكتب",
+        "columns": {
+          "vehicle": "السيارة",
+          "body": "الفئة",
+          "type": "النوع",
+          "office": "المكتب",
+          "photos": "الصور"
+        },
+        "empty": "لا توجد سيارات هنا",
+        "emptyHint": "أضف سيارة أو غيّر عوامل التصفية.",
+        "noPhotos": "لا توجد صور بعد",
+        "photoCount": "{count, plural, one {صورة واحدة} two {صورتان} few {# صور} many {# صورة} other {# صورة}}",
+        "menu": "إجراءات {name}",
+        "open": "فتح السيارة"
+      },
+      "vehicleForm": {
+        "addTitle": "إضافة سيارة",
+        "editTitle": "تعديل السيارة",
+        "description": "يمكن تعيينها للرحلات المحجوزة لفئتها أو فئة أصغر.",
+        "cancel": "إلغاء",
+        "save": "حفظ التغييرات",
+        "add": "إضافة السيارة",
+        "saved": "تم حفظ السيارة",
+        "added": "تمت إضافة السيارة",
+        "bodyHint": "تحدد عدد الركاب والحقائب.",
+        "kind": "تتبع",
+        "chooseOffice": "اختر مكتبًا"
+      },
+      "vehicle": {
+        "breadcrumb": "مسار التنقل",
+        "archived": "مؤرشفة",
+        "trips": "الرحلات القادمة",
+        "details": "التفاصيل",
+        "noOffice": "لا يوجد",
+        "fits": "السعة",
+        "passengers": "الركاب",
+        "largeBags": "حقائب كبيرة",
+        "mediumBags": "حقائب متوسطة",
+        "smallBags": "حقائب صغيرة",
+        "alsoServes": "تصلح أيضًا للرحلات المحجوزة كـ{bodies}.",
+        "photos": {
+          "title": "الصور",
+          "count": "{count} من {limit}",
+          "photoAlt": "الصورة {number}",
+          "cover": "صورة الغلاف",
+          "makeCover": "اجعلها الغلاف",
+          "remove": "حذف الصورة",
+          "removed": "تم حذف الصورة",
+          "none": "لا توجد صور بعد",
+          "moveEarlier": "تقديم",
+          "moveLater": "تأخير",
+          "uploading": "جارٍ الرفع…",
+          "add": "إضافة صور",
+          "hint": "الصورة الأولى هي الغلاف. JPEG أو PNG أو WebP، حتى 5 ميجابايت لكل صورة، و{limit} صور كحد أقصى.",
+          "wrongType": "{name} ليست صورة JPEG أو PNG أو WebP.",
+          "tooBig": "{name} أكبر من 5 ميجابايت."
+        }
+      },
+      "offices": {
+        "title": "المكاتب الشريكة",
+        "description": "شركات تنفذ الرحلات التي نحيلها إليها بسائقيها وسياراتها.",
+        "add": "إضافة مكتب",
+        "search": "ابحث في المكاتب",
+        "columns": {
+          "office": "المكتب",
+          "contact": "التواصل",
+          "area": "المنطقة",
+          "address": "العنوان"
+        },
+        "empty": "لا توجد مكاتب هنا",
+        "emptyHint": "أضف مكتبًا شريكًا لإحالة الرحلات إليه."
+      },
+      "officeForm": {
+        "addTitle": "إضافة مكتب",
+        "editTitle": "تعديل المكتب",
+        "description": "يمكن إحالة الرحلات إلى مكتب شريك، مع أحد سائقيه أو بدونه.",
+        "cancel": "إلغاء",
+        "save": "حفظ التغييرات",
+        "add": "إضافة المكتب",
+        "saved": "تم حفظ المكتب",
+        "added": "تمت إضافة المكتب",
+        "areaHint": "يُستخدم لاقتراح أقرب مكتب لنقطة الانطلاق."
+      },
+      "office": {
+        "breadcrumb": "مسار التنقل",
+        "archived": "مؤرشف",
+        "since": "شريك منذ {date}",
+        "liveTrips": "الرحلات الجارية",
+        "noTrips": "لا توجد رحلات جارية مع هذا المكتب.",
+        "noDriver": "لم يُختر السائق بعد",
+        "drivers": "السائقون",
+        "addDriver": "إضافة سائق",
+        "noDrivers": "لا يوجد سائقون بعد.",
+        "vehicles": "السيارات",
+        "addVehicle": "إضافة سيارة",
+        "noVehicles": "لا توجد سيارات بعد.",
+        "contactTitle": "التواصل",
+        "notes": "ملاحظات"
       }
     }
   },
