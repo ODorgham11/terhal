@@ -90,6 +90,7 @@
       "GOVERNORATE_READ_ONLY": "Governorates can only be renamed.",
       "OUT_OF_COVERAGE": "We don't serve this place yet.",
       "TRIP_CLASS_NAME_TAKEN": "Another active class already has this name.",
+      "BRAND_NAME_TAKEN": "Another active brand already has this name.",
       "PRICING_EXISTS": "This route already has a price for this class and car. Change that price instead.",
       "QUOTE_SAME_PLACE": "The pickup and the drop-off are in the same place. Choose a different drop-off.",
       "PICKUP_TIME_INVALID": "Choose a pickup time at least 3 hours and at most 90 days ahead, on the quarter hour.",

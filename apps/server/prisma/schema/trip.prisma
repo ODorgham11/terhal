@@ -104,6 +104,10 @@ model Trip {
   classId       String
   classSnapshot Json
 
+  // The company the trip is sent under; empty for Terhal. Only staff bookings can have one (Trip_site_brand).
+  brand   Brand?  @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  brandId String?
+
   clientName    String
   clientPhone   String
   pickupDate    DateTime
@@ -167,6 +171,7 @@ model Trip {
   @@index([driverId])
   @@index([vehicleId])
   @@index([officeId])
+  @@index([brandId])
 }
 
 model TripEvent {

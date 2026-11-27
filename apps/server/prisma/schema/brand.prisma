@@ -1,0 +1,29 @@
+// Another company of the client's that trips can be sent under, e.g. Alex Limousine: the booker's emails and the
+// driver's WhatsApp message then carry its name and contact details instead of Terhal's. Terhal itself isn't a row: a
+// trip with no brand is Terhal's, and every booking on the site is (Trip_site_brand).
+model Brand {
+  id String @id @default(cuid())
+
+  nameEn String
+  nameAr String
+
+  // Emails go out from this address, so its domain must be verified with the email provider (Resend).
+  senderEmail String
+  replyTo     String?
+  phone       String?
+  website     String?
+
+  // Pre-selected when staff book a trip. At most one, and never an archived one (Brand_one_default,
+  // Brand_default_active); with none, staff bookings default to Terhal.
+  isDefault Boolean @default(false)
+
+  // Archived brands can't be picked for new trips; trips already under one keep it.
+  archivedAt DateTime?
+
+  trips Trip[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([archivedAt])
+}

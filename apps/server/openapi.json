@@ -113,6 +113,7 @@
               "GOVERNORATE_READ_ONLY",
               "OUT_OF_COVERAGE",
               "TRIP_CLASS_NAME_TAKEN",
+              "BRAND_NAME_TAKEN",
               "PRICING_EXISTS",
               "QUOTE_SAME_PLACE",
               "PICKUP_TIME_INVALID",
@@ -1082,6 +1083,10 @@
               "trip_class.updated",
               "trip_class.archived",
               "trip_class.restored",
+              "brand.created",
+              "brand.updated",
+              "brand.archived",
+              "brand.restored",
               "pricing.created",
               "pricing.updated",
               "pricing.deleted"
@@ -3554,6 +3559,167 @@
           "sortOrder"
         ]
       },
+      "Brand": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "senderEmail": {
+            "type": "string",
+            "description": "Emails come from this address. Its domain must be verified with the email provider."
+          },
+          "replyTo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "website": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Pre-selected when staff book a trip."
+          },
+          "archivedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "nameEn",
+          "nameAr",
+          "senderEmail",
+          "replyTo",
+          "phone",
+          "website",
+          "isDefault",
+          "archivedAt"
+        ]
+      },
+      "CreateBrand": {
+        "type": "object",
+        "properties": {
+          "nameEn": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "nameAr": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "senderEmail": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co",
+            "description": "On a domain verified with the email provider."
+          },
+          "replyTo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "+201001234567"
+          },
+          "website": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100,
+            "pattern": "^(https?:\\/\\/)?[a-z0-9-]+(\\.[a-z0-9-]+)+(\\/\\S*)?$/i",
+            "example": "alexlimousine.com"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Make it the default for staff bookings; the previous default stops being one."
+          }
+        },
+        "required": [
+          "nameEn",
+          "nameAr",
+          "senderEmail"
+        ]
+      },
+      "UpdateBrand": {
+        "type": "object",
+        "properties": {
+          "nameEn": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "nameAr": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "senderEmail": {
+            "type": "string",
+            "maxLength": 75,
+            "example": "someone@terhal.co",
+            "description": "On a domain verified with the email provider."
+          },
+          "replyTo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 75,
+            "example": "someone@terhal.co"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "+201001234567"
+          },
+          "website": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100,
+            "pattern": "^(https?:\\/\\/)?[a-z0-9-]+(\\.[a-z0-9-]+)+(\\/\\S*)?$/i",
+            "example": "alexlimousine.com"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "Make it the default for staff bookings; the previous default stops being one."
+          }
+        }
+      },
       "PricingRow": {
         "type": "object",
         "properties": {
@@ -4664,6 +4830,9 @@
               "phone"
             ]
           },
+          "brand": {
+            "$ref": "#/components/schemas/TripBrand"
+          },
           "paymentMethod": {
             "$ref": "#/components/schemas/PaymentMethod"
           },
@@ -4705,6 +4874,7 @@
           "driver",
           "vehicle",
           "office",
+          "brand",
           "paymentMethod",
           "paidAt",
           "updatedAt"
@@ -4744,6 +4914,29 @@
           "phone",
           "email"
         ]
+      },
+      "TripBrand": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "nameEn",
+          "nameAr"
+        ],
+        "description": "The brand the trip is sent under. Null is Terhal."
       },
       "PaymentMethod": {
         "type": [
@@ -4828,6 +5021,15 @@
             "type": "string",
             "example": "1250.00",
             "description": "The price to charge. Left out, the price list's; without one, a customer's trip is booked on request."
+          },
+          "brandId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Send the trip under this brand; null for Terhal. Left out, the default brand, or Terhal without one. A return leg gets the same."
           },
           "backdated": {
             "type": "boolean",
@@ -5122,6 +5324,9 @@
               "phone"
             ]
           },
+          "brand": {
+            "$ref": "#/components/schemas/TripBrand"
+          },
           "paymentMethod": {
             "$ref": "#/components/schemas/PaymentMethod"
           },
@@ -5179,6 +5384,7 @@
           "driver",
           "vehicle",
           "office",
+          "brand",
           "paymentMethod",
           "paidAt",
           "updatedAt",
@@ -5457,6 +5663,15 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "brandId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Send the trip's messages under this brand from now on; null for Terhal. Staff bookings only."
           }
         }
       },
@@ -10133,6 +10348,10 @@
                     "trip_class.updated",
                     "trip_class.archived",
                     "trip_class.restored",
+                    "brand.created",
+                    "brand.updated",
+                    "brand.archived",
+                    "brand.restored",
                     "pricing.created",
                     "pricing.updated",
                     "pricing.deleted"
@@ -10199,6 +10418,10 @@
                       "trip_class.updated",
                       "trip_class.archived",
                       "trip_class.restored",
+                      "brand.created",
+                      "brand.updated",
+                      "brand.archived",
+                      "brand.restored",
                       "pricing.created",
                       "pricing.updated",
                       "pricing.deleted"
@@ -18062,6 +18285,452 @@
                   "required": [
                     "data"
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/brands": {
+      "get": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "List brands",
+        "description": "The brands a trip can be sent under besides Terhal, which is built in. Active ones, or only archived ones with `archived=true`. Needs `team` or `trips`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": false,
+              "description": "true lists only archived brands."
+            },
+            "required": false,
+            "description": "true lists only archived brands.",
+            "name": "archived",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The brands",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Brand"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "nextCursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Add a brand",
+        "description": "Its sender address must be on a domain verified with the email provider, or its emails fail. Needs `team`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBrand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Brand"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "BRAND_NAME_TAKEN: an active brand has the name.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/brands/{id}": {
+      "patch": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Change a brand",
+        "description": "Send only what changes; empty text clears an optional field. Messages sent from now on use the new details. Needs `team`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBrand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Brand"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no brand with this id.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "BRAND_NAME_TAKEN: an active brand has the name.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/brands/{id}/archive": {
+      "post": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Archive a brand",
+        "description": "It can't be picked for new trips and stops being the default. Trips under it keep it. Needs `team`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Archived",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Brand"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no brand with this id.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/brands/{id}/restore": {
+      "post": {
+        "tags": [
+          "Brands"
+        ],
+        "summary": "Restore an archived brand",
+        "description": "Needs `team`.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Brand"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN without the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: no brand with this id.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "BRAND_NAME_TAKEN: an active brand has the name.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
