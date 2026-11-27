@@ -17,6 +17,8 @@ enum DriverTransactionType {
   CASH_COLLECTED
   // Money paid to the driver: negative.
   PAYOUT
+  // Company cash the driver handed in: positive.
+  CASH_HANDED_IN
   // A manual correction, either way.
   ADJUSTMENT
 }
