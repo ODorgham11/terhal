@@ -23,3 +23,10 @@ export const officesQuery = queryOptions({
   queryFn: () => call(staffApi.offices.$get({ query: { limit: "100" } })),
   staleTime: 5 * 60_000,
 });
+
+// Live trip classes, for the class pickers.
+export const tripClassesQuery = queryOptions({
+  queryKey: ["staff", "trip-classes", "live"],
+  queryFn: () => call(staffApi["trip-classes"].$get({ query: {} })),
+  staleTime: 5 * 60_000,
+});
