@@ -52,7 +52,8 @@
       "nameAr": "Arabic name",
       "descriptionEn": "English description",
       "descriptionAr": "Arabic description",
-      "sortOrder": "Sort order"
+      "sortOrder": "Sort order",
+      "class": "Class"
     },
     "session": {
       "unreachableTitle": "We couldn't reach the server",
@@ -379,7 +380,8 @@
           "reopen": "Reopen trip",
           "copyCode": "Copy code",
           "cancel": "Cancel trip",
-          "reportLink": "Report link"
+          "reportLink": "Report link",
+          "edit": "Edit trip"
         },
         "done": {
           "confirm": "Trip confirmed",
@@ -591,6 +593,36 @@
           "title": "Unlink the return trip?",
           "description": "Both trips stay as they are, just no longer paired."
         }
+      },
+      "edit": {
+        "title": "Edit {code}",
+        "description": "Only what you change is saved, and each change is recorded on the trip.",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "saved": "Trip saved",
+        "locked": "The trip has started, so only its price, payment and brand can change now.",
+        "incomplete": "Pick both places and a pickup date and time.",
+        "badPrice": "Enter a price like 1250 or 1250.50.",
+        "pickup": "Pickup",
+        "dropoff": "Drop-off",
+        "date": "Pickup date",
+        "time": "Pickup time",
+        "cairo": "Cairo time.",
+        "car": "Car",
+        "passengers": "Passengers",
+        "large": "Large bags",
+        "medium": "Medium bags",
+        "small": "Small bags",
+        "tooMuch": "That load doesn't fit this car.",
+        "passengerName": "Passenger name",
+        "passengerPhone": "Passenger phone",
+        "noRepricing": "Changing the route, class or car doesn't change the price: set it below if it should.",
+        "price": "Price",
+        "priceHint": "No price yet. Setting one here skips asking the booker.",
+        "payment": "Payment",
+        "noPayment": "Not set",
+        "paid": "Paid",
+        "brand": "Send messages under"
       }
     },
     "list": {
@@ -1379,6 +1411,105 @@
         "restoreHint": "It can be picked for trips again.",
         "restore": "Restore brand",
         "restored": "Brand restored"
+      }
+    },
+    "booking": {
+      "title": "New trip",
+      "breadcrumb": "Breadcrumb",
+      "description": "Book a trip on behalf of a customer or a guest.",
+      "cancel": "Cancel",
+      "submit": "Book trip",
+      "booked": "Booked {code}",
+      "less": "Fewer {what}",
+      "more": "More {what}",
+      "brand": {
+        "title": "Book under",
+        "label": "Brand",
+        "appSender": "the app's sender address",
+        "hint": "Every email to the booker and every WhatsApp message to the driver about this trip uses this brand's name and contact details. You can change it later from the trip page."
+      },
+      "booker": {
+        "title": "Booker",
+        "customer": "Customer",
+        "guest": "Guest",
+        "searchHint": "Search by name, phone or email.",
+        "tripsSoFar": "{count, plural, =0 {No trips so far.} one {# trip so far.} other {# trips so far.}}",
+        "guestHint": "You're the booker: the trip needs a price now, since there's no one to accept one later.",
+        "passengerName": "Passenger name",
+        "passengerPhone": "Passenger phone",
+        "passengerHint": "Defaults to the customer. Change it if someone else rides."
+      },
+      "customer": {
+        "placeholder": "Search a customer",
+        "clear": "Clear",
+        "searching": "Searching…",
+        "noResults": "No active customers match."
+      },
+      "place": {
+        "needsCentre": "Pick a district or an area: a governorate has no single point.",
+        "exact": "Set exact coordinates",
+        "useCentre": "Use the centre",
+        "coordinates": "Latitude, longitude"
+      },
+      "route": {
+        "title": "Route",
+        "pickup": "Pickup",
+        "dropoff": "Drop-off",
+        "swap": "Swap pickup and drop-off",
+        "hint": "The pin is the place's centre unless you set exact coordinates, e.g. copied from a map. Places outside the covered areas can't be booked."
+      },
+      "when": {
+        "title": "When and what",
+        "date": "Pickup date",
+        "time": "Pickup time",
+        "cairo": "Cairo time.",
+        "backdated": "This trip already happened",
+        "backdatedHint": "Record it with a past pickup time.",
+        "car": "Car"
+      },
+      "load": {
+        "passengers": "Passengers",
+        "large": "Large bags",
+        "medium": "Medium bags",
+        "small": "Small bags",
+        "fits": "A {car} seats {passengers} with {large} large bags. The load above fits.",
+        "tooMuch": "A {car} seats {passengers} with {large} large bags. Pick a bigger car or lighten the load."
+      },
+      "extras": {
+        "title": "Notes and return",
+        "notes": "Notes for the driver",
+        "notesPlaceholder": "e.g. A child seat. Please call 15 minutes before arriving.",
+        "return": "Book a return trip",
+        "returnHint": "Same route, reversed. It's priced and assigned separately.",
+        "returnDate": "Return date",
+        "returnTime": "Return time"
+      },
+      "quote": {
+        "title": "Quote",
+        "pickRoute": "Pick a pickup and a drop-off to see the price.",
+        "outbound": "Outbound",
+        "return": "Return",
+        "total": "Total",
+        "onRequest": "Price on request",
+        "price": "Price",
+        "priceHint": "Left empty, the price list's is used.",
+        "returnPrice": "Return price"
+      },
+      "onRequest": {
+        "title": "If a route has no price",
+        "body": "The quote shows \"Price on request\". A customer's trip can still be booked: it waits as pending until you propose a price and they accept it."
+      },
+      "errors": {
+        "customer": "Pick a customer, or switch to guest.",
+        "clientName": "Enter the passenger's name.",
+        "clientPhone": "Enter the passenger's phone.",
+        "place": "Pick a place.",
+        "when": "Enter a date and time.",
+        "past": "That's in the past. Tick \"This trip already happened\" to record it.",
+        "returnWhen": "The return must be after the pickup.",
+        "price": "Enter a price like 1250 or 1250.50.",
+        "guestPrice": "This route has no price: enter one.",
+        "fixAbove": "Fix the highlighted fields first."
       }
     }
   },
