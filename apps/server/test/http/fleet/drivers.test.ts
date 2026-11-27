@@ -1,5 +1,6 @@
 import type {
   Driver,
+  DriverSummary,
   DriverTransaction,
   DriverTransactionRecorded,
   FleetTrip,
@@ -382,6 +383,36 @@ describe("the driver's ledger", () => {
     expect(logs).toBe(3);
   });
 
+  it("records cash handed in as raising the balance, and sums the ledger", async () => {
+    const { agent } = await signedInStaff();
+    const driver = await addDriver(agent);
+    const record = (json: object) =>
+      agent.request(`/v1/staff/drivers/${driver.id}/transactions`, { method: "POST", json });
+
+    await record({ type: "ADJUSTMENT", amount: "-1000", note: "Cash kept from a trip" });
+    const handedIn = await record({ type: "CASH_HANDED_IN", amount: "600", note: "At the office" });
+    expect(handedIn.status).toBe(201);
+    expect(await bodyOf<DriverTransactionRecorded>(handedIn)).toMatchObject({
+      transaction: { type: "CASH_HANDED_IN", amount: "600.00", note: "At the office" },
+      amountOwed: "-400.00",
+    });
+    await record({ type: "PAYOUT", amount: "50" });
+
+    const summary = await agent.request(`/v1/staff/drivers/${driver.id}/summary`);
+    expect(summary.status).toBe(200);
+    expect(await bodyOf<DriverSummary>(summary)).toEqual({
+      totals: {
+        cashCollected: "0.00",
+        earned: "0.00",
+        paidOut: "50.00",
+        handedIn: "600.00",
+        adjustments: "-1000.00",
+      },
+      thisMonth: { tripsCompleted: 0, kilometres: 0, fees: "0.00" },
+    });
+    expect((await agent.request("/v1/staff/drivers/missing/summary")).status).toBe(404);
+  });
+
   it("refuses other types, a payout that isn't positive and an adjustment without a note", async () => {
     const { agent } = await signedInStaff();
     const driver = await addDriver(agent);
@@ -390,6 +421,7 @@ describe("the driver's ledger", () => {
       { type: "PAYOUT", amount: "-100" },
       { type: "PAYOUT", amount: "0" },
       { type: "PAYOUT", amount: "12.345" },
+      { type: "CASH_HANDED_IN", amount: "-5" },
       { type: "ADJUSTMENT", amount: "100" },
       { type: "ADJUSTMENT", amount: "0", note: "Nothing" },
     ]) {

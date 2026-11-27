@@ -281,3 +281,16 @@ export const customerTrips = async (
   });
   return toPage(rows, limit, toCustomerTrip);
 };
+
+// A driver's completed trips whose report ended in [start, end), and the kilometres driven on them.
+export const driverCompletedTrips = async (driverId: string, start: Date, end: Date) => {
+  const rows = await prisma.trip.findMany({
+    where: { driverId, status: "COMPLETED", report: { endedAt: { gte: start, lt: end } } },
+    select: { report: { select: { startMileage: true, endMileage: true } } },
+  });
+  const kilometres = rows.reduce(
+    (total, { report }) => total + (report ? report.endMileage - report.startMileage : 0),
+    0,
+  );
+  return { tripsCompleted: rows.length, kilometres };
+};
