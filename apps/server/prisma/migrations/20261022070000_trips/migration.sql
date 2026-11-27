@@ -42,7 +42,6 @@ CREATE TABLE "Trip" (
     "officeId" TEXT,
     "classId" TEXT NOT NULL,
     "classSnapshot" JSONB NOT NULL,
-    "brandId" TEXT,
     "clientName" TEXT NOT NULL,
     "clientPhone" TEXT NOT NULL,
     "pickupDate" TIMESTAMP(3) NOT NULL,
@@ -172,9 +171,6 @@ CREATE INDEX "Trip_vehicleId_idx" ON "Trip"("vehicleId");
 CREATE INDEX "Trip_officeId_idx" ON "Trip"("officeId");
 
 -- CreateIndex
-CREATE INDEX "Trip_brandId_idx" ON "Trip"("brandId");
-
--- CreateIndex
 CREATE INDEX "TripEvent_tripId_idx" ON "TripEvent"("tripId");
 
 -- CreateIndex
@@ -217,9 +213,6 @@ ALTER TABLE "Trip" ADD CONSTRAINT "Trip_vehicleId_fkey" FOREIGN KEY ("vehicleId"
 ALTER TABLE "Trip" ADD CONSTRAINT "Trip_officeId_fkey" FOREIGN KEY ("officeId") REFERENCES "Office"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Trip" ADD CONSTRAINT "Trip_brandId_fkey" FOREIGN KEY ("brandId") REFERENCES "Brand"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Trip" ADD CONSTRAINT "Trip_classId_fkey" FOREIGN KEY ("classId") REFERENCES "TripClass"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -258,9 +251,6 @@ ALTER TABLE "TripExpense" ADD CONSTRAINT "TripExpense_reportId_fkey" FOREIGN KEY
 -- A trip is booked by exactly one of a customer, a guest and a staff member. Prisma can't express this, so the database holds it.
 ALTER TABLE "Trip" ADD CONSTRAINT "Trip_one_booker"
     CHECK (num_nonnulls("customerId", "guestSessionId", "staffId") = 1);
-
--- Bookings on the site are always Terhal's: only a trip staff booked can be sent under another brand.
-ALTER TABLE "Trip" ADD CONSTRAINT "Trip_site_brand" CHECK ("source" = 'STAFF' OR "brandId" IS NULL);
 
 -- A trip event's actor is exactly one of a staff member, a customer, a guest, the driver (through the report link) and the
 -- system (a background job, named in "system").
