@@ -138,7 +138,9 @@ describe("the report link", () => {
     );
     const english = await json<Link>(await getLink(trip.id, "en"));
     expect(english.url).toBe(link.url);
-    expect(english.message).toMatch(/^Hi Driver\d+, here's the report link for trip TRH-/);
+    expect(english.message).toMatch(
+      /^Hi Driver\d+, this is Terhal\. Here's the report link for trip TRH-/,
+    );
 
     // Only the hash is stored.
     const row = await prisma.trip.findUniqueOrThrow({ where: { id: trip.id } });
