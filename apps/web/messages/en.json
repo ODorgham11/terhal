@@ -1291,6 +1291,40 @@
         "emptyHint": "The first one is made on the 1st of next month.",
         "next": "{month} will be ready on {date}."
       }
+    },
+    "account": {
+      "title": "Your account",
+      "profile": {
+        "title": "Profile",
+        "emailHint": "Your email can't be changed here: it's how you sign in.",
+        "save": "Save profile",
+        "saved": "Profile saved"
+      },
+      "password": {
+        "title": "Password",
+        "hint": "8 to 72 characters, with an uppercase letter, a lowercase letter and a number.",
+        "submit": "Change password",
+        "changed": "Password changed. Your other devices were signed out."
+      },
+      "devices": {
+        "title": "Signed-in devices",
+        "signOutOthers": "Sign out others",
+        "signOut": "Sign out",
+        "thisDevice": "This device",
+        "on": "{browser} on {system}",
+        "unknown": "Unknown device",
+        "signedIn": "Signed in {when}",
+        "ended": "Signed out that device",
+        "othersEnded": "Signed out your other devices"
+      },
+      "access": {
+        "title": "Your access",
+        "hint": "A colleague with team access can change it."
+      },
+      "language": {
+        "title": "Language",
+        "hint": "The dashboard's language on this browser, and the one your emails come in."
+      }
     }
   },
   "admin": {
