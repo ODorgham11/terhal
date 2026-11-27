@@ -150,7 +150,38 @@
     "title": "Terhal"
   },
   "staff": {
-    "title": "Staff dashboard"
+    "title": "Staff dashboard",
+    "nav": {
+      "label": "Main navigation",
+      "home": "Terhal, go to the overview",
+      "overview": "Overview",
+      "trips": "Trips",
+      "drivers": "Drivers",
+      "vehicles": "Vehicles",
+      "offices": "Offices",
+      "prices": "Prices",
+      "tripClasses": "Trip classes",
+      "locations": "Locations",
+      "customers": "Customers",
+      "team": "Team",
+      "analytics": "Analytics",
+      "brands": "Brands",
+      "groups": {
+        "fleet": "Fleet",
+        "pricing": "Pricing",
+        "management": "Management"
+      },
+      "unassignedCount": "unassigned",
+      "account": "Your account",
+      "signOut": "Sign out"
+    },
+    "topBar": {
+      "openMenu": "Open the menu",
+      "search": "Search trips",
+      "searchPlaceholder": "Search by trip code…",
+      "notifications": "Notifications",
+      "notificationsUnread": "Notifications, {count} unread"
+    }
   },
   "admin": {
     "title": "Admin panel"

@@ -150,7 +150,38 @@
     "title": "ترحال"
   },
   "staff": {
-    "title": "لوحة الموظفين"
+    "title": "لوحة الموظفين",
+    "nav": {
+      "label": "التنقل الرئيسي",
+      "home": "ترحال، الذهاب إلى النظرة العامة",
+      "overview": "نظرة عامة",
+      "trips": "الرحلات",
+      "drivers": "السائقون",
+      "vehicles": "السيارات",
+      "offices": "المكاتب",
+      "prices": "الأسعار",
+      "tripClasses": "فئات الرحلات",
+      "locations": "المواقع",
+      "customers": "العملاء",
+      "team": "الفريق",
+      "analytics": "التحليلات",
+      "brands": "العلامات التجارية",
+      "groups": {
+        "fleet": "الأسطول",
+        "pricing": "التسعير",
+        "management": "الإدارة"
+      },
+      "unassignedCount": "بدون سائق",
+      "account": "حسابك",
+      "signOut": "تسجيل الخروج"
+    },
+    "topBar": {
+      "openMenu": "فتح القائمة",
+      "search": "البحث في الرحلات",
+      "searchPlaceholder": "ابحث برمز الرحلة…",
+      "notifications": "الإشعارات",
+      "notificationsUnread": "الإشعارات، {count} غير مقروءة"
+    }
   },
   "admin": {
     "title": "لوحة الإدارة"
