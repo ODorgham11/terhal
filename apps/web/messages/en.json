@@ -29,7 +29,9 @@
       "newPassword": "New password",
       "code": "Code",
       "permissions": "Permissions",
-      "confirmPassword": "Confirm password"
+      "confirmPassword": "Confirm password",
+      "totalPrice": "Total price",
+      "note": "Note"
     },
     "session": {
       "unreachableTitle": "We couldn't reach the server",
@@ -330,6 +332,243 @@
       "price": {
         "needsPrice": "Needs a price",
         "proposed": "Proposed, waiting"
+      },
+      "detail": {
+        "breadcrumb": "Breadcrumb",
+        "notFound": "We couldn't find that trip.",
+        "backToTrips": "Back to trips",
+        "brandHint": "The brand the customer's messages are sent under",
+        "terhal": "Terhal",
+        "moreActions": "More actions",
+        "copied": "Code copied",
+        "cancel": "Cancel",
+        "loading": "Loading…",
+        "returnTripUnlink": "Unlink",
+        "actions": {
+          "proposePrice": "Propose a price",
+          "changePrice": "Change the price",
+          "confirm": "Confirm trip",
+          "assign": "Assign",
+          "changeAssignment": "Change assignment",
+          "start": "Start trip",
+          "end": "End trip",
+          "unstart": "Undo start",
+          "complete": "Review report & complete",
+          "reopen": "Reopen trip",
+          "copyCode": "Copy code",
+          "cancel": "Cancel trip",
+          "reportLink": "Report link"
+        },
+        "done": {
+          "confirm": "Trip confirmed",
+          "start": "Trip started",
+          "end": "Trip ended. Waiting for the driver's report.",
+          "unstart": "Start undone",
+          "complete": "Trip completed",
+          "reopen": "Trip reopened"
+        },
+        "banners": {
+          "priceRequested": "The booker asked for a price. Propose one so they can accept it.",
+          "priceProposed": "A price was proposed. Waiting for the booker to accept or decline it.",
+          "unassigned": "This trip is confirmed but has no driver, vehicle or office yet.",
+          "reportSent": "The driver sent their report. Check the cash collected and the expenses, then complete the trip to write it to their ledger.",
+          "reportMissing": "Waiting for the driver's report. Send them the report link if they don't have it.",
+          "officeTrip": "A partner office ran this trip, so it needs no report. Complete it when you're ready.",
+          "cancelled": "This trip was cancelled."
+        },
+        "route": {
+          "title": "Route & details",
+          "pickup": "Pickup",
+          "dropoff": "Drop-off",
+          "pickupTime": "Pickup time",
+          "class": "Class",
+          "passengers": "Passengers",
+          "luggage": "Luggage",
+          "noLuggage": "None",
+          "luggageDetail": "{large} large · {medium} medium · {small} small",
+          "office": "Office",
+          "passenger": "Passenger",
+          "notes": "Booker's notes"
+        },
+        "report": {
+          "title": "Driver report",
+          "sent": "Sent {date}",
+          "cash": "Cash collected",
+          "driverFee": "Driver fee",
+          "netOwedByDriver": "Net owed by driver",
+          "netOwedToDriver": "Net owed to driver",
+          "started": "Started",
+          "ended": "Ended",
+          "distance": "Distance",
+          "km": "{km} km",
+          "stops": "Stops",
+          "expenses": "Expenses",
+          "totalExpenses": "Total expenses",
+          "netFormula": "Net = cash collected − driver fee − expenses the driver paid.",
+          "expenseTypes": {
+            "INTERCITY_TOLL": "Intercity toll",
+            "FUEL": "Fuel",
+            "CAR_MAINTENANCE": "Car maintenance",
+            "DRIVER_FEE": "Driver fee",
+            "OFFICE_FEE": "Office fee",
+            "OTHER": "Other"
+          }
+        },
+        "activity": {
+          "title": "Activity",
+          "system": "System",
+          "viaReportLink": "via the report link",
+          "events": {
+            "created": "Trip booked",
+            "updated": "Trip details changed",
+            "priceProposed": "Price proposed",
+            "priceAccepted": "Price accepted",
+            "priceDeclined": "Price declined",
+            "confirmed": "Trip confirmed",
+            "assigned": "Assigned",
+            "unassigned": "Assignment cleared",
+            "started": "Trip started",
+            "startUndone": "Start undone",
+            "ended": "Trip ended",
+            "completed": "Trip completed",
+            "reopened": "Trip reopened",
+            "cancelled": "Trip cancelled",
+            "reportLinkIssued": "Report link sent",
+            "reportSubmitted": "Report submitted",
+            "reportEdited": "Report edited",
+            "paymentRecorded": "Payment recorded",
+            "linked": "Return trip linked",
+            "unlinked": "Return trip unlinked"
+          }
+        },
+        "booker": {
+          "title": "Booker",
+          "phone": "Phone",
+          "email": "Email"
+        },
+        "price": {
+          "title": "Price",
+          "requested": "Price requested",
+          "paid": "Paid",
+          "states": {
+            "QUOTED": "From the price list",
+            "REQUESTED": "No price yet: the booker asked for one",
+            "PROPOSED": "Proposed, waiting for the booker",
+            "ACCEPTED": "Proposed and accepted"
+          },
+          "payment": {
+            "CASH_TO_DRIVER": "Cash to the driver",
+            "CASH_AT_OFFICE": "Cash at the office",
+            "TRANSFER": "Bank transfer",
+            "CARD": "Card"
+          }
+        },
+        "assignment": {
+          "title": "Assignment",
+          "change": "Change",
+          "assign": "Assign"
+        },
+        "returnTrip": {
+          "title": "Return trip",
+          "outboundTitle": "Outbound trip",
+          "none": "No return trip linked.",
+          "link": "Link a return trip",
+          "unlink": "Unlink"
+        },
+        "proposePrice": {
+          "title": "Propose a price",
+          "description": "For {route}. The booker accepts or declines it, unless staff booked the trip.",
+          "totalPrice": "Total price",
+          "note": "Note",
+          "noteHint": "The booker sees this with the price.",
+          "saveToPricing": "Save it to the price list",
+          "saveToPricingHint": "Later bookings of this route are priced at once.",
+          "submit": "Propose price"
+        },
+        "cancelTrip": {
+          "title": "Cancel {code}?",
+          "description": "The booker is told. A cancelled trip can't be restarted.",
+          "reason": "Reason",
+          "note": "Note",
+          "keep": "Keep trip",
+          "submit": "Cancel trip",
+          "reasons": {
+            "CUSTOMER_REQUEST": "The customer asked",
+            "NO_SHOW": "The passenger didn't show up",
+            "NO_VEHICLE": "No vehicle available",
+            "DUPLICATE": "Duplicate booking",
+            "OTHER": "Something else"
+          }
+        },
+        "assign": {
+          "title": "Assign {code}",
+          "description": "Only drivers who are free and vehicles big enough for the trip are listed.",
+          "who": "Who runs it",
+          "internal": "Our driver and vehicle",
+          "office": "A partner office",
+          "officeHint": "Their driver and vehicle are optional.",
+          "officeLabel": "Office",
+          "chooseOffice": "Choose an office",
+          "driver": "Driver",
+          "chooseDriver": "Choose a driver",
+          "vehicle": "Vehicle",
+          "chooseVehicle": "Choose a vehicle",
+          "vehicleHint": "The trip's car or larger.",
+          "busy": "has a trip close by",
+          "conflictTitle": "Already on a trip within 3 hours",
+          "acknowledge": "Assign anyway",
+          "conflictRefused": "That driver or vehicle has a trip close by. Tick “Assign anyway” to go ahead.",
+          "submit": "Save assignment"
+        },
+        "reportLink": {
+          "title": "Report link",
+          "description": "Send it to {driver}. They fill their report in from it, no sign-in needed.",
+          "link": "Link",
+          "expires": "Works until {date}",
+          "copy": "Copy link",
+          "copied": "Link copied",
+          "whatsapp": "Send on WhatsApp",
+          "regenerate": "New link",
+          "regenerated": "New link made. The old one no longer works."
+        },
+        "linkReturn": {
+          "title": "Link a return trip",
+          "description": "Pick the trip that brings the passengers of {code} back.",
+          "search": "Find the trip",
+          "searchPlaceholder": "Code, passenger or phone",
+          "results": "Trips found",
+          "noResults": "No trips match.",
+          "submit": "Link trip"
+        },
+        "confirmTrip": {
+          "title": "Confirm {code}?",
+          "description": "The booker is told their trip is confirmed."
+        },
+        "startTrip": {
+          "title": "Start this trip?",
+          "description": "Do this when the driver sets off."
+        },
+        "endTrip": {
+          "title": "End this trip?",
+          "description": "The trip then waits for the driver's report."
+        },
+        "unstartTrip": {
+          "title": "Undo the start?",
+          "description": "For a trip started by mistake: it goes back to confirmed."
+        },
+        "completeTrip": {
+          "title": "Complete this trip?",
+          "description": "The driver's fee and the expenses they paid, less the cash they collected, are written to their ledger.",
+          "officeDescription": "The trip is marked completed."
+        },
+        "reopenTrip": {
+          "title": "Reopen this trip?",
+          "description": "It goes back to awaiting report, and what completing wrote to the driver's ledger is reversed."
+        },
+        "unlinkTrip": {
+          "title": "Unlink the return trip?",
+          "description": "Both trips stay as they are, just no longer paired."
+        }
       }
     }
   },
