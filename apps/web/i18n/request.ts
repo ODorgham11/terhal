@@ -7,7 +7,9 @@ import { LOCALE_COOKIE, defaultLocaleOf, isLocale } from "./locales";
 // and without one from the host's default.
 export default getRequestConfig(async () => {
   const cookie = (await cookies()).get(LOCALE_COOKIE)?.value;
-  const locale = isLocale(cookie) ? cookie : defaultLocaleOf(sectionOf((await headers()).get("host")));
+  const locale = isLocale(cookie)
+    ? cookie
+    : defaultLocaleOf(sectionOf((await headers()).get("host")));
   const messages = (await import(`../messages/${locale}.json`)) as { default: Messages };
 
   return { locale, messages: messages.default, timeZone: "Africa/Cairo" };
