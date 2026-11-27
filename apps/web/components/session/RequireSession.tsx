@@ -8,6 +8,7 @@ import type { Admin, Customer, Guest, Staff, StaffPermission } from "@terhal/con
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Spinner } from "@/components/ui/Spinner";
+import { StaffForbidden } from "@/components/staff/SystemState";
 import { adminRoutes, siteRoutes, staffRoutes, withNext } from "@/lib/session/routes";
 import {
   useAdminSession,
@@ -27,11 +28,20 @@ type GuardProps<User> = {
   children: (user: User) => ReactNode;
   // Extra check once signed in; when it fails, a "no access" message shows instead.
   allow?: (user: User) => boolean;
+  // Shown instead of the generic "no access" when allow() refuses.
+  forbidden?: ReactNode;
 };
 
 // Shows its children only to a signed-in user, and sends anyone else to sign in. Client-side only: the API checks every
 // request anyway, so this is about what the page shows, not about security.
-function SessionGuard<User>({ session, signIn, verify, children, allow }: GuardProps<User>) {
+function SessionGuard<User>({
+  session,
+  signIn,
+  verify,
+  children,
+  allow,
+  forbidden,
+}: GuardProps<User>) {
   const t = useTranslations("common.session");
   const router = useRouter();
   const target =
@@ -50,6 +60,7 @@ function SessionGuard<User>({ session, signIn, verify, children, allow }: GuardP
 
   if (session.status === "signed-in") {
     if (allow && !allow(session.user)) {
+      if (forbidden) return forbidden;
       return (
         <EmptyState
           icon={IconLock}
@@ -105,6 +116,7 @@ export function RequireStaff({
       session={useStaffSession()}
       signIn={staffRoutes.signIn}
       allow={permission ? (staff) => staff.permissions.includes(permission) : undefined}
+      forbidden={permission && <StaffForbidden permission={permission} />}
     >
       {children}
     </SessionGuard>
