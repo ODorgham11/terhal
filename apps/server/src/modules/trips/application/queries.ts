@@ -256,16 +256,38 @@ export const driverTrips = async (driverId: string, { limit, cursor, status }: L
   return toPage(rows, limit, toFleetTrip);
 };
 
-// How many trips a customer booked, and the total of their completed ones.
-export const customerTripTotals = async (customerId: string) => {
-  const [tripCount, completed] = await Promise.all([
-    prisma.trip.count({ where: { customerId } }),
-    prisma.trip.aggregate({
-      where: { customerId, status: "COMPLETED" },
-      _sum: { totalPrice: true },
-    }),
-  ]);
-  return { tripCount, totalSpent: (completed._sum.totalPrice ?? 0).toFixed(2) };
+const noTrips = () => ({
+  tripCount: 0,
+  completedCount: 0,
+  cancelledCount: 0,
+  totalSpent: "0.00",
+  lastTripAt: null as string | null,
+});
+
+// For each customer: how many trips they booked, completed and cancelled, what the completed ones came to, and the
+// latest completed pickup. One grouped query for a whole page of customers.
+export const customerTripTotals = async (customerIds: string[]) => {
+  const groups = await prisma.trip.groupBy({
+    by: ["customerId", "status"],
+    where: { customerId: { in: customerIds } },
+    _count: { _all: true },
+    _sum: { totalPrice: true },
+    _max: { pickupDate: true },
+  });
+  const totals = new Map(customerIds.map((id) => [id, noTrips()]));
+  for (const group of groups) {
+    const total = group.customerId ? totals.get(group.customerId) : undefined;
+    if (!total) continue;
+    total.tripCount += group._count._all;
+    if (group.status === "CANCELLED") total.cancelledCount += group._count._all;
+    // Grouped by status too, so a customer has one completed group: its sum and latest pickup are theirs.
+    if (group.status === "COMPLETED") {
+      total.completedCount = group._count._all;
+      total.totalSpent = (group._sum.totalPrice ?? 0).toFixed(2);
+      total.lastTripAt = group._max.pickupDate?.toISOString() ?? null;
+    }
+  }
+  return (customerId: string) => totals.get(customerId) ?? noTrips();
 };
 
 // The trips a customer booked (staff bookings for them included), newest pickup first, a page at a time.

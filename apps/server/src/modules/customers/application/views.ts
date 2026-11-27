@@ -39,21 +39,19 @@ export const listCustomers = async ({ q, status, cursor, limit }: ListCustomers)
     ...(cursor && { cursor: { id: cursor }, skip: 1 }),
   });
 
-  const data = rows.slice(0, limit).map(toSummary);
+  const page = rows.slice(0, limit);
+  const totals = await customerTripTotals(page.map((row) => row.id));
+  const data = page.map((row) => ({ ...toSummary(row), ...totals(row.id) }));
   return { data, nextCursor: rows.length > limit ? (data.at(-1)?.id ?? null) : null };
 };
 
-// With how many trips they've booked and what their completed trips came to.
+// With their trip counts and what their completed trips came to, as on the list.
 export const getCustomer = async (customerId: string): Promise<CustomerDetail> => {
   const customer = await prisma.customer.findUnique({ where: { id: customerId } });
   if (!customer) throw customerNotFound();
 
-  const totals = await customerTripTotals(customerId);
-
-  return {
-    ...toSummary(customer),
-    ...totals,
-  };
+  const totals = await customerTripTotals([customerId]);
+  return { ...toSummary(customer), ...totals(customerId) };
 };
 
 // The trips they booked (staff booking on their behalf included), latest pickup first, a page at a time.
