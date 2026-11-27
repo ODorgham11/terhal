@@ -14,34 +14,12 @@ import {
 } from "@tabler/icons-react";
 import type { TripDetail, TripEvent } from "@terhal/contracts";
 import { Avatar } from "@/components/staff/Avatar";
+import { SectionCard } from "@/components/staff/SectionCard";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { call, staffApi } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { useLocalName, useTripDates } from "../format";
 import { TripStatusBadge } from "../TripStatusBadge";
-
-function Section({
-  title,
-  aside,
-  className,
-  children,
-}: {
-  title: string;
-  aside?: React.ReactNode;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card className={cn("flex flex-col gap-4 p-5", className)}>
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-foreground">{title}</h2>
-        {aside}
-      </div>
-      {children}
-    </Card>
-  );
-}
 
 function Chip({ icon: Icon, label, value }: { icon: Icon; label: string; value: React.ReactNode }) {
   return (
@@ -63,7 +41,7 @@ export function RouteCard({ trip }: { trip: TripDetail }) {
   const luggage = trip.largeLuggage + trip.mediumLuggage + trip.smallLuggage;
 
   return (
-    <Section title={t("title")}>
+    <SectionCard title={t("title")}>
       <ol className="relative flex flex-col gap-4 ps-6">
         <span aria-hidden className="absolute start-1.5 top-2 bottom-8 w-px bg-border" />
         {(["pickup", "dropoff"] as const).map((end) => (
@@ -120,7 +98,7 @@ export function RouteCard({ trip }: { trip: TripDetail }) {
           <p className="text-sm whitespace-pre-line text-foreground">{trip.notes}</p>
         </div>
       )}
-    </Section>
+    </SectionCard>
   );
 }
 
@@ -148,7 +126,7 @@ export function ReportCard({ trip }: { trip: TripDetail }) {
   const km = report.data.endMileage - report.data.startMileage;
 
   return (
-    <Section
+    <SectionCard
       title={t("title")}
       aside={
         <span className="text-xs text-muted">
@@ -196,7 +174,7 @@ export function ReportCard({ trip }: { trip: TripDetail }) {
         </div>
       )}
       <p className="text-xs text-muted">{t("netFormula")}</p>
-    </Section>
+    </SectionCard>
   );
 }
 
@@ -258,7 +236,7 @@ export function ActivityCard({ events }: { events: TripEvent[] }) {
   const newestFirst = [...events].reverse();
 
   return (
-    <Section title={t("title")}>
+    <SectionCard title={t("title")}>
       <ol className="flex flex-col gap-4">
         {newestFirst.map((event) => (
           <li key={event.id} className="flex gap-3">
@@ -278,7 +256,7 @@ export function ActivityCard({ events }: { events: TripEvent[] }) {
           </li>
         ))}
       </ol>
-    </Section>
+    </SectionCard>
   );
 }
 
@@ -288,7 +266,7 @@ export function BookerCard({ trip }: { trip: TripDetail }) {
   const [first = "", last] = trip.booker.name.split(" ");
 
   return (
-    <Section title={t("title")}>
+    <SectionCard title={t("title")}>
       <div className="flex items-center gap-2.5">
         <Avatar firstName={first} lastName={last} />
         <div className="flex min-w-0 flex-col">
@@ -325,7 +303,7 @@ export function BookerCard({ trip }: { trip: TripDetail }) {
           </dd>
         </div>
       </dl>
-    </Section>
+    </SectionCard>
   );
 }
 
@@ -334,7 +312,7 @@ export function PriceCard({ trip }: { trip: TripDetail }) {
   const { price } = useTripDates();
 
   return (
-    <Section title={t("title")}>
+    <SectionCard title={t("title")}>
       {trip.totalPrice === null ? (
         <p className="text-sm font-medium text-accent">{t("requested")}</p>
       ) : (
@@ -349,7 +327,7 @@ export function PriceCard({ trip }: { trip: TripDetail }) {
           {trip.paidAt && ` · ${t("paid")}`}
         </p>
       )}
-    </Section>
+    </SectionCard>
   );
 }
 
@@ -366,7 +344,7 @@ export function AssignmentCard({
   const empty = !trip.driver && !trip.vehicle && !trip.office;
 
   return (
-    <Section
+    <SectionCard
       title={t("title")}
       aside={
         onChange &&
@@ -424,7 +402,7 @@ export function AssignmentCard({
           )}
         </ul>
       )}
-    </Section>
+    </SectionCard>
   );
 }
 
@@ -456,7 +434,7 @@ export function ReturnTripCard({
   const other = trip.returnTrip ?? trip.previousTrip;
 
   return (
-    <Section title={trip.previousTrip ? t("outboundTitle") : t("title")}>
+    <SectionCard title={trip.previousTrip ? t("outboundTitle") : t("title")}>
       {other ? (
         <div className="flex flex-col gap-3">
           <Link
@@ -488,6 +466,6 @@ export function ReturnTripCard({
           )}
         </div>
       )}
-    </Section>
+    </SectionCard>
   );
 }
