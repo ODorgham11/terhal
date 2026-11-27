@@ -910,6 +910,76 @@
         "contactTitle": "Contact",
         "notes": "Notes"
       }
+    },
+    "pricing": {
+      "title": "Prices",
+      "description": "Fixed prices per route, class and car. A quote uses the most specific row: an area beats its district, a district beats its governorate.",
+      "importCsv": "Import CSV",
+      "addPrice": "Add price",
+      "search": "Search a place",
+      "fromAnywhere": "From: anywhere",
+      "toAnywhere": "To: anywhere",
+      "allClasses": "All classes",
+      "allCars": "All cars",
+      "selected": "{count} selected",
+      "clearSelection": "Clear",
+      "changePrice": "Change price",
+      "delete": "Delete",
+      "selectPage": "Select every price on this page",
+      "selectRow": "Select {from} to {to}",
+      "columns": {
+        "from": "From",
+        "to": "To",
+        "class": "Class",
+        "car": "Car",
+        "price": "Price",
+        "updated": "Updated"
+      },
+      "empty": "No prices here",
+      "emptyHint": "Add a price, import a CSV, or change the filters.",
+      "deletedPlace": "deleted",
+      "inactive": "Inactive",
+      "rowMenu": "Price actions",
+      "deleted": "{count, plural, one {Price deleted} other {# prices deleted}}",
+      "deleteTitle": "{count, plural, one {Delete this price?} other {Delete # prices?}}",
+      "deleteDescription": "Quotes for these routes will fall back to a less specific price, or need one set by hand.",
+      "add": {
+        "title": "Add price",
+        "description": "A fixed price for one route, class and car.",
+        "from": "From",
+        "to": "To",
+        "class": "Class",
+        "chooseClass": "Choose a class",
+        "car": "Car",
+        "price": "Price",
+        "bothWays": "Same price the other way",
+        "bothWaysHint": "Also adds {from} to {to}.",
+        "specificity": "If a price already exists for this route, class and car, it's replaced.",
+        "cancel": "Cancel",
+        "submit": "Add price",
+        "added": "{count, plural, one {Price added} other {# prices added}}"
+      },
+      "change": {
+        "title": "{count, plural, one {Change price} other {Change # prices}}",
+        "description": "The new price applies to quotes from now on; booked trips keep theirs.",
+        "price": "New price",
+        "cancel": "Cancel",
+        "submit": "Save price",
+        "saved": "{count, plural, one {Price saved} other {# prices saved}}"
+      },
+      "import": {
+        "title": "Import prices",
+        "description": "Rows matching an existing route, class and car change its price; the rest are added.",
+        "choose": "Choose a CSV file",
+        "format": "Needs the fromId, toId, classId, car and price columns, as in the export.",
+        "template": "Download the current list to edit",
+        "missingColumns": "The file is missing these columns: {columns}.",
+        "ready": "{count, plural, =0 {No rows to import.} one {# row ready to import.} other {# rows ready to import.}}",
+        "skipped": "{count, plural, one {# row is skipped} other {# rows are skipped}} for a missing id, unknown car or bad price (lines {lines}).",
+        "cancel": "Cancel",
+        "submit": "Import",
+        "done": "{created} added, {updated} changed, {unchanged} unchanged"
+      }
     }
   },
   "admin": {
