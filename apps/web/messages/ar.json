@@ -220,6 +220,63 @@
         "newResetLink": "طلب رابط جديد",
         "backToSignIn": "العودة لتسجيل الدخول"
       }
+    },
+    "overview": {
+      "greeting": {
+        "morning": "صباح الخير يا {name}",
+        "afternoon": "مساء الخير يا {name}",
+        "evening": "مساء الخير يا {name}"
+      },
+      "subtitle": "{date} · هذا ما يحتاجك اليوم.",
+      "newTrip": "رحلة جديدة",
+      "kpi": {
+        "today": "رحلات اليوم",
+        "tomorrow": "{count, plural, =0 {لا رحلات محجوزة للغد بعد} one {رحلة واحدة غدًا} two {رحلتان غدًا} few {# رحلات غدًا} many {# رحلة غدًا} other {# رحلة غدًا}}",
+        "unassigned": "بدون سائق",
+        "overdue": "{count, plural, one {رحلة واحدة تجاوزت موعدها} two {رحلتان تجاوزتا موعدهما} few {# رحلات تجاوزت موعدها} many {# رحلة تجاوزت موعدها} other {# رحلة تجاوزت موعدها}}",
+        "priceRequests": "تحتاج إلى سعر",
+        "awaitingReport": "بانتظار التقرير",
+        "inProgress": "{count, plural, one {رحلة واحدة على الطريق} two {رحلتان على الطريق} few {# رحلات على الطريق} many {# رحلة على الطريق} other {# رحلة على الطريق}}"
+      },
+      "needsAction": {
+        "title": "تحتاج إلى إجراء",
+        "allTrips": "كل الرحلات",
+        "empty": "لا شيء يحتاجك الآن.",
+        "reasons": {
+          "price": "تحتاج إلى سعر",
+          "confirm": "بانتظار التأكيد",
+          "assign": "بدون سائق",
+          "report": "التقرير مطلوب"
+        },
+        "actions": {
+          "price": "اقتراح سعر",
+          "confirm": "تأكيد",
+          "assign": "تعيين",
+          "report": "مراجعة"
+        }
+      },
+      "today": {
+        "title": "رحلات اليوم",
+        "count": "{count, plural, one {رحلة واحدة} two {رحلتان} few {# رحلات} many {# رحلة} other {# رحلة}}",
+        "empty": "لا رحلات اليوم.",
+        "code": "رمز الرحلة",
+        "unassigned": "بدون تعيين"
+      },
+      "onTheRoad": {
+        "title": "على الطريق الآن",
+        "detail": "{route} · الاستلام {time}",
+        "empty": "لا رحلات على الطريق."
+      }
+    },
+    "trips": {
+      "status": {
+        "PENDING": "قيد الانتظار",
+        "CONFIRMED": "مؤكدة",
+        "IN_PROGRESS": "جارية",
+        "AWAITING_REPORT": "بانتظار التقرير",
+        "COMPLETED": "مكتملة",
+        "CANCELLED": "ملغاة"
+      }
     }
   },
   "admin": {

@@ -220,6 +220,63 @@
         "newResetLink": "Request a new reset link",
         "backToSignIn": "Back to sign in"
       }
+    },
+    "overview": {
+      "greeting": {
+        "morning": "Good morning, {name}",
+        "afternoon": "Good afternoon, {name}",
+        "evening": "Good evening, {name}"
+      },
+      "subtitle": "{date} · Here's what needs you today.",
+      "newTrip": "New trip",
+      "kpi": {
+        "today": "Trips today",
+        "tomorrow": "{count, plural, =0 {None booked for tomorrow yet} one {# tomorrow} other {# tomorrow}}",
+        "unassigned": "No driver yet",
+        "overdue": "{count, plural, one {# past its pickup time} other {# past their pickup time}}",
+        "priceRequests": "Need a price",
+        "awaitingReport": "Awaiting report",
+        "inProgress": "{count, plural, one {# trip on the road} other {# trips on the road}}"
+      },
+      "needsAction": {
+        "title": "Needs action",
+        "allTrips": "All trips",
+        "empty": "Nothing needs you right now.",
+        "reasons": {
+          "price": "Needs a price",
+          "confirm": "Waiting for confirmation",
+          "assign": "No driver yet",
+          "report": "Report due"
+        },
+        "actions": {
+          "price": "Propose price",
+          "confirm": "Confirm",
+          "assign": "Assign",
+          "report": "Review"
+        }
+      },
+      "today": {
+        "title": "Today's pickups",
+        "count": "{count, plural, one {# trip} other {# trips}}",
+        "empty": "No pickups today.",
+        "code": "Trip code",
+        "unassigned": "Unassigned"
+      },
+      "onTheRoad": {
+        "title": "On the road now",
+        "detail": "{route} · Pickup {time}",
+        "empty": "No trips on the road."
+      }
+    },
+    "trips": {
+      "status": {
+        "PENDING": "Pending",
+        "CONFIRMED": "Confirmed",
+        "IN_PROGRESS": "In progress",
+        "AWAITING_REPORT": "Awaiting report",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled"
+      }
     }
   },
   "admin": {
