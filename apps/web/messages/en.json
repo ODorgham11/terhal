@@ -47,7 +47,12 @@
       "officeName": "Office name",
       "contact": "Contact person",
       "address": "Address",
-      "area": "Area"
+      "area": "Area",
+      "nameEn": "English name",
+      "nameAr": "Arabic name",
+      "descriptionEn": "English description",
+      "descriptionAr": "Arabic description",
+      "sortOrder": "Sort order"
     },
     "session": {
       "unreachableTitle": "We couldn't reach the server",
@@ -979,6 +984,42 @@
         "cancel": "Cancel",
         "submit": "Import",
         "done": "{created} added, {updated} changed, {unchanged} unchanged"
+      }
+    },
+    "tripClasses": {
+      "title": "Trip classes",
+      "description": "What's included in a ride. Customers pick one when they book; each has its own prices.",
+      "add": "Add class",
+      "edit": "Edit class",
+      "menu": "Actions for {name}",
+      "columns": {
+        "order": "Order",
+        "class": "Class",
+        "description": "Description",
+        "prices": "Prices",
+        "trips": "Trips ({month})"
+      },
+      "empty": "No classes yet",
+      "emptyHint": "Add a class so customers can book and prices can be set.",
+      "emptyArchived": "No archived classes",
+      "form": {
+        "addTitle": "Add class",
+        "editTitle": "Edit class",
+        "description": "Customers see the name and description in their language.",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add class",
+        "saved": "Class saved",
+        "added": "Class added",
+        "sortHint": "Lower comes first on the site.",
+        "archiveTitle": "Archive this class",
+        "archiveHint": "It stops appearing in quotes and bookings. Its {count, plural, one {# price is} other {# prices are}} kept and come back if you restore it.",
+        "archive": "Archive class",
+        "archived": "Class archived",
+        "restoreTitle": "Restore this class",
+        "restoreHint": "It appears in quotes and bookings again, with its prices.",
+        "restore": "Restore class",
+        "restored": "Class restored"
       }
     }
   },
