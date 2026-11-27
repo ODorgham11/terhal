@@ -36,6 +36,8 @@ export function useTripDates() {
         hour: "numeric",
         minute: "2-digit",
       }),
+    // Nov 28
+    day: (iso: string) => format.dateTime(new Date(iso), { month: "short", day: "numeric" }),
     // 9:00 AM
     time: (iso: string) => format.dateTime(new Date(iso), { hour: "numeric", minute: "2-digit" }),
     // EGP 1,250
