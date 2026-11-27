@@ -67,6 +67,7 @@ export const readReportLink = async (tripId: string, locale: Locale): Promise<Re
       reportTokenSalt: true,
       reportTokenExpiresAt: true,
       driver: { select: { id: true, firstName: true, lastName: true, phone: true } },
+      brand: { select: { nameEn: true, nameAr: true, phone: true } },
     },
   });
   if (!trip) throw tripNotFound();
@@ -79,7 +80,13 @@ export const readReportLink = async (tripId: string, locale: Locale): Promise<Re
 
   const url = reportUrl(env.SITE_URL, token);
   const message = reportLinkMessage(
-    { firstName: driver.firstName, code: trip.code, pickupDate: trip.pickupDate, url },
+    {
+      firstName: driver.firstName,
+      code: trip.code,
+      pickupDate: trip.pickupDate,
+      url,
+      brand: trip.brand,
+    },
     locale,
   );
   return {

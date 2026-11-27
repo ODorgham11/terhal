@@ -34,6 +34,18 @@ export interface NoticeData {
   assignment?: AssignmentDetails | null;
   // The trip's page on the site.
   link?: string | null;
+  // The brand the trip is sent under; absent or null is Terhal. Kept with the notification, so an email sent later
+  // still says what it said when written.
+  brand?: NoticeBrand | null;
+}
+
+export interface NoticeBrand {
+  nameEn: string;
+  nameAr: string;
+  senderEmail: string;
+  replyTo: string | null;
+  phone: string | null;
+  website: string | null;
 }
 
 export interface Rendered {
@@ -42,7 +54,11 @@ export interface Rendered {
   html: string;
 }
 
-const BRAND: Record<Locale, string> = { ar: "ترحال", en: "Terhal" };
+const TERHAL: Record<Locale, string> = { ar: "ترحال", en: "Terhal" };
+
+// The name the booker knows the company by: the trip's brand, or Terhal.
+const brandName = (data: NoticeData, locale: Locale) =>
+  data.brand ? (locale === "ar" ? data.brand.nameAr : data.brand.nameEn) : TERHAL[locale];
 
 // Cairo time, where the company works (X4 a).
 export const formatPickup = (iso: string, locale: Locale) =>
@@ -340,17 +356,17 @@ const templates: Record<NotificationKind, Text> = {
   TRIP_COMPLETED: (data, locale) =>
     locale === "ar"
       ? {
-          title: `شكرًا لسفرك مع ${BRAND.ar}`,
+          title: `شكرًا لسفرك مع ${brandName(data, "ar")}`,
           lines: [
             greeting(data, locale),
-            `اكتملت رحلتك ${data.code}. شكرًا لاختيارك ${BRAND.ar}، ونتمنى أن نراك مجددًا.`,
+            `اكتملت رحلتك ${data.code}. شكرًا لاختيارك ${brandName(data, "ar")}، ونتمنى أن نراك مجددًا.`,
           ],
         }
       : {
-          title: `Thank you for travelling with ${BRAND.en}`,
+          title: `Thank you for travelling with ${brandName(data, "en")}`,
           lines: [
             greeting(data, locale),
-            `Your trip ${data.code} is complete. Thank you for choosing ${BRAND.en}; we hope to see you again.`,
+            `Your trip ${data.code} is complete. Thank you for choosing ${brandName(data, "en")}; we hope to see you again.`,
           ],
         },
 
@@ -441,20 +457,30 @@ const escape = (text: string) =>
 const isolateLtr = (html: string) =>
   html.replace(/(https?:\/\/\S+|\+?\d[\d ]{6,}\d|\bTRH-[0-9A-Z]+)/g, '<bdi dir="ltr">$1</bdi>');
 
-const toHtml = (title: string, lines: string[], locale: Locale) => {
+// A branded email ends with how to reach the brand.
+const contactLine = (data: NoticeData, locale: Locale) => {
+  const parts = [brandName(data, locale), data.brand?.phone, data.brand?.website].filter(Boolean);
+  return data.brand && parts.length > 1 ? parts.join(" · ") : null;
+};
+
+const toHtml = (title: string, lines: string[], data: NoticeData, locale: Locale) => {
   const dir = locale === "ar" ? "rtl" : "ltr";
   const align = locale === "ar" ? "right" : "left";
   const paragraphs = lines
     .map((line) => `<p style="margin:0 0 12px">${isolateLtr(escape(line))}</p>`)
     .join("");
+  const contact = contactLine(data, locale);
   return [
     `<!doctype html><html lang="${locale}" dir="${dir}"><head><meta charset="utf-8">`,
     `<title>${escape(title)}</title></head>`,
     `<body style="margin:0;padding:24px;background:#f6f6f6;font-family:'IBM Plex Sans Arabic',Tahoma,Arial,sans-serif">`,
     `<div dir="${dir}" style="max-width:560px;margin:0 auto;background:#fff;padding:24px;border-radius:8px;text-align:${align};color:#1a1a1a;line-height:1.6">`,
-    `<p style="margin:0 0 16px;font-weight:600">${BRAND[locale]}</p>`,
+    `<p style="margin:0 0 16px;font-weight:600">${escape(brandName(data, locale))}</p>`,
     `<h1 style="margin:0 0 16px;font-size:20px">${isolateLtr(escape(title))}</h1>`,
     paragraphs,
+    contact
+      ? `<p style="margin:16px 0 0;font-size:13px;color:#666">${isolateLtr(escape(contact))}</p>`
+      : "",
     `</div></body></html>`,
   ].join("");
 };
@@ -465,5 +491,5 @@ export const renderNotification = (
   data: NoticeData,
 ): Rendered => {
   const { title, lines } = templates[kind](data, locale);
-  return { title, body: lines.join("\n"), html: toHtml(title, lines, locale) };
+  return { title, body: lines.join("\n"), html: toHtml(title, lines, data, locale) };
 };

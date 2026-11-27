@@ -2,6 +2,7 @@ import { canServe, fitsCar, tripEventActions, type UpdateTrip } from "@terhal/co
 import { prisma } from "../../../platform/db/prisma";
 import { AppError } from "../../../platform/errors/app-error";
 import { validationFailed } from "../../../platform/errors/validation";
+import { brandForBooking } from "../../brands/index";
 import { resolveRoute } from "../../pricing/index";
 import { reportLinkExpiry } from "../domain/report";
 import { EDITABLE_STATUSES, PRICE_EDITABLE_STATUSES } from "../domain/rules";
@@ -15,6 +16,8 @@ import { loadDoesNotFit, statusConflict, tripNotFound } from "./shared";
 
 const PAYMENT_FIELDS = new Set(["paymentMethod", "paidAt"]);
 const PRICE_FIELDS = new Set(["totalPrice", ...PAYMENT_FIELDS]);
+// Fields that can change until the trip is completed, not only while it's pending or confirmed.
+const LATE_FIELDS = new Set([...PRICE_FIELDS, "brandId"]);
 
 const invalid = (path: string, message: string) =>
   validationFailed([{ in: "json", path, code: "custom", message }]);
@@ -71,6 +74,14 @@ export const updateTrip = async (id: string, staffId: string, input: UpdateTrip)
     } satisfies TripFields);
   }
 
+  // A brand for the messages still to come. Only a trip staff booked can leave Terhal (Trip_site_brand).
+  if (input.brandId !== undefined && input.brandId !== trip.brandId) {
+    if (input.brandId !== null && trip.source !== "STAFF") {
+      throw invalid("brandId", "A trip booked on the site is always sent under Terhal.");
+    }
+    set.brandId = (await brandForBooking(input.brandId))?.id ?? null;
+  }
+
   if (input.classId && input.classId !== trip.classId) {
     const tripClass = await prisma.tripClass.findFirst({
       where: { id: input.classId, archivedAt: null },
@@ -113,7 +124,7 @@ export const updateTrip = async (id: string, staffId: string, input: UpdateTrip)
       action: onlyPayment ? tripEventActions.PAYMENT_RECORDED : tripEventActions.UPDATED,
       from: PRICE_EDITABLE_STATUSES,
       check: (current) => {
-        const details = touched.some((key) => !PRICE_FIELDS.has(key));
+        const details = touched.some((key) => !LATE_FIELDS.has(key));
         if (details && !(EDITABLE_STATUSES as readonly string[]).includes(current.status)) {
           throw statusConflict(
             current.status,

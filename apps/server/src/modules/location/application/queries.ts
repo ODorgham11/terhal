@@ -5,6 +5,10 @@ import { parsePolygon, toGeoJson } from "../domain/outline";
 
 export type Client = typeof prisma | Prisma.TransactionClient;
 
+// Whether a location exists and isn't deleted, e.g. for an office being pointed at it.
+export const isLiveLocation = async (id: string, client: Client = prisma) =>
+  (await client.location.count({ where: { id, deletedAt: null } })) > 0;
+
 interface ChainRow {
   start: string;
   depth: number;

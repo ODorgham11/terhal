@@ -7,6 +7,7 @@ import {
 import { prisma } from "../../../platform/db/prisma";
 import { AppError } from "../../../platform/errors/app-error";
 import { recordAudit } from "../../audit/index";
+import { isLiveLocation } from "../../location/index";
 import { liveOfficeTrips } from "../../trips/index";
 import { searchWords } from "../domain/rules";
 import {
@@ -73,18 +74,13 @@ export const getOffice = async (id: string) => {
 };
 
 // An office's location must be a live one (an office keeps a link to one deleted since).
-// TODO: ask the locations module once it's merged instead of reading its table.
 const assertLocationAvailable = async (
   client: Client,
   locationId: string | null | undefined,
   currentLocationId: string | null = null,
 ) => {
   if (!locationId || locationId === currentLocationId) return;
-  const location = await client.location.findFirst({
-    where: { id: locationId, deletedAt: null },
-    select: { id: true },
-  });
-  if (!location) {
+  if (!(await isLiveLocation(locationId, client))) {
     throw new AppError({
       code: "LOCATION_NOT_AVAILABLE",
       status: 422,

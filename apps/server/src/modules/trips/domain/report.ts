@@ -25,18 +25,38 @@ const pickupWhen = (pickupDate: Date, locale: Locale) =>
     timeStyle: "short",
   }).format(pickupDate);
 
+// The sender is the trip's brand (Terhal when it has none), signed off with its phone when it has one.
+export interface MessageBrand {
+  nameEn: string;
+  nameAr: string;
+  phone: string | null;
+}
+
+const TERHAL: MessageBrand = { nameEn: "Terhal", nameAr: "ترحال", phone: null };
+
 export const reportLinkMessage = (
   {
     firstName,
     code,
     pickupDate,
     url,
-  }: { firstName: string; code: string; pickupDate: Date; url: string },
+    brand,
+  }: {
+    firstName: string;
+    code: string;
+    pickupDate: Date;
+    url: string;
+    brand?: MessageBrand | null;
+  },
   locale: Locale,
-) =>
-  locale === "ar"
-    ? `مرحبًا ${firstName}، هذا رابط تقرير الرحلة ${code} (${pickupWhen(pickupDate, "ar")}). افتحه لبدء الرحلة وإنهائها ثم إرسال التقرير: ${url}`
-    : `Hi ${firstName}, here's the report link for trip ${code} (${pickupWhen(pickupDate, "en")}). Open it to start and end the trip, then send the report: ${url}`;
+) => {
+  const sender = brand ?? TERHAL;
+  const name = locale === "ar" ? sender.nameAr : sender.nameEn;
+  const signOff = sender.phone ? `\n— ${name} · ${sender.phone}` : "";
+  return locale === "ar"
+    ? `مرحبًا ${firstName}، معك ${name}. هذا رابط تقرير الرحلة ${code} (${pickupWhen(pickupDate, "ar")}). افتحه لبدء الرحلة وإنهائها ثم إرسال التقرير: ${url}${signOff}`
+    : `Hi ${firstName}, this is ${name}. Here's the report link for trip ${code} (${pickupWhen(pickupDate, "en")}). Open it to start and end the trip, then send the report: ${url}${signOff}`;
+};
 
 // wa.me takes the number in international form without the plus.
 export const whatsappUrl = (phone: string, message: string) =>
