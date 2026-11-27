@@ -40,6 +40,13 @@ cookie with a switcher on every page, not a URL prefix, so `proxy.ts` keeps mapp
 properties (`ms-`/`me-`, `start`/`end`), never left and right, so one layout serves both directions. Places and trip
 classes carry both names (`nameEn`, `nameAr`).
 
+### The staff dashboard defaults to English (2026-11-27)
+
+The staff dashboard is designed in English, left to right (Figma "Terhal — Staff Dashboard"), so it opens in English
+until someone picks Arabic; the customer site and the admin panel still open in Arabic. Both languages stay complete on
+every host. The dashboard is set in the system's own font (SF Pro on Apple devices, the design's font, which can't be
+shipped as a web font), light theme only.
+
 ### The name in Arabic is ترحال (2026-11-21)
 
 Every Arabic text (emails, the interface) writes the product's name as **ترحال**.
