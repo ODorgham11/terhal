@@ -28,7 +28,8 @@
       "currentPassword": "Current password",
       "newPassword": "New password",
       "code": "Code",
-      "permissions": "Permissions"
+      "permissions": "Permissions",
+      "confirmPassword": "Confirm password"
     },
     "session": {
       "unreachableTitle": "We couldn't reach the server",
@@ -143,7 +144,8 @@
       "passwordNumber": "Password must contain at least one number.",
       "option": "Please choose one of the options.",
       "invalid": "This value isn't valid.",
-      "invalidField": "{field} isn't valid."
+      "invalidField": "{field} isn't valid.",
+      "passwordsMatch": "The passwords don't match."
     }
   },
   "site": {
@@ -181,6 +183,43 @@
       "searchPlaceholder": "Search by trip code…",
       "notifications": "Notifications",
       "notificationsUnread": "Notifications, {count} unread"
+    },
+    "auth": {
+      "logo": "Terhal",
+      "footer": "© {year} Terhal · Staff dashboard",
+      "signIn": {
+        "title": "Sign in",
+        "description": "Use your staff email and password.",
+        "forgotPassword": "Forgot password?",
+        "submit": "Sign in"
+      },
+      "forgotPassword": {
+        "title": "Reset your password",
+        "description": "Enter your staff email. If it has an account, we'll send a link to set a new password.",
+        "submit": "Send reset link",
+        "backToSignIn": "Back to sign in",
+        "sentTitle": "Check your email",
+        "sentDescription": "If <email></email> has a staff account, a reset link is on its way. The link works for 1 hour."
+      },
+      "resetPassword": {
+        "title": "Set a new password",
+        "description": "You'll be signed out of your other devices.",
+        "passwordHint": "At least 8 characters, with an uppercase letter, a lowercase letter and a number.",
+        "submit": "Set password",
+        "done": "Password changed. Sign in with your new password."
+      },
+      "invite": {
+        "title": "Join Terhal",
+        "description": "You've been invited to the staff dashboard. Set up your account to continue.",
+        "passwordHint": "At least 8 characters, with an uppercase letter, a lowercase letter and a number.",
+        "submit": "Create account"
+      },
+      "linkExpired": {
+        "title": "This link has expired",
+        "description": "Invitation and reset links only work once and for a limited time. Ask a colleague for a new invitation, or request a new reset link.",
+        "newResetLink": "Request a new reset link",
+        "backToSignIn": "Back to sign in"
+      }
     }
   },
   "admin": {
