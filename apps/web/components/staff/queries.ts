@@ -16,3 +16,10 @@ export const unreadCountQuery = queryOptions({
   queryFn: () => call(staffApi.notifications["unread-count"].$get()),
   refetchInterval: 30_000,
 });
+
+// Live offices, for the office pickers (a business has a handful).
+export const officesQuery = queryOptions({
+  queryKey: ["staff", "offices", "all"],
+  queryFn: () => call(staffApi.offices.$get({ query: { limit: "100" } })),
+  staleTime: 5 * 60_000,
+});

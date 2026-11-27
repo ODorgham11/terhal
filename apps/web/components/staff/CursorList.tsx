@@ -12,10 +12,16 @@ type Page<Row> = { data: Row[]; nextCursor: string | null };
 //   const list = useCursorList(["staff", "drivers"], { q: "", archived: "false" }, (query) =>
 //     call(staffApi.drivers.$get({ query })));
 //   list.rows … <ListPagination list={list} />
+// What's sent: the filters that are set ("" means unset, so it's left out of the type too).
+export type ListQuery<Filters> = { [K in keyof Filters]?: Exclude<Filters[K], ""> } & {
+  limit: string;
+  cursor?: string;
+};
+
 export function useCursorList<Row, Filters extends Record<string, string>>(
   key: readonly unknown[],
   initial: Filters,
-  fetch: (query: Partial<Filters> & { limit: string; cursor?: string }) => Promise<Page<Row>>,
+  fetch: (query: ListQuery<Filters>) => Promise<Page<Row>>,
   pageSize = 20,
 ) {
   const pages = useCursorPages();
@@ -23,12 +29,10 @@ export function useCursorList<Row, Filters extends Record<string, string>>(
 
   // Empty filters are left out of the request.
   const query = {
-    ...(Object.fromEntries(
-      Object.entries(filters).filter(([, value]) => value !== ""),
-    ) as Partial<Filters>),
+    ...Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== "")),
     limit: String(pageSize),
     ...(pages.cursor && { cursor: pages.cursor }),
-  };
+  } as ListQuery<Filters>;
   const result = useQuery({
     queryKey: [...key, query],
     queryFn: () => fetch(query),
