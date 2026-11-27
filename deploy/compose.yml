@@ -33,13 +33,15 @@ services:
     <<: *server
     # Inside it, the server finishes in-flight requests (src/app.ts).
     stop_grace_period: 30s
+    # The process only, not Postgres: a check every 10 seconds that queried the database would keep Neon's compute from
+    # ever scaling to zero. The deploy checks /health/ready once, from outside (.github/workflows/deploy.yml).
     healthcheck:
       test:
         [
           "CMD",
           "node",
           "-e",
-          "fetch('http://localhost:8080/health/ready').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+          "fetch('http://localhost:8080/health/live').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
         ]
       interval: 10s
       timeout: 5s
