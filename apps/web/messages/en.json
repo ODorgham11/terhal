@@ -1075,6 +1075,57 @@
         "restore": "Restore class",
         "restored": "Class restored"
       }
+    },
+    "customers": {
+      "title": "Customers",
+      "description": "People who signed up on the site. Staff can book for them from New trip.",
+      "search": "Search name, email or phone",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "statuses": {
+        "ACTIVE": "Active",
+        "UNVERIFIED": "Unverified",
+        "SUSPENDED": "Suspended",
+        "DELETED": "Deleted"
+      },
+      "columns": {
+        "customer": "Customer",
+        "phone": "Phone",
+        "trips": "Trips",
+        "spent": "Spent",
+        "lastTrip": "Last trip",
+        "joined": "Joined",
+        "status": "Status"
+      },
+      "empty": "No customers here",
+      "emptyHint": "Customers appear once they sign up on the site.",
+      "detail": {
+        "breadcrumb": "Breadcrumb",
+        "since": "Customer since {date}",
+        "book": "Book a trip for {name}",
+        "trips": "Trips",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "spent": "Spent",
+        "contact": "Contact",
+        "language": "Language",
+        "languages": {
+          "en": "English",
+          "ar": "Arabic"
+        },
+        "verified": "Email verified",
+        "account": "Account",
+        "accountHint": "Only an admin can suspend a customer account.",
+        "columns": {
+          "trip": "Trip",
+          "route": "Route",
+          "pickup": "Pickup",
+          "price": "Price",
+          "status": "Status"
+        },
+        "noTrips": "No trips yet.",
+        "priceRequested": "Price requested"
+      }
     }
   },
   "admin": {

@@ -1075,6 +1075,57 @@
         "restore": "استعادة الفئة",
         "restored": "تمت استعادة الفئة"
       }
+    },
+    "customers": {
+      "title": "العملاء",
+      "description": "من سجّلوا على الموقع. يمكن للموظفين الحجز لهم من رحلة جديدة.",
+      "search": "ابحث بالاسم أو البريد أو الهاتف",
+      "status": "الحالة",
+      "allStatuses": "كل الحالات",
+      "statuses": {
+        "ACTIVE": "نشط",
+        "UNVERIFIED": "غير مؤكَّد",
+        "SUSPENDED": "موقوف",
+        "DELETED": "محذوف"
+      },
+      "columns": {
+        "customer": "العميل",
+        "phone": "الهاتف",
+        "trips": "الرحلات",
+        "spent": "الإنفاق",
+        "lastTrip": "آخر رحلة",
+        "joined": "الانضمام",
+        "status": "الحالة"
+      },
+      "empty": "لا يوجد عملاء هنا",
+      "emptyHint": "يظهر العملاء بعد تسجيلهم على الموقع.",
+      "detail": {
+        "breadcrumb": "مسار التنقل",
+        "since": "عميل منذ {date}",
+        "book": "احجز رحلة لـ{name}",
+        "trips": "الرحلات",
+        "completed": "المكتملة",
+        "cancelled": "الملغاة",
+        "spent": "الإنفاق",
+        "contact": "التواصل",
+        "language": "اللغة",
+        "languages": {
+          "en": "الإنجليزية",
+          "ar": "العربية"
+        },
+        "verified": "البريد مؤكَّد",
+        "account": "الحساب",
+        "accountHint": "المدير فقط يمكنه إيقاف حساب عميل.",
+        "columns": {
+          "trip": "الرحلة",
+          "route": "المسار",
+          "pickup": "الانطلاق",
+          "price": "السعر",
+          "status": "الحالة"
+        },
+        "noTrips": "لا توجد رحلات بعد.",
+        "priceRequested": "السعر مطلوب"
+      }
     }
   },
   "admin": {
