@@ -11,6 +11,9 @@ import type { ReminderKind } from "../domain/rules";
 
 const MINUTE = 60_000;
 
+// The job gate's signal for the sweep: notifyTripEvent marks it when it writes to the outbox (platform/jobs/gate.ts).
+export const OUTBOX_SIGNAL = "notifications.outbox";
+
 // Retries with backoff: 30 s, 1, 2, 4 and 8 minutes. Finished jobs are kept a day (failed ones a week), so a repeated
 // id is still recognised.
 export const jobOptions: JobsOptions = {

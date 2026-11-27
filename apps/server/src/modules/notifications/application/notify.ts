@@ -1,5 +1,7 @@
 import type { TripEventAction } from "@terhal/contracts";
+import { markChanged } from "../../../platform/jobs/gate";
 import { planNotifications, type EventActor } from "../domain/rules";
+import { OUTBOX_SIGNAL } from "./outbox";
 import { syncReminders } from "./reminders";
 import { loadTrip, type Db } from "./trips";
 import { writeNotifications } from "./write";
@@ -7,7 +9,8 @@ import { writeNotifications } from "./write";
 // The trips module's afterTripEvent hook lands here, inside the transaction that recorded the event. Everything is
 // written as rows in that transaction (the notifications, their pending email deliveries, the trip's reminders), and
 // nothing is queued from here: the worker's outbox sweep queues them once they're committed, so a rolled back change
-// never emails anyone and a committed one is never lost to a crash between the commit and the queue.
+// never emails anyone and a committed one is never lost to a crash between the commit and the queue. It marks the outbox
+// as changed, so the sweep looks at Postgres again (platform/jobs/gate.ts).
 
 // A recorded trip event, as trips hands it over.
 export interface TripEventNotice {
@@ -21,6 +24,7 @@ export interface TripEventNotice {
 const text = (value: unknown) => (typeof value === "string" ? value : null);
 
 export const notifyTripEvent = async (db: Db, event: TripEventNotice, now = new Date()) => {
+  await markChanged(OUTBOX_SIGNAL);
   const trip = await loadTrip(db, event.tripId);
   if (!trip) return;
 
