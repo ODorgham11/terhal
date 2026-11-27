@@ -1,0 +1,345 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useFormatter, useTranslations } from "next-intl";
+import { useQuery } from "@tanstack/react-query";
+import {
+  IconArchive,
+  IconCash,
+  IconChevronRight,
+  IconPencil,
+  IconRestore,
+} from "@tabler/icons-react";
+import type { Driver, DriverTransaction } from "@terhal/contracts";
+import { DirectionalIcon } from "@/components/DirectionalIcon";
+import { RequireStaff } from "@/components/session/RequireSession";
+import { ListPagination, useCursorList } from "@/components/staff/CursorList";
+import { InfoList, InfoRow, SectionCard } from "@/components/staff/SectionCard";
+import { SystemState } from "@/components/staff/SystemState";
+import { DriverDrawer } from "@/components/staff/fleet/DriverDrawer";
+import { useArchive } from "@/components/staff/fleet/useArchive";
+import { RecordPaymentDialog } from "@/components/staff/fleet/RecordPaymentDialog";
+import { KindBadge, Phone, useBalance, useCalendarDate } from "@/components/staff/fleet/format";
+import { FleetTrips } from "@/components/staff/fleet/FleetTrips";
+import { useTripDates } from "@/components/staff/trips/format";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableEmpty,
+  TableHead,
+  TableHeader,
+  TableLoading,
+  TableRow,
+} from "@/components/ui/Table";
+import { call, isApiError, staffApi, useErrorMessage } from "@/lib/api";
+import { cn } from "@/lib/cn";
+
+export function DriverDetailPage({ id }: { id: string }) {
+  return <RequireStaff permission="fleet">{() => <Detail id={id} />}</RequireStaff>;
+}
+
+function Detail({ id }: { id: string }) {
+  const driver = useQuery({
+    queryKey: ["staff", "driver", id],
+    queryFn: () => call(staffApi.drivers[":id"].$get({ param: { id } })),
+    retry: (count, error) => !(isApiError(error) && error.status === 404) && count < 1,
+  });
+  if (driver.isPending) return <Skeleton className="h-64 w-full" />;
+  if (driver.isError) {
+    return isApiError(driver.error) && driver.error.status === 404 ? (
+      <SystemState kind="notFound" />
+    ) : (
+      <SystemState kind="error" onRetry={() => void driver.refetch()} />
+    );
+  }
+  return <Loaded driver={driver.data} />;
+}
+
+function Loaded({ driver }: { driver: Driver }) {
+  const t = useTranslations("staff.fleet.driver");
+  const nav = useTranslations("staff.nav");
+  const common = useTranslations("staff.common");
+  const kinds = useTranslations("staff.fleet.kinds");
+  const archive = useArchive("drivers");
+  const format = useFormatter();
+  const [dialog, setDialog] = useState<"edit" | "payment" | null>(null);
+  const name = `${driver.firstName} ${driver.lastName}`;
+  const archived = driver.archivedAt !== null;
+
+  return (
+    <>
+      <nav aria-label={t("breadcrumb")} className="flex items-center gap-2 text-xs">
+        <Link href="/drivers" className="text-primary hover:underline">
+          {nav("drivers")}
+        </Link>
+        <DirectionalIcon icon={IconChevronRight} className="size-3.5 text-muted" />
+        <span className="text-muted">{name}</span>
+      </nav>
+
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-semibold text-foreground">{name}</h1>
+            <KindBadge item={driver} />
+            {archived && <Badge tone="neutral">{t("archived")}</Badge>}
+          </div>
+          <p className="text-base text-muted">
+            {t("subtitle", {
+              kind: kinds(driver.office ? "office" : driver.isExternal ? "external" : "internal"),
+              date: format.dateTime(new Date(driver.createdAt), {
+                month: "short",
+                year: "numeric",
+              }),
+            })}
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => void archive(driver.id, archived)}>
+            {archived ? (
+              <IconRestore aria-hidden className="size-5" stroke={1.75} />
+            ) : (
+              <IconArchive aria-hidden className="size-5" stroke={1.75} />
+            )}
+            {archived ? common("restore") : common("archive")}
+          </Button>
+          <Button variant="secondary" onClick={() => setDialog("edit")}>
+            <IconPencil aria-hidden className="size-5" stroke={1.75} />
+            {common("edit")}
+          </Button>
+          <Button onClick={() => setDialog("payment")}>
+            <IconCash aria-hidden className="size-5" stroke={1.75} />
+            {t("recordPayment")}
+          </Button>
+        </div>
+      </header>
+
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="flex min-w-0 flex-col gap-5">
+          <BalanceCard driver={driver} />
+          <LedgerCard driver={driver} />
+          <SectionCard title={t("upcoming")}>
+            <FleetTrips filter={{ driverId: driver.id }} />
+          </SectionCard>
+        </div>
+        <div className="flex flex-col gap-5">
+          <ProfileCard driver={driver} />
+          {driver.notes && (
+            <SectionCard title={t("notes")}>
+              <p className="text-sm whitespace-pre-line text-foreground">{driver.notes}</p>
+            </SectionCard>
+          )}
+          <MonthCard driver={driver} />
+        </div>
+      </div>
+
+      <DriverDrawer
+        driver={driver}
+        open={dialog === "edit"}
+        onOpenChange={(open) => setDialog(open ? "edit" : null)}
+      />
+      <RecordPaymentDialog
+        driver={driver}
+        open={dialog === "payment"}
+        onOpenChange={(open) => setDialog(open ? "payment" : null)}
+      />
+    </>
+  );
+}
+
+function useSummary(id: string) {
+  return useQuery({
+    queryKey: ["staff", "driver", id, "summary"],
+    queryFn: () => call(staffApi.drivers[":id"].summary.$get({ param: { id } })),
+  });
+}
+
+function BalanceCard({ driver }: { driver: Driver }) {
+  const t = useTranslations("staff.fleet.driver.balance");
+  const { price } = useTripDates();
+  const summary = useSummary(driver.id);
+  const amount = Number(driver.amountOwed);
+  const balance = useBalance()(driver.amountOwed);
+  const totals = summary.data?.totals;
+
+  return (
+    <SectionCard title={t("title")}>
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-muted">
+            {amount === 0
+              ? t("settled")
+              : amount > 0
+                ? t("companyOwes", { name: driver.firstName })
+                : t("driverOwes", { name: driver.firstName })}
+          </span>
+          <span className={cn("text-[2rem] leading-10 font-semibold tabular-nums", balance.tone)}>
+            {price(Math.abs(amount).toFixed(2))}
+          </span>
+          <span className="max-w-sm text-xs text-muted">
+            {amount === 0 ? t("settledHint") : amount > 0 ? t("owedHint") : t("owesHint")}
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {(
+            [
+              ["cashCollected", totals?.cashCollected],
+              ["earned", totals?.earned],
+              ["payments", totals && (Number(totals.paidOut) + Number(totals.handedIn)).toFixed(2)],
+            ] as const
+          ).map(([key, value]) => (
+            <div key={key} className="flex flex-col gap-0.5 rounded-lg bg-surface-muted px-3 py-2">
+              <span className="text-xs text-muted">{t(key)}</span>
+              <span className="text-sm font-medium text-foreground tabular-nums">
+                {value === undefined ? "…" : price(value)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </SectionCard>
+  );
+}
+
+const entryKeys = {
+  TRIP_FEE: "tripFee",
+  EXPENSE_REIMBURSEMENT: "expenses",
+  CASH_COLLECTED: "cashCollected",
+  PAYOUT: "payout",
+  CASH_HANDED_IN: "handedIn",
+  ADJUSTMENT: "adjustment",
+} as const;
+
+function LedgerCard({ driver }: { driver: Driver }) {
+  const t = useTranslations("staff.fleet.driver.ledger");
+  const errorMessage = useErrorMessage();
+  const ledger = useCursorList(["staff", "driver", driver.id, "ledger"], {}, (query) =>
+    call(staffApi.drivers[":id"].transactions.$get({ param: { id: driver.id }, query })),
+  );
+
+  return (
+    <SectionCard title={t("title")}>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("date")}</TableHead>
+            <TableHead>{t("entry")}</TableHead>
+            <TableHead>{t("trip")}</TableHead>
+            <TableHead>{t("by")}</TableHead>
+            <TableHead className="text-end">{t("amount")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {ledger.result.isPending ? (
+            <TableLoading columns={5} rows={3} />
+          ) : ledger.result.isError ? (
+            <TableEmpty columns={5} title={errorMessage(ledger.result.error)} />
+          ) : ledger.rows.length === 0 ? (
+            <TableEmpty columns={5} title={t("empty")} />
+          ) : (
+            ledger.rows.map((entry) => <LedgerRow key={entry.id} entry={entry} />)
+          )}
+        </TableBody>
+      </Table>
+      <ListPagination list={ledger} />
+      <p className="text-xs text-muted">{t("hint", { name: driver.firstName })}</p>
+    </SectionCard>
+  );
+}
+
+function LedgerRow({ entry }: { entry: DriverTransaction }) {
+  const t = useTranslations("staff.fleet.driver.ledger");
+  const { day, price } = useTripDates();
+  const amount = Number(entry.amount);
+  return (
+    <TableRow>
+      <TableCell className="whitespace-nowrap">{day(entry.createdAt)}</TableCell>
+      <TableCell>
+        <div className="flex flex-col">
+          <span className="text-sm text-foreground">{t(`entries.${entryKeys[entry.type]}`)}</span>
+          {entry.note && <span className="text-xs text-muted">{entry.note}</span>}
+        </div>
+      </TableCell>
+      <TableCell>
+        {entry.trip ? (
+          <Link
+            href={`/trips/${entry.trip.id}`}
+            dir="ltr"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            {entry.trip.code}
+          </Link>
+        ) : (
+          "—"
+        )}
+      </TableCell>
+      <TableCell className="text-muted">
+        {entry.staff ? `${entry.staff.firstName} ${entry.staff.lastName}` : t("system")}
+      </TableCell>
+      <TableCell
+        className={cn(
+          "text-end font-medium whitespace-nowrap tabular-nums",
+          amount > 0 ? "text-success" : "text-danger",
+        )}
+      >
+        <span dir="ltr">
+          {amount > 0 ? "+ " : "− "}
+          {price(Math.abs(amount).toFixed(2))}
+        </span>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function ProfileCard({ driver }: { driver: Driver }) {
+  const t = useTranslations("staff.fleet.driver.profile");
+  const fields = useTranslations("common.fields");
+  const date = useCalendarDate();
+  return (
+    <SectionCard title={t("title")}>
+      <InfoList>
+        <InfoRow label={fields("phone")}>
+          <Phone phone={driver.phone} />
+        </InfoRow>
+        <InfoRow label={fields("licenseNumber")}>
+          <span dir="ltr">{driver.licenseNumber ?? "—"}</span>
+        </InfoRow>
+        <InfoRow label={fields("licenseExpiresAt")}>
+          {driver.licenseExpiresAt ? date(driver.licenseExpiresAt) : "—"}
+        </InfoRow>
+        <InfoRow label={fields("nationalId")}>
+          <span dir="ltr">{driver.nationalId ?? "—"}</span>
+        </InfoRow>
+        <InfoRow label={fields("office")}>
+          {driver.office ? (
+            <Link href={`/offices/${driver.office.id}`} className="hover:underline">
+              {driver.office.name}
+            </Link>
+          ) : (
+            t("noOffice")
+          )}
+        </InfoRow>
+      </InfoList>
+    </SectionCard>
+  );
+}
+
+function MonthCard({ driver }: { driver: Driver }) {
+  const t = useTranslations("staff.fleet.driver.month");
+  const format = useFormatter();
+  const { price } = useTripDates();
+  const month = useSummary(driver.id).data?.thisMonth;
+  return (
+    <SectionCard title={t("title")}>
+      <InfoList>
+        <InfoRow label={t("trips")}>{month ? format.number(month.tripsCompleted) : "…"}</InfoRow>
+        <InfoRow label={t("kilometres")}>{month ? format.number(month.kilometres) : "…"}</InfoRow>
+        <InfoRow label={t("fees")}>{month ? price(month.fees) : "…"}</InfoRow>
+      </InfoList>
+    </SectionCard>
+  );
+}
