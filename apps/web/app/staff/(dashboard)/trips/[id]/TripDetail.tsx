@@ -24,7 +24,7 @@ import { useRoute, useTripDates } from "@/components/staff/trips/format";
 import { TripStatusBadge } from "@/components/staff/trips/TripStatusBadge";
 import { AssignDialog } from "@/components/staff/trips/detail/AssignDialog";
 import { CancelTripDialog } from "@/components/staff/trips/detail/CancelTripDialog";
-import { ConfirmDialog } from "@/components/staff/trips/detail/ConfirmDialog";
+import { ConfirmDialog } from "@/components/staff/ConfirmDialog";
 import { LinkReturnDialog } from "@/components/staff/trips/detail/LinkReturnDialog";
 import { ProposePriceDialog } from "@/components/staff/trips/detail/ProposePriceDialog";
 import { ReportLinkDialog } from "@/components/staff/trips/detail/ReportLinkDialog";

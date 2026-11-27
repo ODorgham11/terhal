@@ -19,7 +19,7 @@ type ConfirmDialogProps = {
   onConfirm: () => Promise<unknown>;
 };
 
-// A yes/no step on a trip (start it, end it, reopen it): the API's refusal stays in the dialog, next to the button.
+// A yes/no step (start a trip, delete a price): the API's refusal stays in the dialog, next to the button.
 export function ConfirmDialog({
   open,
   onOpenChange,
@@ -30,7 +30,7 @@ export function ConfirmDialog({
   tone = "primary",
   onConfirm,
 }: ConfirmDialogProps) {
-  const t = useTranslations("staff.trips.detail");
+  const t = useTranslations("staff.common");
   const errorMessage = useErrorMessage();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
