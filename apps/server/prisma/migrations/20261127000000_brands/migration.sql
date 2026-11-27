@@ -25,3 +25,15 @@ CREATE UNIQUE INDEX "Brand_active_nameAr" ON "Brand" (search_normalize("nameAr")
 -- At most one brand is the default for staff bookings, and an archived brand never is.
 CREATE UNIQUE INDEX "Brand_one_default" ON "Brand" ("isDefault") WHERE "isDefault";
 ALTER TABLE "Brand" ADD CONSTRAINT "Brand_default_active" CHECK (NOT ("isDefault" AND "archivedAt" IS NOT NULL));
+
+-- A trip's brand. Added here rather than in the trips migration, which staging and production have already applied.
+ALTER TABLE "Trip" ADD COLUMN "brandId" TEXT;
+
+-- CreateIndex
+CREATE INDEX "Trip_brandId_idx" ON "Trip"("brandId");
+
+-- AddForeignKey
+ALTER TABLE "Trip" ADD CONSTRAINT "Trip_brandId_fkey" FOREIGN KEY ("brandId") REFERENCES "Brand"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- Bookings on the site are always Terhal's: only a trip staff booked can be sent under another brand.
+ALTER TABLE "Trip" ADD CONSTRAINT "Trip_site_brand" CHECK ("source" = 'STAFF' OR "brandId" IS NULL);
