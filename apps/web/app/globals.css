@@ -2,61 +2,73 @@
 
 /*
  * Theme tokens. Components only use these (bg-surface, text-muted, border-border, bg-primary...), never raw palette
- * colors, so a rebrand or a dark mode is a change here and nowhere else. Dark follows the system setting.
+ * colors, so a rebrand or a dark mode is a change here and nowhere else. The light values are the brand's, taken from the
+ * logo and kept in step with the Figma variables: maroon primary, copper accent, ivory background. Dark follows the
+ * system setting.
  */
 :root {
-  --background: oklch(0.985 0.002 247);
-  --foreground: oklch(0.21 0.02 265);
-  --surface: oklch(1 0 0);
-  --surface-muted: oklch(0.967 0.003 265);
-  --muted: oklch(0.55 0.02 264);
-  --border: oklch(0.92 0.004 265);
-  --input: oklch(0.87 0.006 265);
-  --ring: oklch(0.55 0.15 255);
+  --background: #fbf8f5;
+  --foreground: #231e1b;
+  --surface: #ffffff;
+  --surface-muted: #f5f1ed;
+  --muted: #766d66;
+  --border: #ede7e1;
+  --input: #ddd5cd;
+  --ring: #7a1a2c;
 
-  --primary: oklch(0.45 0.13 255);
-  --primary-hover: oklch(0.39 0.12 255);
-  --primary-foreground: oklch(0.99 0 0);
+  --primary: #7a1a2c;
+  --primary-hover: #641524;
+  --primary-soft: #faf0f2;
+  --primary-foreground: #ffffff;
 
-  --danger: oklch(0.55 0.21 27);
-  --danger-soft: oklch(0.96 0.02 27);
-  --success: oklch(0.52 0.13 155);
-  --success-soft: oklch(0.96 0.03 155);
-  --warning: oklch(0.6 0.13 70);
-  --warning-soft: oklch(0.97 0.04 85);
-  --info: oklch(0.5 0.13 245);
-  --info-soft: oklch(0.96 0.02 245);
+  --accent: #c2735a;
+  --accent-strong: #8f4a34;
+  --accent-soft: #fbf1ec;
 
-  --overlay: oklch(0.15 0.02 265 / 0.45);
+  --danger: #c4352b;
+  --danger-soft: #fcedec;
+  --success: #1e7a4a;
+  --success-soft: #ecf7f0;
+  --warning: #9a5e08;
+  --warning-soft: #fdf5e3;
+  --info: #2f62b3;
+  --info-soft: #edf3fc;
+
+  --overlay: rgb(35 30 27 / 0.45);
 
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: oklch(0.17 0.01 265);
-    --foreground: oklch(0.96 0.003 265);
-    --surface: oklch(0.21 0.012 265);
-    --surface-muted: oklch(0.25 0.012 265);
-    --muted: oklch(0.7 0.015 265);
-    --border: oklch(0.3 0.012 265);
-    --input: oklch(0.38 0.012 265);
-    --ring: oklch(0.7 0.13 255);
+    --background: #1a1614;
+    --foreground: #f3eee9;
+    --surface: #221d1b;
+    --surface-muted: #2b2522;
+    --muted: #a89e96;
+    --border: #36302c;
+    --input: #463e39;
+    --ring: #e3909f;
 
-    --primary: oklch(0.68 0.13 255);
-    --primary-hover: oklch(0.74 0.12 255);
-    --primary-foreground: oklch(0.17 0.02 265);
+    --primary: #e3909f;
+    --primary-hover: #eba8b4;
+    --primary-soft: #3a2026;
+    --primary-foreground: #1a1614;
 
-    --danger: oklch(0.7 0.17 25);
-    --danger-soft: oklch(0.3 0.06 25);
-    --success: oklch(0.72 0.13 155);
-    --success-soft: oklch(0.29 0.05 155);
-    --warning: oklch(0.8 0.13 80);
-    --warning-soft: oklch(0.3 0.05 80);
-    --info: oklch(0.72 0.12 245);
-    --info-soft: oklch(0.29 0.05 245);
+    --accent: #d48e77;
+    --accent-strong: #e8b3a1;
+    --accent-soft: #3a2a24;
 
-    --overlay: oklch(0 0 0 / 0.6);
+    --danger: #f08a80;
+    --danger-soft: #3d2220;
+    --success: #6fcf9a;
+    --success-soft: #1f3328;
+    --warning: #e9b45c;
+    --warning-soft: #3a2f1c;
+    --info: #8db3ef;
+    --info-soft: #1f2a3d;
+
+    --overlay: rgb(0 0 0 / 0.6);
 
     color-scheme: dark;
   }
@@ -75,7 +87,11 @@
   --color-ring: var(--ring);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
   --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
