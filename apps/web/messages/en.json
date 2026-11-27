@@ -198,7 +198,8 @@
       },
       "unassignedCount": "unassigned",
       "account": "Your account",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "notifications": "Notifications"
     },
     "topBar": {
       "openMenu": "Open the menu",
@@ -1188,6 +1189,19 @@
         "save": "Save access",
         "saved": "Access saved"
       }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Bookings, price answers, cancellations and reports that need a look.",
+      "markAllRead": "Mark all read",
+      "allRead": "All marked read",
+      "seeAll": "See all notifications",
+      "all": "All",
+      "unread": "Unread",
+      "empty": "No notifications yet",
+      "noUnread": "You're all caught up",
+      "emptyHint": "New bookings, price answers and driver reports show up here.",
+      "loadFailed": "Couldn't load notifications."
     }
   },
   "admin": {
