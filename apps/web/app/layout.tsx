@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { headers } from "next/headers";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { directionOf } from "@/i18n/locales";
+import { sectionOf } from "@/lib/hosts";
 import "./globals.css";
 
 // One family for both languages: IBM Plex Sans Arabic draws Arabic and Latin to the same design, so a page that mixes
@@ -20,12 +22,19 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 // The locale comes from the NEXT_LOCALE cookie (i18n/request.ts). Arabic sets dir="rtl" on <html>, which flips every
-// logical class (ms-, pe-, start-, text-end) and every rtl: variant at once.
+// logical class (ms-, pe-, start-, text-end) and every rtl: variant at once. data-host lets globals.css give a host its
+// own font and theme (the staff dashboard: the system font, light only).
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
+  const host = sectionOf((await headers()).get("host"));
 
   return (
-    <html lang={locale} dir={directionOf(locale)} className={`${plex.variable} h-full antialiased`}>
+    <html
+      lang={locale}
+      dir={directionOf(locale)}
+      data-host={host}
+      className={`${plex.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
