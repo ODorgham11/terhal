@@ -163,8 +163,9 @@ What we gave up:
 ## Migrations
 
 - **One migration per domain**, named after it and applied in dependency order: `20261022010000_admin`,
-  `…030000_locations`, `…040000_staff`, `…050000_customers`, `…060000_fleet`, `…070000_trips`, `…080000_pricing`,
-  `…090000_notifications`, `…100000_analytics`. Models live in the matching file under `prisma/schema/`.
+  `…030000_locations`, `…040000_staff`, `…050000_customers`, `…060000_fleet`, `…065000_brands`, `…070000_trips`,
+  `…080000_pricing`, `…090000_notifications`, `…100000_analytics`. Models live in the matching file under
+  `prisma/schema/`.
 - **Everything a domain's tables need lives in its migration:** tables, indexes and foreign keys as Prisma generates them,
   then the rules Prisma can't express (CHECK constraints, triggers) at the end, each with a comment saying why. They're
   named `<Table>_<rule>`, e.g. `Trip_one_booker` or `Location_shape`. No add-on migrations that only add a constraint.

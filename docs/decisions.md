@@ -86,6 +86,21 @@ cancelled automatically.
 A pending trip can be cancelled from the site at any time. Once staff confirm it, the site tells the customer to call;
 only staff cancel confirmed trips, with a reason.
 
+### Trips can be sent under another brand (2026-11-27)
+
+The client also runs Alex Limousine and wants some trips' messages to carry its name instead of Terhal's. A brand is a
+`Brand` row (names in both languages, a sender address, reply-to, phone, website); Terhal is built in, as a trip with no
+brand. The brand belongs to the trip, not to each message, so a booker never gets one email from each company:
+
+- Staff pick it when they book (`brandId`; left out, the default brand, or Terhal without one; a return leg gets the
+  same) and can change it until the trip is completed. Bookings on the site are always Terhal's (`Trip_site_brand`).
+- The booker's emails come from `<English name> <sender address>` with the brand's reply-to, its name in the email's
+  header and thank-you, and its phone and website at the bottom. The brand is stored with each notification, so an
+  email sent later says what it said when written. The sender's domain has to be verified with Resend first.
+- The driver's WhatsApp message introduces the brand and signs off with its phone.
+- Managing brands needs `team` (company setup, like the team); reading them needs `team` or `trips` (booking). Archiving
+  takes a brand out of booking and stops it being the default; trips under it keep it.
+
 ---
 
 ## Code
