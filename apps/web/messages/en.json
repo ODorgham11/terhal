@@ -570,6 +570,80 @@
           "description": "Both trips stay as they are, just no longer paired."
         }
       }
+    },
+    "list": {
+      "showing": "Showing {first}–{last}",
+      "exportCsv": "Export CSV",
+      "active": "Active",
+      "archived": "Archived",
+      "actions": "Actions",
+      "none": "—"
+    },
+    "common": {
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saved": "Saved",
+      "edit": "Edit",
+      "archive": "Archive",
+      "restore": "Restore",
+      "archivedToast": "Archived",
+      "restoredToast": "Restored",
+      "delete": "Delete",
+      "loading": "Loading…",
+      "allOffices": "All offices",
+      "internal": "Internal",
+      "external": "External",
+      "office": "Office",
+      "yes": "Yes",
+      "no": "No",
+      "copied": "Copied"
+    },
+    "system": {
+      "retry": "Try again",
+      "home": "Go to overview",
+      "trips": "Go to trips",
+      "forbidden": {
+        "eyebrow": "403",
+        "title": "You don't have access to this",
+        "description": "Ask an admin on your team to give you access.",
+        "section": "{section} is turned off for your account. Ask an admin on your team to give you access."
+      },
+      "notFound": {
+        "eyebrow": "404",
+        "title": "We couldn't find that page",
+        "description": "The trip or page may have been removed, or the link has a typo."
+      },
+      "error": {
+        "eyebrow": "Something went wrong",
+        "title": "This page didn't load",
+        "description": "It's on our side, not yours. Try again in a moment; if it keeps happening, tell your admin."
+      }
+    },
+    "permissions": {
+      "trips": {
+        "name": "Trips",
+        "description": "Book, price, assign, cancel and complete trips."
+      },
+      "fleet": {
+        "name": "Fleet",
+        "description": "Drivers, vehicles, offices and driver payments."
+      },
+      "pricing": {
+        "name": "Pricing",
+        "description": "Prices, trip classes and locations."
+      },
+      "customers": {
+        "name": "Customers",
+        "description": "See customer accounts and their trips."
+      },
+      "team": {
+        "name": "Team",
+        "description": "Invite staff, change their access and manage brands."
+      },
+      "analytics": {
+        "name": "Analytics",
+        "description": "Revenue, costs and monthly reports."
+      }
     }
   },
   "admin": {
