@@ -1126,6 +1126,68 @@
         "noTrips": "No trips yet.",
         "priceRequested": "Price requested"
       }
+    },
+    "team": {
+      "title": "Team",
+      "description": "Staff who use this dashboard and what each can do.",
+      "inviteMember": "Invite member",
+      "members": "Members",
+      "invitations": "Invitations",
+      "fullAccess": "Full access",
+      "noAccess": "No access",
+      "you": "(you)",
+      "never": "Never",
+      "menu": "Actions for {name}",
+      "editAccess": "Edit access",
+      "remove": "Remove from team",
+      "statuses": {
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "DELETED": "Removed"
+      },
+      "columns": {
+        "member": "Member",
+        "access": "Access",
+        "lastActive": "Last active",
+        "status": "Status",
+        "email": "Email",
+        "invitedBy": "Invited by",
+        "expires": "Expires"
+      },
+      "removeTitle": "Remove {name} from the team?",
+      "removeDescription": "They're signed out everywhere and can't sign in again. Their trips and history stay, and their email can be invited again.",
+      "removed": "Removed from the team",
+      "noInvitations": "No open invitations",
+      "noInvitationsHint": "Invitations waiting to be accepted show here.",
+      "resend": "Resend",
+      "resent": "Sent again to {email}",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke this invitation?",
+      "revokeDescription": "The link sent to {email} stops working.",
+      "revoked": "Invitation revoked",
+      "invite": {
+        "title": "Invite a team member",
+        "description": "They get an email with a link to set a password. The link works for 7 days.",
+        "access": "Access",
+        "pickOne": "Give them at least one kind of access.",
+        "cancel": "Cancel",
+        "submit": "Send invitation",
+        "sent": "Invitation sent to {email}"
+      },
+      "member": {
+        "since": "Member since {date}",
+        "suspendTitle": "Suspend access",
+        "suspendHint": "Signs them out everywhere. You can restore access later.",
+        "suspend": "Suspend",
+        "suspended": "Access suspended",
+        "reactivateTitle": "Restore access",
+        "reactivateHint": "They can sign in again with the access below.",
+        "reactivate": "Restore",
+        "reactivated": "Access restored",
+        "cancel": "Cancel",
+        "save": "Save access",
+        "saved": "Access saved"
+      }
     }
   },
   "admin": {
