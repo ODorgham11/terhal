@@ -72,6 +72,10 @@ export const auditActions = {
   TRIP_CLASS_UPDATED: "trip_class.updated",
   TRIP_CLASS_ARCHIVED: "trip_class.archived",
   TRIP_CLASS_RESTORED: "trip_class.restored",
+  BRAND_CREATED: "brand.created",
+  BRAND_UPDATED: "brand.updated",
+  BRAND_ARCHIVED: "brand.archived",
+  BRAND_RESTORED: "brand.restored",
   // Price changes keep the price before and after (P5), one entry per row, bulk uploads included.
   PRICING_CREATED: "pricing.created",
   PRICING_UPDATED: "pricing.updated",

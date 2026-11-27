@@ -96,6 +96,10 @@ export const errorCodes = [
   // An active class already has this name, in English or in Arabic. Archived classes don't count.
   "TRIP_CLASS_NAME_TAKEN",
 
+  // Brands
+  // An active brand already has this name, in English or in Arabic. Archived brands don't count.
+  "BRAND_NAME_TAKEN",
+
   // Pricing
   // The route already has a price for this class and car body: change that one instead.
   "PRICING_EXISTS",

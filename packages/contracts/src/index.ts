@@ -4,6 +4,7 @@ export * from "./account";
 export * from "./admin";
 export * from "./analytics";
 export * from "./audit";
+export * from "./brands";
 export * from "./cars";
 export * from "./customer";
 export * from "./errors";
