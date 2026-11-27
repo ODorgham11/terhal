@@ -1,14 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query";
-import { IconBell, IconMenu2, IconSearch } from "@tabler/icons-react";
+import { IconMenu2, IconSearch } from "@tabler/icons-react";
 import type { Staff } from "@terhal/contracts";
 import { Input } from "@/components/ui/Input";
-import { unreadCountQuery } from "./queries";
+import { NotificationBell } from "./notifications/NotificationBell";
 
 type TopBarProps = {
   staff: Staff;
@@ -21,8 +19,6 @@ export function TopBar({ staff, onOpenMenu }: TopBarProps) {
   const t = useTranslations("staff.topBar");
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const unread = useQuery(unreadCountQuery);
-  const hasUnread = (unread.data?.count ?? 0) > 0;
 
   const search = (event: FormEvent) => {
     event.preventDefault();
@@ -58,23 +54,7 @@ export function TopBar({ staff, onOpenMenu }: TopBarProps) {
 
       <div className="flex-1" />
 
-      <Link
-        href="/notifications"
-        aria-label={
-          hasUnread
-            ? t("notificationsUnread", { count: unread.data?.count ?? 0 })
-            : t("notifications")
-        }
-        className="relative inline-flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-      >
-        <IconBell aria-hidden className="size-5" stroke={1.75} />
-        {hasUnread && (
-          <span
-            aria-hidden
-            className="absolute end-2.5 top-2.5 size-2 rounded-full bg-accent ring-2 ring-surface"
-          />
-        )}
-      </Link>
+      <NotificationBell />
     </header>
   );
 }
