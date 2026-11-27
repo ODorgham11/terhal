@@ -7,7 +7,6 @@ import {
   IconAlertTriangle,
   IconCalendarPlus,
   IconCash,
-  IconCircleCheck,
   IconCircleX,
   IconFileText,
   IconQuestionMark,
