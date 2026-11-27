@@ -44,6 +44,10 @@ export const listReports = async () => {
   return { data: documents.map(toReport), nextCursor: null };
 };
 
+// Whether the month's report is out. Trips asks before reopening a completed trip of that month (T8 a).
+export const hasMonthReport = async (target: Month) =>
+  (await prisma.analyticsDocument.count({ where: { year: target.year, month: target.month } })) > 0;
+
 export const reportLink = async (target: Month, now = new Date()): Promise<AnalyticsReportLink> => {
   const document = await prisma.analyticsDocument.findUnique({
     where: { year_month: target },

@@ -3,6 +3,7 @@ import type { Prisma, Trip } from "../../../../generated/prisma/client";
 import { prisma } from "../../../platform/db/prisma";
 import { AppError } from "../../../platform/errors/app-error";
 import type { Booker } from "../../../platform/http/authenticate";
+import { hasMonthReport } from "../../analytics/index";
 import { cairoMonth, isAssigned } from "../domain/rules";
 import { changeTrip, type TripActor } from "./events";
 import { onTripCompleted, onTripReopened } from "./hooks";
@@ -154,7 +155,6 @@ export const unstartTrip = (id: string, staffId: string) =>
 
 // T8 a: reopening a completed trip's report, until its month's report (AnalyticsDocument, by the pickup's Cairo month)
 // is generated. What completing wrote to the ledger is reversed through the hook.
-// The analytics module doesn't exist yet, so its table is read here.
 export const reopenTrip = (id: string, staffId: string) =>
   move(
     id,
@@ -165,11 +165,7 @@ export const reopenTrip = (id: string, staffId: string) =>
       to: "AWAITING_REPORT",
       check: async (trip) => {
         const month = cairoMonth(trip.pickupDate);
-        const document = await prisma.analyticsDocument.findUnique({
-          where: { year_month: month },
-          select: { id: true },
-        });
-        if (document) {
+        if (await hasMonthReport(month)) {
           throw new AppError({
             code: "MONTH_REPORT_GENERATED",
             status: 409,
