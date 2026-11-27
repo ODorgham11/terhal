@@ -834,6 +834,29 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "tripCount": {
+            "type": "integer",
+            "description": "Every trip they booked, in any status."
+          },
+          "completedCount": {
+            "type": "integer"
+          },
+          "cancelledCount": {
+            "type": "integer"
+          },
+          "totalSpent": {
+            "type": "string",
+            "description": "The total price of their completed trips, in EGP with two decimals.",
+            "example": "1250.00"
+          },
+          "lastTripAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Their latest completed trip's pickup."
           }
         },
         "required": [
@@ -845,7 +868,12 @@
           "status",
           "locale",
           "verifiedAt",
-          "createdAt"
+          "createdAt",
+          "tripCount",
+          "completedCount",
+          "cancelledCount",
+          "totalSpent",
+          "lastTripAt"
         ]
       },
       "CustomerDetail": {
@@ -893,10 +921,24 @@
             "type": "integer",
             "description": "Every trip they booked, in any status."
           },
+          "completedCount": {
+            "type": "integer"
+          },
+          "cancelledCount": {
+            "type": "integer"
+          },
           "totalSpent": {
             "type": "string",
             "description": "The total price of their completed trips, in EGP with two decimals.",
             "example": "1250.00"
+          },
+          "lastTripAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Their latest completed trip's pickup."
           }
         },
         "required": [
@@ -910,7 +952,10 @@
           "verifiedAt",
           "createdAt",
           "tripCount",
-          "totalSpent"
+          "completedCount",
+          "cancelledCount",
+          "totalSpent",
+          "lastTripAt"
         ]
       },
       "CustomerTrip": {
@@ -2083,6 +2128,75 @@
           "office"
         ]
       },
+      "DriverSummary": {
+        "type": "object",
+        "properties": {
+          "totals": {
+            "type": "object",
+            "properties": {
+              "cashCollected": {
+                "type": "string",
+                "description": "Cash collected from customers, all time.",
+                "example": "14200.00"
+              },
+              "earned": {
+                "type": "string",
+                "description": "Trip fees and reimbursed expenses, all time.",
+                "example": "6870.00"
+              },
+              "paidOut": {
+                "type": "string",
+                "description": "Paid to the driver, all time.",
+                "example": "3000.00"
+              },
+              "handedIn": {
+                "type": "string",
+                "description": "Company cash the driver handed in, all time.",
+                "example": "3200.00"
+              },
+              "adjustments": {
+                "type": "string",
+                "description": "The sum of the adjustments, signed.",
+                "example": "-100.00"
+              }
+            },
+            "required": [
+              "cashCollected",
+              "earned",
+              "paidOut",
+              "handedIn",
+              "adjustments"
+            ]
+          },
+          "thisMonth": {
+            "type": "object",
+            "properties": {
+              "tripsCompleted": {
+                "type": "integer",
+                "description": "Completed trips whose report ended this month."
+              },
+              "kilometres": {
+                "type": "integer",
+                "description": "Driven on those trips, from their reports' odometers."
+              },
+              "fees": {
+                "type": "string",
+                "description": "Trip fees written to the ledger this month.",
+                "example": "8400.00"
+              }
+            },
+            "required": [
+              "tripsCompleted",
+              "kilometres",
+              "fees"
+            ]
+          }
+        },
+        "required": [
+          "totals",
+          "thisMonth"
+        ]
+      },
       "DriverTransaction": {
         "type": "object",
         "properties": {
@@ -2096,6 +2210,7 @@
               "EXPENSE_REIMBURSEMENT",
               "CASH_COLLECTED",
               "PAYOUT",
+              "CASH_HANDED_IN",
               "ADJUSTMENT"
             ]
           },
@@ -2191,6 +2306,30 @@
                 "type": "string",
                 "enum": [
                   "PAYOUT"
+                ]
+              },
+              "amount": {
+                "type": "string",
+                "pattern": "^-?\\d{1,9}(\\.\\d{1,2})?$",
+                "example": "500.00"
+              },
+              "note": {
+                "type": "string",
+                "maxLength": 500
+              }
+            },
+            "required": [
+              "type",
+              "amount"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "CASH_HANDED_IN"
                 ]
               },
               "amount": {
@@ -3400,6 +3539,61 @@
           "nameEn",
           "nameAr",
           "center"
+        ]
+      },
+      "StaffTripClass": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "descriptionEn": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "descriptionAr": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sortOrder": {
+            "type": "integer"
+          },
+          "archivedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "prices": {
+            "type": "integer",
+            "description": "Price rows for this class."
+          },
+          "tripsThisMonth": {
+            "type": "integer",
+            "description": "Trips picked up this Cairo month in this class, cancelled ones left out."
+          }
+        },
+        "required": [
+          "id",
+          "nameEn",
+          "nameAr",
+          "descriptionEn",
+          "descriptionAr",
+          "sortOrder",
+          "archivedAt",
+          "prices",
+          "tripsThisMonth"
         ]
       },
       "TripClass": {
@@ -14687,6 +14881,73 @@
         }
       }
     },
+    "/v1/staff/drivers/{id}/summary": {
+      "get": {
+        "tags": [
+          "Drivers"
+        ],
+        "summary": "Sum up a driver's ledger and month",
+        "description": "The ledger's totals by kind (all time), and this month's completed trips, kilometres and fees (Cairo time).",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such driver.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/staff/drivers/{id}/transactions": {
       "get": {
         "tags": [
@@ -14806,8 +15067,8 @@
         "tags": [
           "Drivers"
         ],
-        "summary": "Record a payout or an adjustment",
-        "description": "A payout's `amount` is what was paid to the driver and lowers the balance by that much. An adjustment's is signed (positive when the company owes the driver more) and needs a note. Entries can't be changed or deleted: correct a mistake with another adjustment.",
+        "summary": "Record a payment or an adjustment",
+        "description": "A payout's `amount` is what was paid to the driver and lowers the balance by that much; cash handed in is company cash the driver gave back and raises it by that much. An adjustment's is signed (positive when the company owes the driver more) and needs a note. Entries can't be changed or deleted: correct a mistake with another adjustment.",
         "security": [
           {
             "staffCookie": []
@@ -17820,7 +18081,7 @@
           "Trip classes"
         ],
         "summary": "List trip classes",
-        "description": "Active classes in the site's order, or only archived ones with `archived=true`. Needs `pricing` or `trips`.",
+        "description": "Active classes in the site's order, or only archived ones with `archived=true`, each with its price rows and this month's trips. Needs `pricing` or `trips`.",
         "security": [
           {
             "staffCookie": []
@@ -17854,7 +18115,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/TripClass"
+                        "$ref": "#/components/schemas/StaffTripClass"
                       }
                     },
                     "nextCursor": {
