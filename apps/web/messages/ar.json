@@ -276,6 +276,60 @@
         "AWAITING_REPORT": "بانتظار التقرير",
         "COMPLETED": "مكتملة",
         "CANCELLED": "ملغاة"
+      },
+      "list": {
+        "title": "الرحلات",
+        "description": "كل رحلة، من الحجز حتى اكتمال تقرير السائق.",
+        "export": "تصدير CSV",
+        "newTrip": "رحلة جديدة",
+        "statusFilter": "التصفية حسب الحالة",
+        "all": "الكل",
+        "search": "البحث في الرحلات",
+        "searchPlaceholder": "ابحث بالرمز أو اسم الراكب أو الهاتف",
+        "from": "الاستلام من",
+        "to": "الاستلام حتى",
+        "office": "المكتب الشريك",
+        "allOffices": "كل المكاتب",
+        "unassignedOnly": "غير المعيّنة فقط",
+        "loading": "جارٍ تحميل الرحلات…",
+        "empty": "لا رحلات مطابقة.",
+        "emptyHint": "جرّب حالة أخرى أو امسح عوامل التصفية.",
+        "showing": "عرض {first}–{last}",
+        "rowActions": "إجراءات {code}",
+        "open": "فتح الرحلة",
+        "copyCode": "نسخ الرمز",
+        "copied": "تم نسخ {code}.",
+        "routeDetail": "{class} · {car} · {passengers, plural, one {راكب واحد} two {راكبان} few {# ركاب} many {# راكبًا} other {# راكب}}",
+        "columns": {
+          "code": "الرمز",
+          "status": "الحالة",
+          "route": "المسار",
+          "pickup": "موعد الاستلام",
+          "booker": "صاحب الحجز",
+          "price": "السعر",
+          "assignment": "التعيين",
+          "actions": "الإجراءات"
+        }
+      },
+      "car": {
+        "SEDAN": "سيدان",
+        "SUV": "SUV",
+        "MINIVAN": "ميني فان",
+        "VAN": "فان"
+      },
+      "booker": {
+        "CUSTOMER": "عميل",
+        "GUEST": "زائر",
+        "STAFF": "موظف"
+      },
+      "assignment": {
+        "partnerOffice": "مكتب شريك",
+        "noDriver": "بدون سائق بعد",
+        "unassigned": "غير معيّنة"
+      },
+      "price": {
+        "needsPrice": "تحتاج إلى سعر",
+        "proposed": "مقترح، بانتظار الرد"
       }
     }
   },

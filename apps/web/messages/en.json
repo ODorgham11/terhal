@@ -276,6 +276,60 @@
         "AWAITING_REPORT": "Awaiting report",
         "COMPLETED": "Completed",
         "CANCELLED": "Cancelled"
+      },
+      "list": {
+        "title": "Trips",
+        "description": "Every trip, from booking to the driver's completed report.",
+        "export": "Export CSV",
+        "newTrip": "New trip",
+        "statusFilter": "Filter by status",
+        "all": "All",
+        "search": "Search trips",
+        "searchPlaceholder": "Search by code, passenger or phone",
+        "from": "Pickups from",
+        "to": "Pickups until",
+        "office": "Partner office",
+        "allOffices": "All offices",
+        "unassignedOnly": "Unassigned only",
+        "loading": "Loading trips…",
+        "empty": "No trips match.",
+        "emptyHint": "Try another status or clear the filters.",
+        "showing": "Showing {first}–{last}",
+        "rowActions": "Actions for {code}",
+        "open": "Open trip",
+        "copyCode": "Copy code",
+        "copied": "Copied {code}.",
+        "routeDetail": "{class} · {car} · {passengers, plural, one {# passenger} other {# passengers}}",
+        "columns": {
+          "code": "Code",
+          "status": "Status",
+          "route": "Route",
+          "pickup": "Pickup time",
+          "booker": "Booker",
+          "price": "Price",
+          "assignment": "Assignment",
+          "actions": "Actions"
+        }
+      },
+      "car": {
+        "SEDAN": "Sedan",
+        "SUV": "SUV",
+        "MINIVAN": "Minivan",
+        "VAN": "Van"
+      },
+      "booker": {
+        "CUSTOMER": "Customer",
+        "GUEST": "Guest",
+        "STAFF": "Staff"
+      },
+      "assignment": {
+        "partnerOffice": "Partner office",
+        "noDriver": "No driver yet",
+        "unassigned": "Unassigned"
+      },
+      "price": {
+        "needsPrice": "Needs a price",
+        "proposed": "Proposed, waiting"
       }
     }
   },
