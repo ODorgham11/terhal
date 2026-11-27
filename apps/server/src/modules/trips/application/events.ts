@@ -87,6 +87,7 @@ export type TripFields = Partial<
     | "driverId"
     | "vehicleId"
     | "officeId"
+    | "brandId"
     | "paymentMethod"
     | "paidAt"
     | "previousTripId"

@@ -138,6 +138,7 @@ export const tripSelect = {
     select: { id: true, make: true, model: true, color: true, plateNumber: true, body: true },
   },
   office: { select: { id: true, name: true, phone: true } },
+  brand: { select: { id: true, nameEn: true, nameAr: true } },
   createdAt: true,
   updatedAt: true,
 } as const satisfies Prisma.TripSelect;
@@ -206,6 +207,7 @@ export const toTrip = (row: TripRow): Trip => ({
   driver: row.driver,
   vehicle: row.vehicle,
   office: row.office,
+  brand: row.brand,
   paymentMethod: row.paymentMethod,
   paidAt: row.paidAt?.toISOString() ?? null,
   updatedAt: row.updatedAt.toISOString(),
