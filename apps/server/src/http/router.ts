@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { analyticsRoutes } from "../modules/analytics/index";
 import { auditRoutes } from "../modules/audit/index";
+import { brandRoutes } from "../modules/brands/index";
 import { driverRoutes, officeRoutes, vehicleRoutes } from "../modules/fleet/index";
 import { adminCustomerRoutes, staffCustomerRoutes } from "../modules/customers/index";
 import {
@@ -105,6 +106,7 @@ const v1 = createRouter()
   .route("/", staffLocationRoutes)
   .route("/", siteLocationRoutes)
   .route("/", tripClassRoutes)
+  .route("/", brandRoutes)
   .route("/", pricingRoutes)
   .route("/", quoteRoutes)
   .route("/", siteTripRoutes)
