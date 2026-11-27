@@ -1202,6 +1202,95 @@
       "noUnread": "You're all caught up",
       "emptyHint": "New bookings, price answers and driver reports show up here.",
       "loadFailed": "Couldn't load notifications."
+    },
+    "analytics": {
+      "title": "Analytics",
+      "subtitle": "{range} · compared with {previous}",
+      "range": "Range",
+      "groupBy": "Group by",
+      "monthlyReports": "Monthly reports",
+      "ranges": {
+        "thisMonth": "This month",
+        "lastMonth": "Last month",
+        "last30": "Last 30 days",
+        "thisYear": "This year"
+      },
+      "previous": {
+        "last30": "the 30 days before",
+        "thisYear": "last year"
+      },
+      "groupings": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month"
+      },
+      "versus": "{change} vs {versus}",
+      "versusPoints": "{points} pts vs {versus}",
+      "ofRevenue": "{share} of revenue",
+      "includesUpcoming": "Includes upcoming trips",
+      "costsNote": "Fees, expenses, office fees",
+      "unpaidTrips": "{count, plural, =0 {All paid} one {# completed trip} other {# completed trips}}",
+      "kpis": {
+        "revenue": "Revenue",
+        "margin": "Margin",
+        "trips": "Trips",
+        "cancellationRate": "Cancellation rate",
+        "bookedValue": "Booked value",
+        "averageFare": "Average fare",
+        "costs": "Driver and office costs",
+        "unpaid": "Unpaid"
+      },
+      "trend": {
+        "title": {
+          "day": "Revenue and costs by day",
+          "week": "Revenue and costs by week",
+          "month": "Revenue and costs by month"
+        },
+        "revenue": "Revenue",
+        "costs": "Costs",
+        "period": "Period",
+        "caption": "Revenue and costs for each period",
+        "weeksNote": "Weeks start on Sunday. The first and last weeks may be partial."
+      },
+      "byClass": "Trips by class",
+      "byCar": "Trips by car",
+      "bySource": "Booked by",
+      "sources": {
+        "CUSTOMER": "Customers on the site",
+        "STAFF": "Staff"
+      },
+      "noData": "Nothing in this range.",
+      "topRoutes": {
+        "title": "Top routes",
+        "route": "Route",
+        "trips": "Trips",
+        "revenue": "Revenue"
+      },
+      "balances": {
+        "title": "Driver balances",
+        "held": "Cash drivers hold",
+        "owed": "Owed to drivers",
+        "net": "Net, {count, plural, one {# driver} other {# drivers}}",
+        "settled": "Settled",
+        "driversOwe": "Drivers owe {amount}",
+        "weOwe": "We owe {amount}",
+        "seeDrivers": "See each driver"
+      },
+      "costsByType": "Costs by type",
+      "total": "Total",
+      "reports": {
+        "title": "Monthly reports",
+        "breadcrumb": "Breadcrumb",
+        "description": "An Excel file for each finished month: every trip, its money, driver balances and costs. Made on the 1st of the next month.",
+        "month": "Month",
+        "size": "Size",
+        "generated": "Generated",
+        "download": "Download",
+        "kb": "KB",
+        "empty": "No reports yet",
+        "emptyHint": "The first one is made on the 1st of next month.",
+        "next": "{month} will be ready on {date}."
+      }
     }
   },
   "admin": {
