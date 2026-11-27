@@ -1,4 +1,4 @@
-// Models live in per-domain files alongside this one (staff, customer, admin, location, pricing, fleet, trip,
+// Models live in per-domain files alongside this one (staff, customer, admin, location, pricing, fleet, trip, brand,
 // notification, analytics).
 //
 // Optional relations use onDelete: Restrict, so deleting a row that others still point at fails instead of silently

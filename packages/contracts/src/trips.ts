@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TripBrand } from "./brands";
 import { CarBody } from "./cars";
 import { Phone } from "./fields";
 import { Pin } from "./locations";
@@ -178,6 +179,10 @@ export const StaffBookTrip = z
       description:
         "The price to charge. Left out, the price list's; without one, a customer's trip is booked on request.",
     }),
+    brandId: Id("Brand").nullable().optional().meta({
+      description:
+        "Send the trip under this brand; null for Terhal. Left out, the default brand, or Terhal without one. A return leg gets the same.",
+    }),
     backdated: z.boolean({ error: "Backdated must be true or false." }).default(false).meta({
       description: "Needed for a pickup time in the past (recording a trip that already happened).",
     }),
@@ -300,6 +305,7 @@ export const Trip = z
       })
       .nullable(),
     office: z.object({ id: z.string(), name: z.string(), phone: z.string() }).nullable(),
+    brand: TripBrand.nullable(),
     paymentMethod: PaymentMethod.nullable(),
     paidAt: z.iso.datetime().nullable(),
     updatedAt: z.iso.datetime(),
@@ -451,6 +457,10 @@ export const UpdateTrip = z
     totalPrice: Price.optional().meta({ description: "Editable until the trip is completed." }),
     paymentMethod: PaymentMethod.nullable().optional(),
     paidAt: z.iso.datetime({ error: "Paid at must be an ISO-8601 instant." }).nullable().optional(),
+    brandId: Id("Brand").nullable().optional().meta({
+      description:
+        "Send the trip's messages under this brand from now on; null for Terhal. Staff bookings only.",
+    }),
   })
   .refine((update) => Object.values(update).some((value: unknown) => value !== undefined), {
     message: "Send at least one field to change.",

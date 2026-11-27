@@ -41,6 +41,16 @@ const select = {
   guestSession: { select: { id: true, email: true, firstName: true, locale: true } },
   driver: { select: { firstName: true, phone: true } },
   vehicle: { select: { make: true, model: true, color: true, plateNumber: true } },
+  brand: {
+    select: {
+      nameEn: true,
+      nameAr: true,
+      senderEmail: true,
+      replyTo: true,
+      phone: true,
+      website: true,
+    },
+  },
 } satisfies Prisma.TripSelect;
 
 type Row = Prisma.TripGetPayload<{ select: typeof select }>;
@@ -105,6 +115,7 @@ export const loadTrip = async (db: Db, tripId: string): Promise<NotifiableTrip |
       price: trip.totalPrice?.toFixed(2) ?? null,
       assignment: assignment(trip),
       link: booker ? tripLink(trip.id) : null,
+      brand: trip.brand,
     },
   };
 };

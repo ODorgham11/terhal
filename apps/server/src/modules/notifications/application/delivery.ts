@@ -33,15 +33,18 @@ export const deliver = async (
   });
 
   const { notification } = delivery;
-  const { html } = renderNotification(
-    notification.kind,
-    notification.locale,
-    notification.data as unknown as NoticeData,
-  );
+  const data = notification.data as unknown as NoticeData;
+  const { html } = renderNotification(notification.kind, notification.locale, data);
+  // A branded trip's email comes from the brand (its domain verified with Resend); otherwise from Terhal's address.
+  const brand = data.brand;
   try {
     const providerId = await send(delivery.recipient, notification.title, notification.body, {
       html,
       idempotencyKey: `delivery-${deliveryId}`,
+      ...(brand && {
+        from: `${brand.nameEn} <${brand.senderEmail}>`,
+        ...(brand.replyTo && { replyTo: brand.replyTo }),
+      }),
     });
     await prisma.notificationDelivery.update({
       where: { id: deliveryId },

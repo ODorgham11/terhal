@@ -17,6 +17,7 @@ import { prisma } from "../../../platform/db/prisma";
 import { AppError } from "../../../platform/errors/app-error";
 import { validationFailed } from "../../../platform/errors/validation";
 import type { Booker } from "../../../platform/http/authenticate";
+import { brandForBooking } from "../../brands/index";
 import { priceFor, resolveRoute } from "../../pricing/index";
 import {
   CODE_LENGTH,
@@ -66,6 +67,8 @@ interface Booking {
   clientName: string;
   clientPhone: string;
   notes: string | undefined;
+  // Every leg is sent under it; null is Terhal, as on the site.
+  brandId: string | null;
   legs: LegPlan[];
 }
 
@@ -234,6 +237,7 @@ const create = async (
             totalPrice: plan.totalPrice,
             priceState: plan.priceState,
             notes: booking.notes ?? null,
+            brandId: booking.brandId,
             idempotencyKey: plan.leg === "outbound" ? booking.idempotencyKey : null,
             pickupId: plan.pickup.id,
             pickupSnapshot: plan.pickup.nameEn,
@@ -384,6 +388,7 @@ export const bookOnline = async (
       clientName: input.clientName ?? `${who.firstName} ${who.lastName}`,
       clientPhone: input.clientPhone ?? who.phone,
       notes: input.notes,
+      brandId: null,
       legs,
     },
     guestEmail ? { key: `guest:${guestEmail}`, guestEmail } : { key: `customer:${who.id}` },
@@ -446,6 +451,7 @@ export const bookByStaff = async (
 
   if (!fitsCar(input.car, input)) throw loadDoesNotFit();
   await assertClassActive(input.classId);
+  const brand = await brandForBooking(input.brandId);
   const { outbound, back } = await routes(input, input.return !== undefined);
 
   const priceOf = async (
@@ -489,6 +495,7 @@ export const bookByStaff = async (
     clientName,
     clientPhone,
     notes: input.notes,
+    brandId: brand?.id ?? null,
     legs,
   });
   return { ...(await readBooking(booked)), replayed: false };
