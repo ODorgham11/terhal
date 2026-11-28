@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { WholeNumberInput } from "@/components/ui/WholeNumberInput";
 import { toast } from "@/components/ui/Toast";
 import { call, isApiError, siteApi } from "@/lib/api";
+import { cn } from "@/lib/cn";
 import { reportKey } from "./keys";
 
 // The driver's report: every field the API requires (SubmitReport), checked against the same schema before it's sent.
@@ -93,7 +94,8 @@ const payloadOf = (draft: Draft) => ({
   vehicleDropoff: draft.vehicleDropoff,
   endedAt: instant(draft.endedAt),
   endMileage: draft.endMileage === "" ? Number.NaN : Number(draft.endMileage),
-  cashCollected: draft.cashCollected.trim() || "",
+  // Nothing entered means nothing collected.
+  cashCollected: draft.cashCollected.trim() || "0",
   stops: draft.stops.map((stop) => ({
     address: stop.address,
     startedAt: instant(stop.startedAt),
@@ -249,7 +251,6 @@ export function ReportForm({ trip, token }: { trip: DriverTrip; token: string })
         />
         <Repeated
           title={t("stops")}
-          empty={t("noStops")}
           addLabel={t("addStop")}
           items={draft.stops}
           onAdd={() =>
@@ -297,12 +298,7 @@ export function ReportForm({ trip, token }: { trip: DriverTrip; token: string })
                   onChange={(endedAt) => update({ endedAt })}
                   error={message(`stops.${index}.endedAt`)}
                 />
-                <Field label={t("notes")} optional>
-                  <Input
-                    value={stop.notes}
-                    onChange={(event) => update({ notes: event.target.value })}
-                  />
-                </Field>
+                <NoteField value={stop.notes} onChange={(notes) => update({ notes })} />
               </>
             );
           }}
@@ -332,8 +328,9 @@ export function ReportForm({ trip, token }: { trip: DriverTrip; token: string })
       </Group>
 
       <Group title={t("money")}>
-        <Field label={t("cashCollected")} hint={t("cashHint")} error={message("cashCollected")}>
+        <Field label={t("cashCollected")} optional error={message("cashCollected")}>
           <MoneyInput
+            placeholder="0"
             value={draft.cashCollected}
             onChange={(event) => set("cashCollected", event.target.value)}
           />
@@ -406,36 +403,29 @@ function WhenField({
   );
 }
 
-// In: the height opens, then the content fades up into it. Out: the content fades first, then the height closes.
+// Opening and closing in two layers: the outer one only changes height (and clips), the inner one fades and settles
+// into place. Moving the clipping box itself is what made it judder. In: the space opens, the content fades in as it
+// does. Out: the content fades first, then the space closes after it.
 const curve = [0.32, 0.72, 0, 1] as const;
 const grow = {
-  initial: { height: 0, opacity: 0, y: -6 },
+  initial: { height: 0 },
+  animate: { height: "auto", transition: { duration: 0.36, ease: curve } },
+  exit: { height: 0, transition: { duration: 0.32, delay: 0.06, ease: curve } },
+} as const;
+const settle = {
+  initial: { opacity: 0, y: -8, scale: 0.98 },
   animate: {
-    height: "auto",
     opacity: 1,
     y: 0,
-    transition: {
-      height: { duration: 0.32, ease: curve },
-      opacity: { duration: 0.22, delay: 0.1, ease: "easeOut" },
-      y: { duration: 0.32, delay: 0.06, ease: curve },
-    },
+    scale: 1,
+    transition: { duration: 0.36, delay: 0.04, ease: curve },
   },
-  exit: {
-    height: 0,
-    opacity: 0,
-    y: -6,
-    transition: {
-      opacity: { duration: 0.14, ease: "easeIn" },
-      y: { duration: 0.14, ease: "easeIn" },
-      height: { duration: 0.28, delay: 0.08, ease: curve },
-    },
-  },
+  exit: { opacity: 0, y: -4, scale: 0.98, transition: { duration: 0.16, ease: "easeIn" } },
 } as const;
 
 // A list the driver adds to and removes from, each item easing in and out.
 function Repeated<Item extends { key: string }>({
   title,
-  empty,
   addLabel,
   items,
   onAdd,
@@ -444,7 +434,6 @@ function Repeated<Item extends { key: string }>({
   render,
 }: {
   title: string;
-  empty: string;
   addLabel: string;
   items: Item[];
   onAdd: () => void;
@@ -459,14 +448,12 @@ function Repeated<Item extends { key: string }>({
     <div className="flex flex-col">
       <span className="pb-3 text-sm font-medium text-foreground">{title}</span>
       <AnimatePresence initial={false}>
-        {items.length === 0 && (
-          <motion.p key="empty" {...grow} className="overflow-hidden text-sm text-muted">
-            <span className="block pb-3">{empty}</span>
-          </motion.p>
-        )}
         {items.map((item, index) => (
           <motion.div key={item.key} {...grow} className="overflow-hidden">
-            <div className="mb-3 flex flex-col gap-4 rounded-xl border border-border bg-surface-muted/40 p-4">
+            <motion.div
+              {...settle}
+              className="mb-3 flex origin-top flex-col gap-4 rounded-xl border border-border bg-surface-muted/40 p-4"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-foreground">{label(index)}</span>
                 <Button
@@ -480,7 +467,7 @@ function Repeated<Item extends { key: string }>({
                 </Button>
               </div>
               {render(item, index)}
-            </div>
+            </motion.div>
           </motion.div>
         ))}
       </AnimatePresence>
@@ -506,7 +493,6 @@ function ExpensesField({
   return (
     <Repeated
       title={t("expenses")}
-      empty={t("noExpenses")}
       addLabel={t("addExpense")}
       items={expenses}
       onAdd={() =>
@@ -542,16 +528,70 @@ function ExpensesField({
                 />
               </Field>
             </div>
-            <Field label={t("notes")} optional>
-              <Textarea
-                rows={2}
-                value={expense.notes}
-                onChange={(event) => update({ notes: event.target.value })}
-              />
-            </Field>
+            <NoteField value={expense.notes} onChange={(notes) => update({ notes })} />
           </>
         );
       }}
     />
+  );
+}
+
+// A note is optional, so it stays a link until it's wanted. "Add a note" opens the box above it and turns into
+// "Cancel", which closes the box and drops what was in it.
+function NoteField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const t = useTranslations("report.form");
+  const id = useId();
+  const [open, setOpen] = useState(value !== "");
+  const toggle = () => {
+    if (open) onChange("");
+    setOpen(!open);
+  };
+  return (
+    <div className="flex flex-col">
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div key="note" {...grow} className="overflow-hidden">
+            <motion.div {...settle} className="flex origin-top flex-col gap-1.5 pb-2">
+              <label htmlFor={id} className="text-sm font-medium text-foreground">
+                {t("notes")}
+              </label>
+              <Textarea
+                id={id}
+                rows={2}
+                autoFocus
+                value={value}
+                onChange={(event) => onChange(event.target.value)}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        className={cn(
+          "inline-flex items-center gap-1 self-start rounded-md text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+          open ? "text-muted hover:text-foreground" : "text-primary hover:text-primary-hover",
+        )}
+      >
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.span
+            key={open ? "cancel" : "add"}
+            {...fade}
+            className="inline-flex items-center gap-1"
+          >
+            {open ? (
+              t("cancelNote")
+            ) : (
+              <>
+                <IconPlus aria-hidden className="size-4" stroke={2} />
+                {t("addNote")}
+              </>
+            )}
+          </motion.span>
+        </AnimatePresence>
+      </button>
+    </div>
   );
 }
