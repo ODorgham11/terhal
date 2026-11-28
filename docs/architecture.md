@@ -160,6 +160,21 @@ What we gave up:
 | Migrations | Expand and contract once the client's data is in production (see [Migrations](#migrations)): a deploy never breaks the code that's still running. They run in their own container before the new version starts (`deploy/deploy.sh`), never at boot.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | Rollback   | Because migrations stay backward compatible, a rollback is a redeploy of the previous images (README, "Deploys").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
+## Files
+
+Uploads never pass through the API. For a vehicle photo the dashboard asks for
+an upload (`POST /staff/vehicles/{id}/images/uploads`, with the type and size),
+gets a link signed for one new key and that content type, `PUT`s the file to it,
+then confirms (`POST /staff/vehicles/{id}/images`). Only the confirm makes it an
+image, after reading what arrived: its size, and its type from the bytes.
+Anything that fails is deleted, and uploads never confirmed are swept with their
+files an hour after their link expires (the fleet queue's `sweep-uploads`).
+
+The link is the storage's own: a presigned R2 `PUT` in staging and production
+(the bucket needs `deploy/r2-cors.json`), and in local development a signed
+`PUT /v1/files` on the API that writes to `.storage`, like the signed `GET`
+that serves it.
+
 ## Migrations
 
 - **One migration per domain**, named after it and applied in dependency order: `20261022010000_admin`,
