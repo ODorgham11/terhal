@@ -88,7 +88,7 @@ function Node({
     <li role="treeitem" aria-expanded={leaf ? undefined : open} aria-selected={selected}>
       <div
         className={cn(
-          "flex h-9 items-center gap-1 rounded-lg pe-2 text-sm",
+          "flex h-9 items-center gap-1 rounded-lg pe-2 text-sm transition-colors duration-200",
           selected
             ? "bg-primary-soft font-medium text-primary"
             : "text-foreground hover:bg-surface-muted",
