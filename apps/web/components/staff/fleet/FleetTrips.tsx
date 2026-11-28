@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "motion/react";
+import { Swap, fade } from "@/components/ui/Motion";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { call, staffApi, useErrorMessage } from "@/lib/api";
 import { useRoute, useTripDates } from "../trips/format";
 import { TripStatusBadge } from "../trips/TripStatusBadge";
@@ -13,30 +16,55 @@ type Filter = { driverId: string } | { vehicleId: string } | { officeId: string 
 export function FleetTrips({ filter }: { filter: Filter }) {
   const t = useTranslations("staff.fleet");
   const errorMessage = useErrorMessage();
-  const route = useRoute();
-  const { dateTime } = useTripDates();
   // From the start of today, so a trip under way this morning still shows.
   const from = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
   const trips = useQuery({
     queryKey: ["staff", "trips", { ...filter, upcoming: true }],
-    queryFn: () => call(staffApi.trips.$get({ query: { ...filter, from, limit: "50" } })),
+    queryFn: () => listTrips({ ...filter, from, limit: "50" }),
   });
 
-  if (trips.isPending) return <p className="text-sm text-muted">{t("loadingTrips")}</p>;
-  if (trips.isError) return <p className="text-sm text-danger">{errorMessage(trips.error)}</p>;
-  const upcoming = trips.data.data
+  const upcoming = (trips.data?.data ?? [])
     .filter((trip) => trip.status !== "CANCELLED" && trip.status !== "COMPLETED")
     .sort((a, b) => a.pickupDate.localeCompare(b.pickupDate))
     .slice(0, 8);
-  if (upcoming.length === 0) return <p className="text-sm text-muted">{t("noUpcoming")}</p>;
+  const state = trips.isPending
+    ? "loading"
+    : trips.isError
+      ? "error"
+      : upcoming.length === 0
+        ? "empty"
+        : "trips";
 
   return (
-    <ul className="flex flex-col divide-y divide-border">
-      {upcoming.map((trip) => (
-        <li key={trip.id}>
+    <Swap state={state}>
+      {state === "loading" ? (
+        <TripsLoading label={t("loadingTrips")} />
+      ) : state === "error" ? (
+        <p className="py-6 text-center text-sm text-danger">{errorMessage(trips.error)}</p>
+      ) : state === "empty" ? (
+        <p className="flex min-h-24 items-center justify-center text-center text-sm text-muted">
+          {t("noUpcoming")}
+        </p>
+      ) : (
+        <TripList trips={upcoming} />
+      )}
+    </Swap>
+  );
+}
+
+type FleetTrip = Awaited<ReturnType<typeof listTrips>>["data"][number];
+const listTrips = (query: Record<string, string>) => call(staffApi.trips.$get({ query }));
+
+function TripList({ trips }: { trips: FleetTrip[] }) {
+  const route = useRoute();
+  const { dateTime } = useTripDates();
+  return (
+    <ul className="-mx-2 flex flex-col">
+      {trips.map((trip) => (
+        <motion.li key={trip.id} {...fade} className="border-b border-border last:border-0">
           <Link
             href={`/trips/${trip.id}`}
-            className="flex items-center gap-4 py-3 hover:bg-surface-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="my-1 flex items-center gap-4 rounded-lg px-2 py-2 transition-colors duration-200 hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
             <span className="w-28 shrink-0 text-sm font-medium text-primary" dir="ltr">
               {trip.code}
@@ -47,6 +75,29 @@ export function FleetTrips({ filter }: { filter: Filter }) {
             </span>
             <TripStatusBadge status={trip.status} />
           </Link>
+        </motion.li>
+      ))}
+    </ul>
+  );
+}
+
+// Rows shaped like the trips they stand in for.
+function TripsLoading({ label }: { label: string }) {
+  return (
+    <ul role="status" className="-mx-2 flex flex-col">
+      <span className="sr-only">{label}</span>
+      {[0, 1, 2].map((row) => (
+        <li
+          key={row}
+          aria-hidden
+          className="my-1 flex items-center gap-4 border-b border-border px-2 py-2 last:border-0"
+        >
+          <Skeleton className="h-3.5 w-24 shrink-0" />
+          <div className="flex flex-1 flex-col gap-1.5">
+            <Skeleton className={row % 2 ? "h-3.5 w-40" : "h-3.5 w-52"} />
+            <Skeleton className="h-3 w-28" />
+          </div>
+          <Skeleton className="h-5.5 w-24 rounded-full" />
         </li>
       ))}
     </ul>
