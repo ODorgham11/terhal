@@ -40,6 +40,11 @@
 
   --overlay: rgb(35 30 27 / 0.45);
 
+  /* Chart series, in a fixed order: the maroon and copper lightened into the band where bars read well, and far
+     enough apart for colour-blind readers (checked with the dataviz validator against white). */
+  --chart-1: #a8384c;
+  --chart-2: #c97a5f;
+
   /* The customer site and the admin panel use IBM Plex Sans Arabic (app/layout.tsx); the staff dashboard below. */
   --font-host: var(--font-plex);
 
@@ -116,6 +121,8 @@
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
   --color-overlay: var(--overlay);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
 }
 
 @layer base {
