@@ -52,7 +52,7 @@ import { toast } from "@/components/ui/Toast";
 import { call, endpoint, staffApi, useErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/cn";
 
-const COLUMNS = 8;
+const COLUMNS = 9;
 
 export function PricesList() {
   return <RequireStaff permission="pricing">{() => <Prices />}</RequireStaff>;
@@ -277,6 +277,8 @@ function Prices() {
                 />
               </TableHead>
               <TableHead>{t("columns.from")}</TableHead>
+              {/* The arrow's own narrow column, so it sits centred between the two places. */}
+              <TableHead className="w-10 px-0" aria-hidden />
               <TableHead>{t("columns.to")}</TableHead>
               <TableHead>{t("columns.class")}</TableHead>
               <TableHead>{t("columns.car")}</TableHead>
@@ -395,11 +397,11 @@ function PriceRow({
       <TableCell>
         <Place place={row.from} />
       </TableCell>
+      <TableCell className="w-10 px-0">
+        <DirectionalIcon icon={IconArrowRight} className="mx-auto block size-4 text-muted" />
+      </TableCell>
       <TableCell>
-        <div className="flex items-center gap-3">
-          <DirectionalIcon icon={IconArrowRight} className="size-4 shrink-0 text-muted" />
-          <Place place={row.to} />
-        </div>
+        <Place place={row.to} />
       </TableCell>
       <TableCell>{name(row.class)}</TableCell>
       <TableCell>{cars(row.car)}</TableCell>
@@ -524,11 +526,11 @@ function PriceRowsLoading() {
           <TableCell>
             <SkeletonLines first={row % 2 ? "w-24" : "w-32"} second="w-16" />
           </TableCell>
+          <TableCell className="w-10 px-0">
+            <Skeleton className="mx-auto size-4" />
+          </TableCell>
           <TableCell>
-            <div className="flex items-center gap-3">
-              <Skeleton className="size-4 shrink-0" />
-              <SkeletonLines first={row % 2 ? "w-28" : "w-24"} second="w-16" />
-            </div>
+            <SkeletonLines first={row % 2 ? "w-28" : "w-24"} second="w-16" />
           </TableCell>
           <TableCell>
             <Skeleton className="h-3.5 w-16" />
