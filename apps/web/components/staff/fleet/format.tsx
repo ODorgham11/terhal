@@ -4,6 +4,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import type { Driver, Vehicle } from "@terhal/contracts";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
+import { whatsappLink } from "@/lib/whatsapp";
 import { useTripDates } from "../trips/format";
 
 // +201001234567 → 0100-123-4567, the way Egyptian numbers are written; other numbers as stored.
@@ -14,7 +15,13 @@ export const displayPhone = (phone: string) => {
 
 export function Phone({ phone, className }: { phone: string; className?: string }) {
   return (
-    <a href={`tel:${phone}`} dir="ltr" className={cn("hover:underline", className)}>
+    <a
+      href={whatsappLink(phone)}
+      target="_blank"
+      rel="noreferrer"
+      dir="ltr"
+      className={cn("hover:underline", className)}
+    >
       {displayPhone(phone)}
     </a>
   );

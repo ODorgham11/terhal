@@ -19,6 +19,7 @@ import { SectionCard } from "@/components/staff/SectionCard";
 import { Button } from "@/components/ui/Button";
 import { call, staffApi } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import { whatsappLink } from "@/lib/whatsapp";
 import { useLocalName, useTripDates } from "../format";
 import { TripStatusBadge } from "../TripStatusBadge";
 
@@ -88,7 +89,13 @@ export function RouteCard({ trip }: { trip: TripDetail }) {
         <span className="text-xs text-muted">{t("passenger")}</span>
         <span className="text-sm text-foreground">
           {trip.clientName} ·{" "}
-          <a href={`tel:${trip.clientPhone}`} dir="ltr" className="text-primary hover:underline">
+          <a
+            href={whatsappLink(trip.clientPhone)}
+            target="_blank"
+            rel="noreferrer"
+            dir="ltr"
+            className="text-primary hover:underline"
+          >
             {trip.clientPhone}
           </a>
         </span>
@@ -289,7 +296,12 @@ export function BookerCard({ trip }: { trip: TripDetail }) {
           <div className="flex justify-between gap-4">
             <dt className="text-muted">{t("phone")}</dt>
             <dd dir="ltr">
-              <a href={`tel:${trip.booker.phone}`} className="text-foreground hover:underline">
+              <a
+                href={whatsappLink(trip.booker.phone)}
+                target="_blank"
+                rel="noreferrer"
+                className="text-foreground hover:underline"
+              >
                 {trip.booker.phone}
               </a>
             </dd>
@@ -385,7 +397,9 @@ export function AssignmentCard({
                   {trip.driver.firstName} {trip.driver.lastName}
                 </Link>
                 <a
-                  href={`tel:${trip.driver.phone}`}
+                  href={whatsappLink(trip.driver.phone)}
+                  target="_blank"
+                  rel="noreferrer"
                   dir="ltr"
                   className="text-start text-xs text-muted hover:underline"
                 >
@@ -435,36 +449,34 @@ export function ReturnTripCard({
   const other = trip.returnTrip ?? trip.previousTrip;
 
   return (
-    <SectionCard
-      title={trip.previousTrip ? t("outboundTitle") : t("title")}
-      aside={
-        other &&
-        onUnlink && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onUnlink}
-            className="bg-surface-muted text-muted hover:bg-border hover:text-foreground"
-          >
-            <IconUnlink aria-hidden className="size-4" stroke={1.75} />
-            {t("unlink")}
-          </Button>
-        )
-      }
-    >
+    <SectionCard title={trip.previousTrip ? t("outboundTitle") : t("title")}>
       {other ? (
-        <Link
-          href={`/trips/${other.id}`}
-          className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 hover:bg-surface-muted"
-        >
-          <span className="flex flex-col">
-            <span className="text-sm font-medium text-primary" dir="ltr">
-              {other.code}
+        <>
+          <Link
+            href={`/trips/${other.id}`}
+            className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 hover:bg-surface-muted"
+          >
+            <span className="flex flex-col">
+              <span className="text-sm font-medium text-primary" dir="ltr">
+                {other.code}
+              </span>
+              <span className="text-xs text-muted">{dateTime(other.pickupDate)}</span>
             </span>
-            <span className="text-xs text-muted">{dateTime(other.pickupDate)}</span>
-          </span>
-          <TripStatusBadge status={other.status} />
-        </Link>
+            <TripStatusBadge status={other.status} />
+          </Link>
+          {/* At the foot of the card, on gray, so it reads as a separate action rather than part of the link. */}
+          {onUnlink && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onUnlink}
+              className="self-end bg-surface-muted text-muted hover:bg-border hover:text-foreground"
+            >
+              <IconUnlink aria-hidden className="size-4" stroke={1.75} />
+              {t("unlink")}
+            </Button>
+          )}
+        </>
       ) : (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-muted">{t("none")}</p>
