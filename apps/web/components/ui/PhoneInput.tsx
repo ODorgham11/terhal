@@ -235,7 +235,7 @@ function CountrySelect({
         type="button"
         disabled={disabled}
         aria-label={t("country", { country: names.of(value) ?? value })}
-        className="flex h-full shrink-0 items-center gap-1.5 rounded-s-lg border-e border-input ps-3 pe-2 text-foreground transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
+        className="flex h-full shrink-0 items-center gap-1.5 rounded-s-lg border-e border-input ps-3 pe-2 text-foreground transition-colors hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
       >
         <Flag country={value} />
         <span className="text-muted tabular-nums">+{getCountryCallingCode(value)}</span>
@@ -275,7 +275,7 @@ function CountrySelect({
                     setOpen(false);
                     setQ("");
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-sm text-foreground hover:bg-surface-muted focus-visible:bg-surface-muted focus-visible:outline-none"
+                  className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-sm text-foreground hover:bg-hover focus-visible:bg-hover focus-visible:outline-none"
                 >
                   <Flag country={item.country} />
                   <span className="min-w-0 flex-1 truncate">{item.name}</span>

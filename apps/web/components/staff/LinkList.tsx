@@ -18,7 +18,7 @@ export function LinkListItem({ href, children }: { href: string; children: React
     <motion.li {...fade}>
       <Link
         href={href}
-        className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-surface-muted focus-visible:bg-surface-muted focus-visible:outline-none"
+        className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-hover focus-visible:bg-hover focus-visible:outline-none"
       >
         {children}
       </Link>

@@ -24,7 +24,7 @@ export function PasswordInput(props: Omit<ComponentProps<typeof Input>, "type">)
           onClick={() => setVisible((shown) => !shown)}
           aria-label={visible ? t("hidePassword") : t("showPassword")}
           aria-pressed={visible}
-          className="rounded-md p-1.5 text-muted transition-colors hover:bg-surface-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="rounded-md p-1.5 text-muted transition-colors hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
           <Toggle aria-hidden className="size-4.5" stroke={1.75} />
         </button>

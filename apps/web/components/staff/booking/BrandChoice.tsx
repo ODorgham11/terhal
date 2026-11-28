@@ -50,7 +50,7 @@ export function BrandChoice({ value, onChange }: Props) {
               "flex items-center gap-3 rounded-xl border p-3 text-start transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
               checked
                 ? "border-primary bg-primary-soft/50"
-                : "border-border hover:bg-surface-muted/60",
+                : "border-border hover:bg-hover",
             )}
           >
             <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-surface-muted">

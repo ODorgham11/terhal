@@ -119,7 +119,7 @@ function LinkForm({ trip, onDone }: { trip: Trip; onDone: () => void }) {
                   "flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                   picked === candidate.id
                     ? "border-primary bg-primary-soft"
-                    : "border-border hover:bg-surface-muted",
+                    : "border-border hover:bg-hover",
                 )}
               >
                 <span className="flex min-w-0 flex-col">

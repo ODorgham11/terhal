@@ -176,7 +176,7 @@ function ClassRow({ tripClass, onEdit }: { tripClass: StaffTripClass; onEdit: ()
   });
 
   return (
-    <MotionTableRow {...fade} className="cursor-pointer hover:bg-surface-muted/50" onClick={onEdit}>
+    <MotionTableRow {...fade} className="cursor-pointer hover:bg-hover" onClick={onEdit}>
       <TableCell className="text-muted tabular-nums">{tripClass.sortOrder}</TableCell>
       <TableCell>
         <div className="flex flex-col">
@@ -223,7 +223,7 @@ function ClassCard({
       <button
         type="button"
         onClick={onEdit}
-        className="flex w-full flex-col gap-3 rounded-xl border border-border bg-surface p-4 text-start transition-colors hover:bg-surface-muted/50"
+        className="flex w-full flex-col gap-3 rounded-xl border border-border bg-surface p-4 text-start transition-colors hover:bg-hover"
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 flex-col">

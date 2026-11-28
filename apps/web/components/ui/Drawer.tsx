@@ -104,7 +104,7 @@ export function DrawerContent({
           </div>
           <Primitive.Close
             aria-label={t("close")}
-            className="rounded-md p-1 text-muted transition-colors hover:bg-surface-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="rounded-md p-1 text-muted transition-colors hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
             <IconX aria-hidden className="size-4" />
           </Primitive.Close>

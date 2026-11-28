@@ -34,7 +34,7 @@ export function TopBar({ staff, onOpenMenu }: TopBarProps) {
         type="button"
         onClick={onOpenMenu}
         aria-label={t("openMenu")}
-        className="inline-flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:hidden"
+        className="inline-flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:hidden"
       >
         <IconMenu2 aria-hidden className="size-5" stroke={1.75} />
       </button>

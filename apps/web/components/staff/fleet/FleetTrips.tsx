@@ -65,7 +65,7 @@ function TripList({ trips }: { trips: FleetTrip[] }) {
         <motion.li key={trip.id} {...fade}>
           <Link
             href={`/trips/${trip.id}`}
-            className="flex items-center gap-4 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-surface-muted focus-visible:bg-surface-muted focus-visible:outline-none"
+            className="flex items-center gap-4 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-hover focus-visible:bg-hover focus-visible:outline-none"
           >
             <span className="w-28 shrink-0 text-sm font-medium text-primary" dir="ltr">
               {trip.code}

@@ -155,7 +155,7 @@ function FlatList({
               "flex h-10 items-center gap-2 rounded-lg px-2 text-sm transition-colors duration-200",
               location.id === selectedId
                 ? "bg-primary-soft font-medium text-primary"
-                : "hover:bg-surface-muted",
+                : "hover:bg-hover",
             )}
           >
             <button

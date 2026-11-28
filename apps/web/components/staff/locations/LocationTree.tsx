@@ -98,7 +98,7 @@ function Node({
           "flex h-9 items-center gap-1 rounded-lg pe-2 text-sm transition-colors duration-200",
           selected
             ? "bg-primary-soft font-medium text-primary"
-            : "text-foreground hover:bg-surface-muted",
+            : "text-foreground hover:bg-hover",
         )}
         style={{ paddingInlineStart: `${String(depth * 1.25)}rem` }}
       >

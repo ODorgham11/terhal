@@ -48,16 +48,16 @@ function Calendar(props: React.ComponentProps<typeof DayPicker>) {
         caption_label: "text-sm font-semibold text-foreground",
         nav: "absolute end-3 top-3 flex items-center gap-1",
         button_previous:
-          "inline-flex size-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-muted hover:text-foreground disabled:opacity-40",
+          "inline-flex size-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40",
         button_next:
-          "inline-flex size-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-muted hover:text-foreground disabled:opacity-40",
+          "inline-flex size-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40",
         month_grid: "border-collapse",
         weekdays: "flex",
         weekday: "flex size-9 items-center justify-center text-xs font-medium text-muted",
         week: "mt-1 flex",
         day: "group/day relative size-9 p-0 text-center",
         day_button:
-          "relative z-10 inline-flex size-9 items-center justify-center rounded-lg text-sm text-foreground tabular-nums transition-colors hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+          "relative z-10 inline-flex size-9 items-center justify-center rounded-lg text-sm text-foreground tabular-nums transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         today: "[&>button]:font-semibold [&>button]:text-primary",
         selected:
           "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary-hover",
@@ -405,7 +405,7 @@ function Choice({
         "h-9 shrink-0 rounded-lg px-2 text-sm tabular-nums transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         selected
           ? "bg-primary font-medium text-primary-foreground"
-          : "text-foreground hover:bg-surface-muted",
+          : "text-foreground hover:bg-hover",
       )}
     >
       {children}

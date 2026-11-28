@@ -163,7 +163,7 @@ function CustomerRow({ customer }: { customer: CustomerDetail }) {
   return (
     <MotionTableRow
       {...fade}
-      className={cn("cursor-pointer hover:bg-surface-muted/50", faded(customer) && "opacity-70")}
+      className={cn("cursor-pointer hover:bg-hover", faded(customer) && "opacity-70")}
       onClick={() => router.push(href)}
     >
       <TableCell>
@@ -210,7 +210,7 @@ function CustomerCard({ customer }: { customer: CustomerDetail }) {
     <motion.li {...fade} className={cn(faded(customer) && "opacity-70")}>
       <Link
         href={`/customers/${customer.id}`}
-        className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:bg-surface-muted/50"
+        className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:bg-hover"
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2.5">

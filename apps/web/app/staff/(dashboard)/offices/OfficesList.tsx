@@ -170,7 +170,7 @@ function OfficeRow({ office }: { office: Office }) {
   return (
     <MotionTableRow
       {...fade}
-      className="cursor-pointer hover:bg-surface-muted/50"
+      className="cursor-pointer hover:bg-hover"
       onClick={() => router.push(href)}
     >
       <TableCell>
@@ -207,7 +207,7 @@ function OfficeCard({ office }: { office: Office }) {
     <motion.li {...fade}>
       <Link
         href={`/offices/${office.id}`}
-        className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:bg-surface-muted/50"
+        className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:bg-hover"
       >
         <div className="flex items-center justify-between gap-2">
           <span className="truncate text-sm font-medium text-foreground">{office.name}</span>

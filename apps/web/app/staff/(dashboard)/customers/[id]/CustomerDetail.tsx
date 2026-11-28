@@ -215,7 +215,7 @@ function TripRow({ trip }: { trip: z.infer<typeof CustomerTrip> }) {
   return (
     <MotionTableRow
       {...fade}
-      className="cursor-pointer hover:bg-surface-muted/50"
+      className="cursor-pointer hover:bg-hover"
       onClick={() => router.push(href)}
     >
       <TableCell>

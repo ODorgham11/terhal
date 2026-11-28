@@ -82,7 +82,7 @@ export function NotificationBell() {
           <Link
             href="/notifications"
             onClick={() => setOpen(false)}
-            className="border-t border-border px-4 py-3 text-center text-sm font-medium text-primary hover:bg-surface-muted/60"
+            className="border-t border-border px-4 py-3 text-center text-sm font-medium text-primary hover:bg-hover"
           >
             {t("seeAll")}
           </Link>

@@ -17,7 +17,7 @@ export function Stepper({ label, value, onChange, min = 0, max = 50 }: Props) {
   const t = useTranslations("staff.booking");
   const set = (next: number) => onChange(Math.min(max, Math.max(min, next)));
   const button =
-    "grid size-8 place-items-center rounded-md text-muted hover:bg-surface-muted hover:text-foreground disabled:opacity-40";
+    "grid size-8 place-items-center rounded-md text-muted hover:bg-hover hover:text-foreground disabled:opacity-40";
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-sm font-medium text-foreground">{label}</span>

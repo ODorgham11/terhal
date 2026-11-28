@@ -74,7 +74,7 @@ export function NotificationItem({ notification, compact, onOpen }: Props) {
     </>
   );
   const classes = cn(
-    "flex w-full items-start gap-3 px-4 py-3 text-start transition-colors hover:bg-surface-muted/60",
+    "flex w-full items-start gap-3 px-4 py-3 text-start transition-colors hover:bg-hover",
     unread && "bg-primary-soft/30",
   );
 
