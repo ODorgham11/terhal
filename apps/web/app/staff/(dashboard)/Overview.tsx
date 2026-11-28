@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "motion/react";
 import {
   IconChevronRight,
   IconClockExclamation,
@@ -23,7 +24,8 @@ import { StatCard } from "@/components/staff/StatCard";
 import { TripStatusBadge } from "@/components/staff/trips/TripStatusBadge";
 import { useRoute, useTripDates } from "@/components/staff/trips/format";
 import { Button } from "@/components/ui/Button";
-import { Card, CardHeader } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
+import { FadeText, Swap, fade } from "@/components/ui/Motion";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { call, staffApi } from "@/lib/api";
@@ -95,30 +97,28 @@ function TripsOverview({ staff }: { staff: Staff }) {
           label={t("kpi.today")}
           value={counts?.today ?? "–"}
           note={counts && t("kpi.tomorrow", { count: counts.tomorrow })}
+          noteLoading={!counts}
         />
         <StatCard
           icon={IconSteeringWheel}
           label={t("kpi.unassigned")}
           value={counts?.unassigned ?? "–"}
-          note={
-            counts && counts.overdue > 0 ? t("kpi.overdue", { count: counts.overdue }) : undefined
-          }
-          noteTone="danger"
+          note={counts && t("kpi.overdue", { count: counts.overdue })}
+          noteTone={counts && counts.overdue > 0 ? "danger" : "muted"}
+          noteLoading={!counts}
         />
         <StatCard
           icon={IconTag}
           label={t("kpi.priceRequests")}
           value={counts?.priceRequests ?? "–"}
+          note={t("kpi.priceRequestsNote")}
         />
         <StatCard
           icon={IconFileText}
           label={t("kpi.awaitingReport")}
           value={counts?.awaitingReport ?? "–"}
-          note={
-            counts && counts.inProgress > 0
-              ? t("kpi.inProgress", { count: counts.inProgress })
-              : undefined
-          }
+          note={counts && t("kpi.inProgress", { count: counts.inProgress })}
+          noteLoading={!counts}
         />
       </div>
 
@@ -172,11 +172,15 @@ function NeedsAction() {
 
   return (
     <Card className="p-5">
-      <CardHeader
+      <SectionHeader
         title={t("title")}
-        className="p-0 pb-3"
-        actions={
-          <Button asChild variant="ghost" size="sm">
+        action={
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="-me-2 gap-1 px-2 text-muted hover:text-foreground"
+          >
             <Link href="/trips">
               {t("allTrips")}
               <DirectionalIcon icon={IconChevronRight} className="size-4" />
@@ -184,17 +188,21 @@ function NeedsAction() {
           </Button>
         }
       />
-      {loading ? (
-        <RowsLoading />
-      ) : rows.length === 0 ? (
-        <p className="border-t border-border py-6 text-center text-sm text-muted">{t("empty")}</p>
-      ) : (
-        <ul>
-          {rows.map(({ trip, reason }) => (
-            <ActionRow key={trip.id} trip={trip} reason={reason} />
-          ))}
-        </ul>
-      )}
+      <Swap state={loading ? "loading" : rows.length === 0 ? "empty" : "rows"}>
+        {loading ? (
+          <RowsLoading />
+        ) : rows.length === 0 ? (
+          <EmptyRow>{t("empty")}</EmptyRow>
+        ) : (
+          <ul>
+            <AnimatePresence initial={false}>
+              {rows.map(({ trip, reason }) => (
+                <ActionRow key={trip.id} trip={trip} reason={reason} />
+              ))}
+            </AnimatePresence>
+          </ul>
+        )}
+      </Swap>
     </Card>
   );
 }
@@ -205,7 +213,11 @@ function ActionRow({ trip, reason }: { trip: Trip; reason: Reason }) {
   const dates = useTripDates();
 
   return (
-    <li className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border py-3">
+    <motion.li
+      layout="position"
+      {...fade}
+      className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border py-3"
+    >
       <Link
         href={`/trips/${trip.id}`}
         className="w-25 shrink-0 text-sm font-medium text-primary hover:underline"
@@ -224,7 +236,7 @@ function ActionRow({ trip, reason }: { trip: Trip; reason: Reason }) {
       <Button asChild variant="secondary" size="sm">
         <Link href={`/trips/${trip.id}`}>{t(`actions.${reason}`)}</Link>
       </Button>
-    </li>
+    </motion.li>
   );
 }
 
@@ -246,56 +258,68 @@ function TodaysPickups() {
 
   return (
     <Card className="p-5">
-      <CardHeader
+      <SectionHeader
         title={t("title")}
-        className="p-0 pb-3"
-        actions={
-          today.data && (
-            <span className="text-xs text-muted">{t("count", { count: trips.length })}</span>
-          )
+        action={
+          <AnimatePresence initial={false}>
+            {today.data && (
+              <motion.span {...fade} className="text-sm text-muted">
+                <FadeText value={t("count", { count: trips.length })} />
+              </motion.span>
+            )}
+          </AnimatePresence>
         }
       />
-      {today.isPending ? (
-        <RowsLoading />
-      ) : trips.length === 0 ? (
-        <p className="border-t border-border py-6 text-center text-sm text-muted">{t("empty")}</p>
-      ) : (
-        <ul>
-          {trips.map((trip) => {
-            const who = trip.driver
-              ? `${trip.driver.firstName} ${trip.driver.lastName}`
-              : trip.office?.name;
-            return (
-              <li key={trip.id} className="flex items-center gap-4 border-t border-border py-3">
-                <p className="w-17.5 shrink-0 text-sm font-medium text-foreground">
-                  {dates.time(trip.pickupDate)}
-                </p>
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <Link
-                    href={`/trips/${trip.id}`}
-                    className="truncate text-sm font-medium text-foreground hover:underline"
+      <Swap state={today.isPending ? "loading" : trips.length === 0 ? "empty" : "rows"}>
+        {today.isPending ? (
+          <RowsLoading />
+        ) : trips.length === 0 ? (
+          <EmptyRow>{t("empty")}</EmptyRow>
+        ) : (
+          <ul>
+            <AnimatePresence initial={false}>
+              {trips.map((trip) => {
+                const who = trip.driver
+                  ? `${trip.driver.firstName} ${trip.driver.lastName}`
+                  : trip.office?.name;
+                return (
+                  <motion.li
+                    key={trip.id}
+                    layout="position"
+                    {...fade}
+                    className="flex items-center gap-4 border-t border-border py-3"
                   >
-                    {route(trip)}
-                  </Link>
-                  <p className="text-xs text-muted" dir="ltr">
-                    <span className="sr-only">{t("code")} </span>
-                    {trip.code}
-                  </p>
-                </div>
-                <p
-                  className={cn(
-                    "hidden w-35 truncate text-sm sm:block",
-                    who ? "text-foreground" : "text-warning",
-                  )}
-                >
-                  {who ?? t("unassigned")}
-                </p>
-                <TripStatusBadge status={trip.status} />
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                    <p className="w-17.5 shrink-0 text-sm font-medium text-foreground">
+                      {dates.time(trip.pickupDate)}
+                    </p>
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <Link
+                        href={`/trips/${trip.id}`}
+                        className="truncate text-sm font-medium text-foreground hover:underline"
+                      >
+                        {route(trip)}
+                      </Link>
+                      <p className="text-xs text-muted" dir="ltr">
+                        <span className="sr-only">{t("code")} </span>
+                        {trip.code}
+                      </p>
+                    </div>
+                    <p
+                      className={cn(
+                        "hidden w-40 truncate text-[0.9375rem] sm:block",
+                        who ? "text-foreground" : "text-warning",
+                      )}
+                    >
+                      {who ?? t("unassigned")}
+                    </p>
+                    <TripStatusBadge status={trip.status} className="px-3 py-1 text-[0.8125rem]" />
+                  </motion.li>
+                );
+              })}
+            </AnimatePresence>
+          </ul>
+        )}
+      </Swap>
     </Card>
   );
 }
@@ -307,39 +331,62 @@ function OnTheRoad() {
   const trips = useQuery(tripsQuery({ status: "IN_PROGRESS", limit: "20" }));
 
   return (
-    <Card className="flex flex-col gap-3 p-5">
-      <h2 className="text-base font-semibold text-foreground">{t("title")}</h2>
-      {trips.isPending ? (
-        <RowsLoading />
-      ) : trips.data?.data.length ? (
-        <ul className="flex flex-col gap-3">
-          {trips.data.data.map((trip) => (
-            <li key={trip.id}>
-              <Link href={`/trips/${trip.id}`} className="group flex items-center gap-2.5">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
-                  <IconSteeringWheel aria-hidden className="size-4" stroke={1.75} />
-                </span>
-                <span className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm font-medium text-foreground group-hover:underline">
-                    {trip.driver
-                      ? `${trip.driver.firstName} ${trip.driver.lastName}`
-                      : (trip.office?.name ?? trip.code)}
-                  </span>
-                  <span className="truncate text-xs text-muted">
-                    {t("detail", { route: route(trip), time: dates.time(trip.pickupDate) })}
-                  </span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="flex items-center gap-2 text-sm text-muted">
-          <IconClockExclamation aria-hidden className="size-4" stroke={1.75} />
-          {t("empty")}
-        </p>
-      )}
+    <Card className="p-5">
+      <SectionHeader title={t("title")} />
+      <Swap state={trips.isPending ? "loading" : trips.data?.data.length ? "rows" : "empty"}>
+        {trips.isPending ? (
+          <RowsLoading />
+        ) : trips.data?.data.length ? (
+          <ul className="flex flex-col gap-3">
+            <AnimatePresence initial={false}>
+              {trips.data.data.map((trip) => (
+                <motion.li key={trip.id} layout="position" {...fade}>
+                  <Link href={`/trips/${trip.id}`} className="group flex items-center gap-2.5">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+                      <IconSteeringWheel aria-hidden className="size-4" stroke={1.75} />
+                    </span>
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate text-sm font-medium text-foreground group-hover:underline">
+                        {trip.driver
+                          ? `${trip.driver.firstName} ${trip.driver.lastName}`
+                          : (trip.office?.name ?? trip.code)}
+                      </span>
+                      <span className="truncate text-xs text-muted">
+                        {t("detail", { route: route(trip), time: dates.time(trip.pickupDate) })}
+                      </span>
+                    </span>
+                  </Link>
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </ul>
+        ) : (
+          <p className="flex items-center gap-2 text-sm text-muted">
+            <IconClockExclamation aria-hidden className="size-4" stroke={1.75} />
+            {t("empty")}
+          </p>
+        )}
+      </Swap>
     </Card>
+  );
+}
+
+// Every overview card's header: one height whether it carries a button, a count or nothing, so they line up.
+function SectionHeader({ title, action }: { title: string; action?: ReactNode }) {
+  return (
+    <header className="flex h-8 items-center justify-between gap-4 pb-4 box-content">
+      <h2 className="text-base font-semibold text-foreground">{title}</h2>
+      {action}
+    </header>
+  );
+}
+
+// An empty card body, sitting in the middle of the space under the header's line.
+function EmptyRow({ children }: { children: ReactNode }) {
+  return (
+    <p className="-mb-5 flex min-h-24 items-center justify-center border-t border-border text-center text-sm text-muted">
+      {children}
+    </p>
   );
 }
 

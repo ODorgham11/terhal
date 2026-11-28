@@ -14,10 +14,10 @@ const tones: Record<TripStatus, BadgeTone> = {
   CANCELLED: "danger",
 };
 
-export function TripStatusBadge({ status }: { status: TripStatus }) {
+export function TripStatusBadge({ status, className }: { status: TripStatus; className?: string }) {
   const t = useTranslations("staff.trips.status");
   return (
-    <Badge tone={tones[status]} dot>
+    <Badge tone={tones[status]} dot className={className}>
       {t(status)}
     </Badge>
   );
