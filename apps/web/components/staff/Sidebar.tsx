@@ -111,11 +111,12 @@ function SidebarLink({ item, label, count, active, rail, onNavigate }: SidebarLi
       aria-label={rail ? label : undefined}
       title={rail ? label : undefined}
       className={cn(
-        "relative flex shrink-0 items-center rounded-lg text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        // No outline: a key-focused link takes the hover's background instead.
+        "relative flex shrink-0 items-center rounded-lg text-sm transition-colors outline-none",
         rail ? "size-10 justify-center" : "h-10 w-full gap-3 px-3",
         active
           ? "bg-primary-soft font-medium text-primary"
-          : "text-foreground hover:bg-surface-muted",
+          : "text-foreground hover:bg-surface-muted focus-visible:bg-surface-muted",
       )}
     >
       <Icon aria-hidden className="size-5 shrink-0" stroke={1.75} />
