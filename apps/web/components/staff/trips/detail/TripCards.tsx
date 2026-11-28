@@ -9,6 +9,7 @@ import {
   IconCar,
   IconLink,
   IconLuggage,
+  IconUnlink,
   IconUsers,
   type Icon,
 } from "@tabler/icons-react";
@@ -312,11 +313,11 @@ export function PriceCard({ trip }: { trip: TripDetail }) {
   const { price } = useTripDates();
 
   return (
-    <SectionCard title={t("title")}>
+    <SectionCard title={t("title")} contentClassName="gap-1">
       {trip.totalPrice === null ? (
         <p className="text-sm font-medium text-accent">{t("requested")}</p>
       ) : (
-        <p className="text-[2rem] leading-10 font-semibold text-foreground tabular-nums">
+        <p className="text-2xl leading-8 font-semibold text-foreground tabular-nums">
           {price(trip.totalPrice)}
         </p>
       )}
@@ -434,27 +435,36 @@ export function ReturnTripCard({
   const other = trip.returnTrip ?? trip.previousTrip;
 
   return (
-    <SectionCard title={trip.previousTrip ? t("outboundTitle") : t("title")}>
-      {other ? (
-        <div className="flex flex-col gap-3">
-          <Link
-            href={`/trips/${other.id}`}
-            className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 hover:bg-surface-muted"
+    <SectionCard
+      title={trip.previousTrip ? t("outboundTitle") : t("title")}
+      aside={
+        other &&
+        onUnlink && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onUnlink}
+            className="bg-surface-muted text-muted hover:bg-border hover:text-foreground"
           >
-            <span className="flex flex-col">
-              <span className="text-sm font-medium text-primary" dir="ltr">
-                {other.code}
-              </span>
-              <span className="text-xs text-muted">{dateTime(other.pickupDate)}</span>
+            <IconUnlink aria-hidden className="size-4" stroke={1.75} />
+            {t("unlink")}
+          </Button>
+        )
+      }
+    >
+      {other ? (
+        <Link
+          href={`/trips/${other.id}`}
+          className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 hover:bg-surface-muted"
+        >
+          <span className="flex flex-col">
+            <span className="text-sm font-medium text-primary" dir="ltr">
+              {other.code}
             </span>
-            <TripStatusBadge status={other.status} />
-          </Link>
-          {onUnlink && (
-            <Button variant="ghost" size="sm" onClick={onUnlink} className="self-start">
-              {t("unlink")}
-            </Button>
-          )}
-        </div>
+            <span className="text-xs text-muted">{dateTime(other.pickupDate)}</span>
+          </span>
+          <TripStatusBadge status={other.status} />
+        </Link>
       ) : (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-muted">{t("none")}</p>
