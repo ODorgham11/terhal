@@ -257,7 +257,8 @@
       "car": "Car",
       "load": "{passengers, plural, one {# passenger} other {# passengers}} · {luggage, plural, =0 {no luggage} one {# bag} other {# bags}}",
       "vehicle": "Vehicle",
-      "notes": "Notes from the office"
+      "notes": "Notes from the office",
+      "reportSent": "Report sent"
     },
     "form": {
       "title": "Your report",

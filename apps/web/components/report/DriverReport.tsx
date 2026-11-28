@@ -4,7 +4,7 @@ import { useState, useSyncExternalStore, type ReactNode } from "react";
 import Image from "next/image";
 import { useFormatter, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import {
   IconAlertTriangle,
   IconBan,
@@ -23,6 +23,7 @@ import logo from "@/assets/logo.png";
 import { ConfirmDialog } from "@/components/staff/ConfirmDialog";
 import { TripStatusBadge } from "@/components/staff/trips/TripStatusBadge";
 import { useLocalName, useRoute, useTripDates } from "@/components/staff/trips/format";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Swap, fade } from "@/components/ui/Motion";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -162,8 +163,8 @@ function StateCard({
         >
           <StateIcon aria-hidden className="size-5" stroke={1.75} />
         </span>
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+        <div className="flex min-w-0 flex-col">
+          <h1 className="text-lg leading-6 font-semibold text-foreground">{title}</h1>
           <p className="text-sm text-muted">{body}</p>
         </div>
       </div>
@@ -203,6 +204,7 @@ function TripPage({ trip, token }: { trip: DriverTrip; token: string }) {
               : "completed";
   const fillsReport = !report && (status === "IN_PROGRESS" || status === "AWAITING_REPORT");
   const beforeEnd = !report && (status === "CONFIRMED" || status === "IN_PROGRESS");
+  const outcome = stage === "completed" || stage === "sent" || stage === "cancelled";
 
   const stateCard = {
     completed: <StateCard icon={IconCircleCheck} tone="success" {...copy(t, "completed")} />,
@@ -241,12 +243,20 @@ function TripPage({ trip, token }: { trip: DriverTrip; token: string }) {
 
   return (
     <motion.div {...fade} className="flex flex-col gap-4">
-      {/* The trip first, then where it stands, then the report. The passenger can only be messaged before the trip
-          ends: after it, the driver is reporting, not contacting anyone. */}
-      <TripCard trip={trip} contact={beforeEnd} />
+      {/* How it ended (completed, report sent, cancelled) comes first; otherwise the trip comes first, then what to do
+          next, then the report. The passenger can only be messaged before the trip ends: after it, the driver is
+          reporting, not contacting anyone. */}
+      <div>
+        <Swap state={outcome ? stage : "none"}>
+          {outcome && <div className="pb-4">{stateCard}</div>}
+        </Swap>
+        <TripCard trip={trip} contact={beforeEnd} />
+      </div>
       <div>
         {/* The card carries its own space below, so when there's none (trip ended) nothing is left behind. */}
-        <Swap state={stage}>{stateCard && <div className="pb-4">{stateCard}</div>}</Swap>
+        <Swap state={outcome ? "none" : stage}>
+          {!outcome && stateCard && <div className="pb-4">{stateCard}</div>}
+        </Swap>
         {fillsReport && <ReportForm trip={trip} token={token} />}
         {report && <ReportSummary report={report} />}
       </div>
@@ -301,7 +311,18 @@ function TripCard({ trip, contact = false }: { trip: DriverTrip; contact?: boole
           </span>
           <span className="text-base font-semibold text-foreground">{route(trip)}</span>
         </div>
-        <TripStatusBadge status={trip.status} />
+        {/* Sent but not yet reviewed, the trip is still awaiting its report to the office; to the driver, it's sent. */}
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.span key={trip.report ? `${trip.status}-sent` : trip.status} {...fade}>
+            {trip.report && trip.status === "AWAITING_REPORT" ? (
+              <Badge tone="success" dot>
+                {t("reportSent")}
+              </Badge>
+            ) : (
+              <TripStatusBadge status={trip.status} />
+            )}
+          </motion.span>
+        </AnimatePresence>
       </div>
 
       <ol className="relative flex flex-col gap-4 ps-6">
