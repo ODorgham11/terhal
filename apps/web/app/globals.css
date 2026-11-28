@@ -4,7 +4,7 @@
  * Theme tokens. Components only use these (bg-surface, text-muted, border-border, bg-primary...), never raw palette
  * colors, so a rebrand or a dark mode is a change here and nowhere else. The light values are the brand's, taken from the
  * logo and kept in step with the Figma variables: maroon primary, copper accent, ivory background. Dark follows the
- * system setting, except on the staff dashboard, which is light only.
+ * system setting, except on the staff dashboard and the admin panel, which are light only.
  */
 :root {
   --background: #fbf8f5;
@@ -51,14 +51,16 @@
   color-scheme: light;
 }
 
-/* The staff dashboard is set in the system's font: SF Pro on Apple devices, which is the design's font. */
-[data-host="staff"] {
+/* The staff dashboard, and the admin panel built in its image, are set in the system's font: SF Pro on Apple devices,
+   which is the design's font. */
+[data-host="staff"],
+[data-host="admin"] {
   --font-host: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Arabic";
 }
 
 /* A page that's always light (the driver report, on white) opts out with data-theme="light" anywhere inside it. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-host="staff"]):not(:has([data-theme="light"])) {
+  :root:not([data-host="staff"]):not([data-host="admin"]):not(:has([data-theme="light"])) {
     --background: #1a1614;
     --foreground: #f3eee9;
     --surface: #221d1b;

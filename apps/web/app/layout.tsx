@@ -23,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 // The locale comes from the NEXT_LOCALE cookie (i18n/request.ts). Arabic sets dir="rtl" on <html>, which flips every
 // logical class (ms-, pe-, start-, text-end) and every rtl: variant at once. data-host lets globals.css give a host its
-// own font and theme (the staff dashboard: the system font, light only).
+// own font and theme (the staff dashboard and the admin panel: the system font, light only).
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
   const host = sectionOf((await headers()).get("host"));
