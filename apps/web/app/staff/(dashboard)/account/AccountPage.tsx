@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Controller } from "react-hook-form";
+import { AnimatePresence, motion } from "motion/react";
 import { IconDeviceDesktop, IconLogout, IconMail } from "@tabler/icons-react";
 import { z } from "zod";
 import { ChangePassword, UpdateStaffAccount, type Staff } from "@terhal/contracts";
@@ -22,6 +23,7 @@ import { Form, FormError, FormField } from "@/components/ui/Form";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { PhoneInput } from "@/components/ui/PhoneInput";
+import { Swap, fade } from "@/components/ui/Motion";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { toast } from "@/components/ui/Toast";
 import { locales, type Locale } from "@/i18n/locales";
@@ -37,10 +39,10 @@ export function AccountPage() {
 function Account({ staff }: { staff: Staff }) {
   const t = useTranslations("staff.account");
   return (
-    <>
+    <motion.div {...fade} className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold text-foreground">{t("title")}</h1>
-        <p className="text-base text-muted">
+        <p className="text-sm text-muted">
           {staff.firstName} {staff.lastName}
         </p>
       </header>
@@ -58,7 +60,7 @@ function Account({ staff }: { staff: Staff }) {
           <LanguageCard staff={staff} />
         </div>
       </div>
-    </>
+    </motion.div>
   );
 }
 
@@ -98,6 +100,7 @@ function ProfileCard({ staff }: { staff: Staff }) {
         </div>
       </div>
       <Form
+        className="gap-6"
         form={form}
         onSubmit={async ({ phone, ...values }) => {
           const saved = await call(
@@ -113,7 +116,7 @@ function ProfileCard({ staff }: { staff: Staff }) {
         }}
       >
         <FormError />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
           <FormField name="firstName" label={fields("firstName")}>
             <Input autoComplete="given-name" {...form.register("firstName")} />
           </FormField>
@@ -163,6 +166,7 @@ function PasswordCard() {
   return (
     <SectionCard title={t("title")}>
       <Form
+        className="gap-6"
         form={form}
         onSubmit={async ({ currentPassword, newPassword }) => {
           await call(staffApi.auth.password.$post({ json: { currentPassword, newPassword } }));
@@ -223,76 +227,113 @@ function DevicesCard() {
     <SectionCard
       title={t("title")}
       aside={
-        others > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            loading={busy === "all"}
-            onClick={() => void end("all")}
-          >
-            <DirectionalIcon icon={IconLogout} className="size-4" stroke={1.75} />
-            {t("signOutOthers")}
-          </Button>
-        )
+        <AnimatePresence initial={false}>
+          {others > 0 && (
+            <motion.span key="others" {...fade}>
+              <Button
+                variant="ghost"
+                size="sm"
+                loading={busy === "all"}
+                onClick={() => void end("all")}
+              >
+                <DirectionalIcon icon={IconLogout} className="size-4" stroke={1.75} />
+                {t("signOutOthers")}
+              </Button>
+            </motion.span>
+          )}
+        </AnimatePresence>
       }
     >
-      {sessions.isPending ? (
-        <Skeleton className="h-24 w-full" />
-      ) : sessions.isError ? (
-        <p className="text-sm text-muted">{errorMessage(sessions.error)}</p>
-      ) : (
-        <ul className="flex flex-col divide-y divide-border">
-          {sessions.data.data.map((session) => {
-            const device = describeDevice(session.userAgent);
-            const label = device
-              ? device.browser && device.system
-                ? t("on", { browser: device.browser, system: device.system })
-                : (device.browser ?? device.system)
-              : t("unknown");
-            return (
-              <li key={session.id} className="flex items-center gap-3 py-3">
-                <IconDeviceDesktop
-                  aria-hidden
-                  className="size-5 shrink-0 text-muted"
-                  stroke={1.75}
-                />
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="flex flex-wrap items-center gap-2 text-sm text-foreground">
-                    {label}
-                    {session.current && <Badge tone="success">{t("thisDevice")}</Badge>}
-                  </span>
-                  <span className="text-xs text-muted">
-                    {[
-                      session.ipAddress && <span dir="ltr">{session.ipAddress}</span>,
-                      t("signedIn", {
-                        when: format.relativeTime(new Date(session.createdAt), now),
-                      }),
-                    ]
-                      .filter(Boolean)
-                      .map((part, index) => (
-                        <span key={index}>
-                          {index > 0 && " · "}
-                          {part}
-                        </span>
-                      ))}
-                  </span>
-                </div>
-                {!session.current && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    loading={busy === session.id}
-                    onClick={() => void end(session.id)}
+      <Swap state={sessions.isPending ? "loading" : sessions.isError ? "error" : "ready"}>
+        {sessions.isPending ? (
+          <DevicesLoading />
+        ) : sessions.isError ? (
+          <p className="text-sm text-danger">{errorMessage(sessions.error)}</p>
+        ) : (
+          <ul className="flex flex-col">
+            <AnimatePresence initial={false}>
+              {sessions.data.data.map((session) => {
+                const device = describeDevice(session.userAgent);
+                const label = device
+                  ? device.browser && device.system
+                    ? t("on", { browser: device.browser, system: device.system })
+                    : (device.browser ?? device.system)
+                  : t("unknown");
+                return (
+                  <motion.li
+                    key={session.id}
+                    layout
+                    {...fade}
+                    className="flex items-center gap-3 border-b border-border py-3 first:pt-0 last:border-0 last:pb-0"
                   >
-                    {t("signOut")}
-                  </Button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                    <IconDeviceDesktop
+                      aria-hidden
+                      className="size-5 shrink-0 text-muted"
+                      stroke={1.75}
+                    />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="flex flex-wrap items-center gap-2 text-sm text-foreground">
+                        {label}
+                        {session.current && <Badge tone="success">{t("thisDevice")}</Badge>}
+                      </span>
+                      <span className="text-xs text-muted">
+                        {[
+                          session.ipAddress && <span dir="ltr">{session.ipAddress}</span>,
+                          t("signedIn", {
+                            when: format.relativeTime(new Date(session.createdAt), now),
+                          }),
+                        ]
+                          .filter(Boolean)
+                          .map((part, index) => (
+                            <span key={index}>
+                              {index > 0 && " · "}
+                              {part}
+                            </span>
+                          ))}
+                      </span>
+                    </div>
+                    {!session.current && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        loading={busy === session.id}
+                        onClick={() => void end(session.id)}
+                      >
+                        {t("signOut")}
+                      </Button>
+                    )}
+                  </motion.li>
+                );
+              })}
+            </AnimatePresence>
+          </ul>
+        )}
+      </Swap>
     </SectionCard>
+  );
+}
+
+// Signed-in devices in gray: an icon, two lines and a button, like the rows they stand in for.
+function DevicesLoading() {
+  const t = useTranslations("common.ui");
+  return (
+    <ul role="status" className="flex flex-col">
+      <span className="sr-only">{t("loading")}</span>
+      {[0, 1].map((row) => (
+        <li
+          key={row}
+          aria-hidden
+          className="flex items-center gap-3 border-b border-border py-3 first:pt-0 last:border-0 last:pb-0"
+        >
+          <Skeleton className="size-5 shrink-0 rounded-md" />
+          <div className="flex flex-1 flex-col gap-1.5">
+            <Skeleton className={row ? "h-3.5 w-32" : "h-3.5 w-40"} />
+            <Skeleton className="h-3 w-44" />
+          </div>
+          {row > 0 && <Skeleton className="h-8 w-18 rounded-lg" />}
+        </li>
+      ))}
+    </ul>
   );
 }
 
