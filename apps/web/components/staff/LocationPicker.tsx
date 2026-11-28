@@ -18,12 +18,22 @@ type LocationPickerProps = {
   placeholder?: string;
   invalid?: boolean;
   id?: string;
+  // Only places a trip can go to: districts, areas and flexible governorates.
+  bookable?: boolean;
 };
 
 // Search the locations (governorates, districts, areas) and pick one: a combobox, so arrow keys and Enter work.
-export function LocationPicker({ value, onChange, placeholder, invalid, id }: LocationPickerProps) {
+export function LocationPicker({
+  value,
+  onChange,
+  placeholder,
+  invalid,
+  id,
+  bookable = false,
+}: LocationPickerProps) {
   const t = useTranslations("staff.locationPicker");
   const localities = useTranslations("staff.locations.localities");
+  const places = useTranslations("staff.locations");
   const name = useLocalName();
   const listId = useId();
   const [text, setText] = useState("");
@@ -37,8 +47,13 @@ export function LocationPicker({ value, onChange, placeholder, invalid, id }: Lo
   }, [text]);
 
   const results = useQuery({
-    queryKey: ["staff", "locations", "pick", q],
-    queryFn: () => call(staffApi.locations.$get({ query: { q, limit: "10" } })),
+    queryKey: ["staff", "locations", "pick", q, bookable],
+    queryFn: () =>
+      call(
+        staffApi.locations.$get({
+          query: { q, limit: "10", ...(bookable && { bookable: "true" as const }) },
+        }),
+      ),
     enabled: open && q.length >= 1,
     staleTime: 60_000,
   });
@@ -135,7 +150,9 @@ export function LocationPicker({ value, onChange, placeholder, invalid, id }: Lo
                 )}
               >
                 <span className="truncate text-foreground">{name(location)}</span>
-                <span className="shrink-0 text-xs text-muted">{localities(location.locality)}</span>
+                <span className="shrink-0 text-xs text-muted">
+                  {location.flexible ? places("wholeGovernorate") : localities(location.locality)}
+                </span>
               </li>
             ))
           )}

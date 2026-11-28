@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import type { Pin } from "@terhal/contracts";
+import type { TripPin } from "@terhal/contracts";
 import { Input } from "@/components/ui/Input";
 import { call, staffApi } from "@/lib/api";
 import { toLatinDigits } from "@/lib/digits";
 import { LocationPicker, type PickedLocation } from "../LocationPicker";
 
-export type Place = { label: PickedLocation; pin: Pin };
+export type Place = { label: PickedLocation; pin: TripPin };
 
 type Props = {
   value: Place | null;
@@ -16,7 +16,8 @@ type Props = {
   invalid?: boolean;
 };
 
-// A trip end: a district or area (its centre becomes the pin), or exact coordinates pasted from a map.
+// A trip end: a district or area (its centre becomes the pin), the whole of a flexible governorate (booked by name, its
+// outline's centre as the pin), or exact coordinates pasted from a map.
 export function PlaceField({ value, onChange, invalid }: Props) {
   const t = useTranslations("staff.booking.place");
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +28,9 @@ export function PlaceField({ value, onChange, invalid }: Props) {
     setError(null);
     if (!location) return onChange(null);
     const detail = await call(staffApi.locations[":id"].$get({ param: { id: location.id } }));
+    if (detail.flexible && detail.pin) {
+      return onChange({ label: location, pin: { ...detail.pin, locationId: detail.id } });
+    }
     if (!detail.center) {
       setError(t("needsCentre"));
       return onChange(null);
@@ -43,7 +47,11 @@ export function PlaceField({ value, onChange, invalid }: Props) {
       toLatinDigits(text),
     );
     if (!match || !value) return;
-    onChange({ ...value, pin: { latitude: Number(match[1]), longitude: Number(match[2]) } });
+    // A whole governorate stays booked by name; the pasted spot only moves its pin.
+    onChange({
+      ...value,
+      pin: { ...value.pin, latitude: Number(match[1]), longitude: Number(match[2]) },
+    });
   };
 
   return (
@@ -52,6 +60,7 @@ export function PlaceField({ value, onChange, invalid }: Props) {
         value={value?.label ?? null}
         onChange={(location) => void pick(location)}
         invalid={invalid || !!error}
+        bookable
       />
       {error && <p className="text-xs text-danger">{error}</p>}
       {value && (
