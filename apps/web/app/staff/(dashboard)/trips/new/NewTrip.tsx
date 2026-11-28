@@ -291,9 +291,10 @@ function Booking({ customerId }: { customerId?: string }) {
                 error={show(problems.clientPhone) ? t("errors.clientPhone") : undefined}
               >
                 <PhoneInput
+                  countries="all"
                   autoComplete="off"
                   value={clientPhone}
-                  onChange={(event) => setClientPhone(event.target.value)}
+                  onChange={setClientPhone}
                 />
               </Field>
             </div>

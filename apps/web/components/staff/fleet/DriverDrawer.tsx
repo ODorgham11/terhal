@@ -1,5 +1,6 @@
 "use client";
 
+import { Controller } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -147,7 +148,11 @@ function DriverFields({
         </FormField>
       </div>
       <FormField name="phone" label={fields("phone")}>
-        <PhoneInput autoComplete="off" {...form.register("phone")} />
+        <Controller
+          control={form.control}
+          name="phone"
+          render={({ field }) => <PhoneInput {...field} autoComplete="off" />}
+        />
       </FormField>
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField name="licenseNumber" label={fields("licenseNumber")}>

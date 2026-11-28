@@ -19,7 +19,9 @@
       "hidePassword": "إخفاء كلمة المرور",
       "clear": "مسح",
       "pickDate": "اختر تاريخًا",
-      "pickDates": "أي تاريخ"
+      "pickDates": "أي تاريخ",
+      "country": "الدولة: {country}",
+      "searchCountries": "ابحث عن دولة"
     },
     "fields": {
       "firstName": "الاسم الأول",

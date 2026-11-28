@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Controller } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconMail } from "@tabler/icons-react";
@@ -103,9 +104,12 @@ function InvitationForm({
           </FormField>
         </div>
         <FormField name="phone" label={fields("phone")} optional>
-          <PhoneInput
-            autoComplete="tel"
-            {...form.register("phone", { setValueAs: (value: string) => value || undefined })}
+          <Controller
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <PhoneInput {...field} onChange={(phone) => field.onChange(phone || undefined)} />
+            )}
           />
         </FormField>
         <FormField name="password" label={fields("password")} hint={t("passwordHint")}>

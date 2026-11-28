@@ -1,5 +1,6 @@
 "use client";
 
+import { Controller } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -112,7 +113,11 @@ function BrandFields({ brand, onDone }: { brand?: Brand; onDone: () => void }) {
           <Input type="email" dir="ltr" autoComplete="off" {...form.register("replyTo")} />
         </FormField>
         <FormField name="phone" label={t("phone")} optional>
-          <PhoneInput autoComplete="off" {...form.register("phone")} />
+          <Controller
+            control={form.control}
+            name="phone"
+            render={({ field }) => <PhoneInput {...field} autoComplete="off" />}
+          />
         </FormField>
         <FormField name="website" label={t("website")} optional>
           <Input

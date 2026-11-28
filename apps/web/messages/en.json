@@ -19,7 +19,9 @@
       "hidePassword": "Hide password",
       "clear": "Clear",
       "pickDate": "Pick a date",
-      "pickDates": "Any date"
+      "pickDates": "Any date",
+      "country": "Country: {country}",
+      "searchCountries": "Search countries"
     },
     "fields": {
       "firstName": "First name",

@@ -235,9 +235,10 @@ function EditForm({ trip, onDone }: { trip: Trip; onDone: () => void }) {
             </Field>
             <Field label={t("passengerPhone")}>
               <PhoneInput
+                countries="all"
                 autoComplete="off"
                 value={clientPhone}
-                onChange={(event) => setClientPhone(event.target.value)}
+                onChange={setClientPhone}
               />
             </Field>
           </div>

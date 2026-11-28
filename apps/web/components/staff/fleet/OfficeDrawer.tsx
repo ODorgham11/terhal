@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Controller } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -115,7 +116,11 @@ function OfficeFields({ office, onSaved }: { office?: Office; onSaved: (office: 
           <Input autoComplete="off" {...form.register("contact")} />
         </FormField>
         <FormField name="phone" label={fields("phone")}>
-          <PhoneInput autoComplete="off" {...form.register("phone")} />
+          <Controller
+            control={form.control}
+            name="phone"
+            render={({ field }) => <PhoneInput {...field} autoComplete="off" />}
+          />
         </FormField>
       </div>
       <FormField name="email" label={fields("email")} optional>

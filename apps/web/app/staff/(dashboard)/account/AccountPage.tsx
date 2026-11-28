@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Controller } from "react-hook-form";
 import { IconDeviceDesktop, IconLogout, IconMail } from "@tabler/icons-react";
 import { z } from "zod";
 import { ChangePassword, UpdateStaffAccount, type Staff } from "@terhal/contracts";
@@ -121,7 +122,11 @@ function ProfileCard({ staff }: { staff: Staff }) {
           </FormField>
         </div>
         <FormField name="phone" label={fields("phone")} optional>
-          <PhoneInput autoComplete="tel" {...form.register("phone")} />
+          <Controller
+            control={form.control}
+            name="phone"
+            render={({ field }) => <PhoneInput {...field} />}
+          />
         </FormField>
         <Field label={fields("email")} hint={t("emailHint")}>
           <Input
