@@ -34,13 +34,13 @@ export function NotificationBell() {
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger
         aria-label={count > 0 ? top("notificationsUnread", { count }) : top("notifications")}
-        className="relative inline-flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="relative inline-flex size-10 items-center justify-center rounded-lg bg-surface-muted text-foreground transition-colors hover:bg-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <IconBell aria-hidden className="size-5" stroke={1.75} />
         {count > 0 && (
           <span
             aria-hidden
-            className="absolute end-2.5 top-2.5 size-2 rounded-full bg-accent ring-2 ring-surface"
+            className="absolute end-2.5 top-2.5 size-2 rounded-full bg-accent ring-2 ring-surface-muted"
           />
         )}
       </Popover.Trigger>
