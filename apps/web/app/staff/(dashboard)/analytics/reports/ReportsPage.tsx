@@ -4,20 +4,23 @@ import { useState } from "react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "motion/react";
 import { IconChevronRight, IconDownload, IconFileSpreadsheet } from "@tabler/icons-react";
 import type { AnalyticsReport } from "@terhal/contracts";
 import { DirectionalIcon } from "@/components/DirectionalIcon";
 import { RequireStaff } from "@/components/session/RequireSession";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { AutoHeight, fade } from "@/components/ui/Motion";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
+  MotionTableRow,
   Table,
   TableBody,
   TableCell,
   TableEmpty,
   TableHead,
   TableHeader,
-  TableLoading,
   TableRow,
 } from "@/components/ui/Table";
 import { toast } from "@/components/ui/Toast";
@@ -42,7 +45,7 @@ function Reports() {
   const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
   return (
-    <>
+    <motion.div {...fade} className="flex flex-col gap-6">
       <nav aria-label={t("breadcrumb")} className="flex items-center gap-2 text-xs">
         <Link href="/analytics" className="text-primary hover:underline">
           {nav("analytics")}
@@ -51,37 +54,73 @@ function Reports() {
         <span className="text-muted">{t("title")}</span>
       </nav>
       <PageHeader title={t("title")} description={t("description")} />
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("month")}</TableHead>
-            <TableHead>{t("size")}</TableHead>
-            <TableHead>{t("generated")}</TableHead>
-            <TableHead>
-              <span className="sr-only">{t("download")}</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {reports.isPending ? (
-            <TableLoading columns={COLUMNS} />
-          ) : reports.isError ? (
-            <TableEmpty columns={COLUMNS} title={errorMessage(reports.error)} />
-          ) : reports.data.data.length === 0 ? (
-            <TableEmpty columns={COLUMNS} title={t("empty")} description={t("emptyHint")} />
-          ) : (
-            reports.data.data.map((report) => (
-              <ReportRow key={`${String(report.year)}-${String(report.month)}`} report={report} />
-            ))
-          )}
-        </TableBody>
-      </Table>
+      <AutoHeight>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("month")}</TableHead>
+              <TableHead>{t("size")}</TableHead>
+              <TableHead>{t("generated")}</TableHead>
+              <TableHead>
+                <span className="sr-only">{t("download")}</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {reports.isPending ? (
+              <ReportRowsLoading />
+            ) : reports.isError ? (
+              <TableEmpty columns={COLUMNS} title={errorMessage(reports.error)} />
+            ) : reports.data.data.length === 0 ? (
+              <TableEmpty columns={COLUMNS} title={t("empty")} description={t("emptyHint")} />
+            ) : (
+              reports.data.data.map((report) => (
+                <ReportRow key={`${String(report.year)}-${String(report.month)}`} report={report} />
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </AutoHeight>
       <p className="text-xs text-muted">
         {t("next", {
           month: format.dateTime(now, { month: "long", year: "numeric" }),
           date: format.dateTime(nextMonthStart, { month: "short", day: "numeric" }),
         })}
       </p>
+    </motion.div>
+  );
+}
+
+// Reports in gray, row for row, so the table doesn't move when they arrive.
+function ReportRowsLoading() {
+  const t = useTranslations("common.ui");
+  return (
+    <>
+      {[0, 1, 2].map((row) => (
+        <motion.tr
+          key={row}
+          {...fade}
+          className="border-b border-border"
+          aria-hidden={row > 0 || undefined}
+        >
+          <TableCell>
+            {row === 0 && <span className="sr-only">{t("loading")}</span>}
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="size-5 rounded-md" />
+              <Skeleton className={row % 2 ? "h-3.5 w-28" : "h-3.5 w-32"} />
+            </div>
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-3.5 w-12" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-3.5 w-36" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="ms-auto h-8 w-28 rounded-lg" />
+          </TableCell>
+        </motion.tr>
+      ))}
     </>
   );
 }
@@ -114,17 +153,17 @@ function ReportRow({ report }: { report: AnalyticsReport }) {
   };
 
   return (
-    <TableRow>
+    <MotionTableRow {...fade}>
       <TableCell>
-        <span className="flex items-center gap-2.5 text-sm font-medium text-foreground">
+        <span className="flex items-center gap-2.5 font-medium text-foreground">
           <IconFileSpreadsheet aria-hidden className="size-5 text-success" stroke={1.75} />
           {month}
         </span>
       </TableCell>
-      <TableCell className="text-sm text-muted tabular-nums">
+      <TableCell className="text-muted tabular-nums">
         {format.number(report.size / 1024, { maximumFractionDigits: 0 })} {t("kb")}
       </TableCell>
-      <TableCell className="text-sm text-muted">
+      <TableCell className="whitespace-nowrap text-muted">
         {format.dateTime(new Date(report.generatedAt), { dateStyle: "medium", timeStyle: "short" })}
       </TableCell>
       <TableCell className="text-end">
@@ -133,6 +172,6 @@ function ReportRow({ report }: { report: AnalyticsReport }) {
           {t("download")}
         </Button>
       </TableCell>
-    </TableRow>
+    </MotionTableRow>
   );
 }
