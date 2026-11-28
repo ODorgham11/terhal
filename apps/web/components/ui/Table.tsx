@@ -87,7 +87,7 @@ export function TableEmpty({ columns, title, description, action }: TableEmptyPr
         <div className="flex flex-col items-center gap-1.5">
           <p className="text-base font-semibold text-foreground">{title ?? t("noResults")}</p>
           {description && <p className="text-[0.8125rem] text-muted">{description}</p>}
-          {action}
+          {action && <div className="pt-4">{action}</div>}
         </div>
       </td>
     </motion.tr>
