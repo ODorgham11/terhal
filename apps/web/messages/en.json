@@ -1514,6 +1514,76 @@
     }
   },
   "admin": {
-    "title": "Admin panel"
+    "title": "Admin panel",
+    "signOut": "Sign out",
+    "auth": {
+      "code": "Authentication code",
+      "codeHint": "The 6-digit code from your authenticator app.",
+      "signIn": {
+        "title": "Sign in to the admin panel",
+        "description": "Admins set up the company's staff accounts.",
+        "submit": "Continue",
+        "codeTitle": "Enter your code",
+        "codeDescription": "Open your authenticator app and enter the code it shows for Terhal.",
+        "verify": "Sign in",
+        "back": "Use a different account"
+      },
+      "invite": {
+        "title": "Create your admin account",
+        "description": "You were invited to run Terhal's admin panel.",
+        "passwordHint": "At least 8 characters, with an uppercase letter, a lowercase letter and a number.",
+        "next": "Continue",
+        "authenticatorTitle": "Set up your authenticator",
+        "authenticatorDescription": "Every sign-in asks for a code from an authenticator app, such as Google Authenticator or 1Password. Scan this code with it, then enter the 6 digits it shows.",
+        "qrLabel": "QR code for your authenticator app",
+        "manual": "Can't scan? Enter this key in the app instead:",
+        "finish": "Create account",
+        "back": "Back",
+        "expiredTitle": "This invitation can't be used",
+        "expiredDescription": "It was already used, revoked, or it expired. Ask an admin for a new one.",
+        "toSignIn": "Go to sign in"
+      }
+    },
+    "staff": {
+      "title": "Staff",
+      "description": "Who can use the staff dashboard, and what each can do.",
+      "invite": "Invite staff",
+      "members": "Members",
+      "invitations": "Open invitations",
+      "firstTitle": "No staff yet",
+      "firstBody": "Invite the first staff member with team access. They can then invite everyone else from the dashboard's Team page.",
+      "columns": {
+        "member": "Member",
+        "access": "Access",
+        "status": "Status",
+        "email": "Email",
+        "expires": "Expires",
+        "actions": "Actions"
+      },
+      "noMembers": "No staff yet.",
+      "noInvitations": "No open invitations.",
+      "menu": "Actions for {name}",
+      "editAccess": "Edit access",
+      "suspend": "Suspend",
+      "suspended": "Access suspended",
+      "reactivate": "Restore access",
+      "reactivated": "Access restored",
+      "resend": "Resend",
+      "resent": "Sent again to {email}",
+      "revoke": "Revoke",
+      "revoked": "Invitation revoked",
+      "inviteDialog": {
+        "title": "Invite a staff member",
+        "description": "They get an email with a link to set a password for the staff dashboard. The link works for 7 days.",
+        "cancel": "Cancel",
+        "submit": "Send invitation",
+        "sent": "Invitation sent to {email}"
+      },
+      "accessDialog": {
+        "cancel": "Cancel",
+        "save": "Save access",
+        "saved": "Access saved"
+      }
+    }
   }
 }
