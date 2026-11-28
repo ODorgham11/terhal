@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { Form, FormError, FormField } from "@/components/ui/Form";
 import { Input } from "@/components/ui/Input";
+import { WholeNumberInput } from "@/components/ui/WholeNumberInput";
 import { Textarea } from "@/components/ui/Textarea";
 import { toast } from "@/components/ui/Toast";
 import { call, staffApi } from "@/lib/api";
@@ -21,7 +22,7 @@ const ClassForm = z.object({
   nameAr: Name,
   descriptionEn: Description,
   descriptionAr: Description,
-  sortOrder: z.number().int().min(-1000).max(1000),
+  sortOrder: z.number().int().min(0).max(1000),
 });
 
 type Props = {
@@ -113,9 +114,7 @@ function ClassFields({ tripClass, onDone }: { tripClass?: StaffTripClass; onDone
         <Textarea rows={3} dir="rtl" {...form.register("descriptionAr")} />
       </FormField>
       <FormField name="sortOrder" label={fields("sortOrder")} hint={t("sortHint")}>
-        <Input
-          inputMode="numeric"
-          autoComplete="off"
+        <WholeNumberInput
           {...form.register("sortOrder", {
             setValueAs: (value: string | number) => Number(toLatinDigits(String(value)) || 0),
           })}

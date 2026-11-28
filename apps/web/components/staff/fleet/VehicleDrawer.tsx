@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { Form, FormError, FormField } from "@/components/ui/Form";
 import { Input } from "@/components/ui/Input";
+import { WholeNumberInput } from "@/components/ui/WholeNumberInput";
 import { Radio, RadioGroup } from "@/components/ui/Radio";
 import { Select } from "@/components/ui/Select";
 import { toast } from "@/components/ui/Toast";
@@ -138,9 +139,7 @@ function VehicleFields({
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <FormField name="year" label={fields("year")} optional>
-          <Input
-            inputMode="numeric"
-            autoComplete="off"
+          <WholeNumberInput
             {...form.register("year", {
               setValueAs: (value: string | number) =>
                 value === "" || value === undefined ? undefined : Number(value),

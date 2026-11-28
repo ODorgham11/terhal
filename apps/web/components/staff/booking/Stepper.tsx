@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { IconMinus, IconPlus } from "@tabler/icons-react";
+import { toLatinDigits } from "@/lib/digits";
 
 type Props = {
   label: string;
@@ -34,7 +35,9 @@ export function Stepper({ label, value, onChange, min = 0, max = 50 }: Props) {
           aria-label={label}
           inputMode="numeric"
           value={value}
-          onChange={(event) => set(Number(event.target.value.replace(/\D/g, "")) || 0)}
+          onChange={(event) =>
+            set(Number(toLatinDigits(event.target.value).replace(/\D/g, "")) || 0)
+          }
           className="w-10 bg-transparent text-center text-sm tabular-nums outline-none"
         />
         <button
