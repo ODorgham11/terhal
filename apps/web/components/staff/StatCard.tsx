@@ -15,6 +15,9 @@ type StatCardProps = {
   note?: ReactNode;
   noteTone?: "muted" | "success" | "warning" | "accent" | "danger";
   noteLoading?: boolean;
+  // The number and the note in gray while they load, so they appear at once when they arrive instead of fading in
+  // from a dash.
+  loading?: boolean;
   className?: string;
 };
 
@@ -34,6 +37,7 @@ export function StatCard({
   note,
   noteTone = "muted",
   noteLoading = false,
+  loading = false,
   className,
 }: StatCardProps) {
   return (
@@ -49,10 +53,16 @@ export function StatCard({
         </span>
         <p className="min-w-0 flex-1 truncate text-sm text-muted">{label}</p>
       </div>
-      <p className="text-[1.75rem] leading-8.5 font-semibold text-foreground tabular-nums">
-        <FadeText value={value} />
-      </p>
-      {noteLoading ? (
+      {loading ? (
+        <div className="flex h-8.5 items-center">
+          <Skeleton className="h-6.5 w-12" />
+        </div>
+      ) : (
+        <p className="text-[1.75rem] leading-8.5 font-semibold text-foreground tabular-nums">
+          <FadeText value={value} />
+        </p>
+      )}
+      {noteLoading || (loading && note === undefined) ? (
         <Skeleton className="h-4 w-28" />
       ) : (
         note && (

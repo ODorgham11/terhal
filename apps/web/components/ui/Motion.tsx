@@ -42,8 +42,24 @@ export function AutoHeight({ className, children }: { className?: string; childr
 }
 
 // Crossfades between states (loading, empty, the rows): the outgoing one fades over the incoming one while the
-// height eases. Give each state a different `state`.
-export function Swap({ state, children }: { state: string; children: ReactNode }) {
+// height eases. Give each state a different `state`. With `instant`, the states swap at once and only the height eases
+// (the overview, which shouldn't fade as it fills in).
+export function Swap({
+  state,
+  instant = false,
+  children,
+}: {
+  state: string;
+  instant?: boolean;
+  children: ReactNode;
+}) {
+  if (instant) {
+    return (
+      <AutoHeight>
+        <div key={state}>{children}</div>
+      </AutoHeight>
+    );
+  }
   return (
     <AutoHeight>
       <AnimatePresence initial={false} mode="popLayout">
