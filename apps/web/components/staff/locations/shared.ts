@@ -14,4 +14,4 @@ export const toMeters = (km: number) => Math.round(km * 1000);
 export const toKm = (meters: number) => String(Math.round(meters / 100) / 10);
 
 export const mapLink = (latitude: number, longitude: number) =>
-  `https://www.openstreetmap.org/?mlat=${String(latitude)}&mlon=${String(longitude)}#map=13/${String(latitude)}/${String(longitude)}`;
+  `https://www.google.com/maps/search/?api=1&query=${String(latitude)},${String(longitude)}`;
