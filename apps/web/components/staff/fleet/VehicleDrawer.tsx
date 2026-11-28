@@ -1,13 +1,17 @@
 "use client";
 
+import { Controller } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "motion/react";
 import { z } from "zod";
 import { CreateVehicle, carBodies, type Vehicle } from "@terhal/contracts";
 import { Button } from "@/components/ui/Button";
 import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { Form, FormError, FormField } from "@/components/ui/Form";
 import { Input } from "@/components/ui/Input";
+import { fade } from "@/components/ui/Motion";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { WholeNumberInput } from "@/components/ui/WholeNumberInput";
 import { Radio, RadioGroup } from "@/components/ui/Radio";
 import { Select } from "@/components/ui/Select";
@@ -15,6 +19,7 @@ import { toast } from "@/components/ui/Toast";
 import { call, staffApi } from "@/lib/api";
 import { useZodForm } from "@/lib/forms/useZodForm";
 import { officesQuery } from "../queries";
+import { Segmented } from "../Segmented";
 import { kindOf } from "./format";
 
 const VehicleForm = z
@@ -155,30 +160,54 @@ function VehicleFields({
         </FormField>
       </div>
       <FormField name="body" label={fields("body")} hint={t("bodyHint")}>
-        <Select {...form.register("body")}>
-          {carBodies.map((body) => (
-            <option key={body} value={body}>
-              {cars(body)}
-            </option>
-          ))}
-        </Select>
+        {/* The same picker as a trip's car, so a vehicle's body and a trip's read alike. */}
+        <Controller
+          control={form.control}
+          name="body"
+          render={({ field }) => (
+            <Segmented
+              label={fields("body")}
+              value={field.value}
+              onChange={field.onChange}
+              options={carBodies.map((body) => ({ value: body, label: cars(body) }))}
+            />
+          )}
+        />
       </FormField>
       <RadioGroup legend={t("kind")}>
         {(["internal", "external", "office"] as const).map((value) => (
           <Radio key={value} value={value} label={kinds(value)} {...form.register("kind")} />
         ))}
       </RadioGroup>
-      {kind === "office" && (
-        <FormField name="officeId" label={fields("office")}>
-          <Select placeholder={t("chooseOffice")} {...form.register("officeId")}>
-            {offices.data?.data.map((office) => (
-              <option key={office.id} value={office.id}>
-                {office.name}
-              </option>
-            ))}
-          </Select>
-        </FormField>
-      )}
+      {/* Opens under the choice when it's an office's vehicle, and closes again when it isn't. */}
+      <AnimatePresence initial={false}>
+        {kind === "office" && (
+          <motion.div
+            key="office"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={fade.transition}
+            className="-mt-6 overflow-hidden"
+          >
+            <div className="pt-6">
+              <FormField name="officeId" label={fields("office")}>
+                {offices.data ? (
+                  <Select placeholder={t("chooseOffice")} {...form.register("officeId")}>
+                    {offices.data.data.map((office) => (
+                      <option key={office.id} value={office.id}>
+                        {office.name}
+                      </option>
+                    ))}
+                  </Select>
+                ) : (
+                  <Skeleton className="h-10 w-full rounded-lg" />
+                )}
+              </FormField>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Form>
   );
 }
