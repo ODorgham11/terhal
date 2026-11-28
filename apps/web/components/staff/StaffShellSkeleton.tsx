@@ -10,7 +10,14 @@ import { cn } from "@/lib/cn";
 
 // The dashboard's frame in gray while the session is checked (the sign-in cookies live on the API, so the page can only
 // ask from the browser). Same boxes as StaffShell, so the real one lands in place without a shift.
-export function StaffShellSkeleton() {
+// The admin panel uses it too, with its own menu's groups and no search or bell.
+export function StaffShellSkeleton({
+  groups = staffGroups,
+  tools = true,
+}: {
+  groups?: number[];
+  tools?: boolean;
+} = {}) {
   const t = useTranslations("common.ui");
   const pathname = usePathname();
 
@@ -18,21 +25,21 @@ export function StaffShellSkeleton() {
     <div className="flex min-h-dvh" aria-busy role="status">
       <span className="sr-only">{t("loading")}</span>
       <div className="sticky top-0 hidden h-dvh shrink-0 md:block xl:hidden">
-        <SidebarSkeleton rail />
+        <SidebarSkeleton rail groups={groups} />
       </div>
       <div className="sticky top-0 hidden h-dvh shrink-0 xl:block">
-        <SidebarSkeleton rail={false} />
+        <SidebarSkeleton rail={false} groups={groups} />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-surface px-4 md:px-6">
           <Skeleton className="size-10 rounded-lg md:hidden" />
-          <Skeleton className="hidden h-10 w-90 rounded-lg md:block" />
+          {tools && <Skeleton className="hidden h-10 w-90 rounded-lg md:block" />}
           <div className="flex-1" />
-          <Skeleton className="size-10 rounded-lg" />
+          {tools && <Skeleton className="size-10 rounded-lg" />}
         </header>
         <main className="flex flex-1 flex-col gap-6 p-4 md:p-6 xl:p-8">
-          {pathname === "/" ? <OverviewSkeleton /> : <PageSkeleton />}
+          {pathname === "/" && tools ? <OverviewSkeleton /> : <PageSkeleton />}
         </main>
       </div>
     </div>
@@ -40,9 +47,9 @@ export function StaffShellSkeleton() {
 }
 
 // Four groups of links, roughly the size of a full menu; the real one may have fewer.
-const groups = [3, 3, 2, 4];
+const staffGroups = [3, 3, 2, 4];
 
-function SidebarSkeleton({ rail }: { rail: boolean }) {
+function SidebarSkeleton({ rail, groups }: { rail: boolean; groups: number[] }) {
   return (
     <div
       className={cn(

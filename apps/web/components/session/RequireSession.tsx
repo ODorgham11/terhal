@@ -102,9 +102,12 @@ function SessionGuard<User>({
 type RequireProps<User> = Pick<GuardProps<User>, "children">;
 
 //   <RequireAdmin>{(admin) => <p>{admin.firstName}</p>}</RequireAdmin>
-export function RequireAdmin({ children }: RequireProps<Admin>) {
+export function RequireAdmin({
+  loading,
+  children,
+}: RequireProps<Admin> & Pick<GuardProps<Admin>, "loading">) {
   return (
-    <SessionGuard session={useAdminSession()} signIn={adminRoutes.signIn}>
+    <SessionGuard session={useAdminSession()} signIn={adminRoutes.signIn} loading={loading}>
       {children}
     </SessionGuard>
   );
