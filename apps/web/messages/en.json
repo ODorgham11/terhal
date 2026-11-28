@@ -911,7 +911,7 @@
       "flexibleOn": "{name} can be booked as a whole",
       "flexibleOff": "{name} is booked by its districts and areas only",
       "wholeGovernorate": "Whole governorate",
-      "viewOnMap": "See the centre on a map",
+      "viewOnMap": "Open in Google Maps",
       "usage": "Used by {offices, plural, =0 {no offices} one {# office} other {# offices}} and {trips, plural, =0 {no upcoming trips} one {# upcoming trip} other {# upcoming trips}}.",
       "save": "Save location",
       "saved": "Location saved",
@@ -941,7 +941,13 @@
       "addInside": "Add a place inside",
       "close": "Close",
       "deleteSection": "Delete this place",
-      "deleteSectionHint": "It and everything inside it stop matching quotes. It can be restored from Deleted."
+      "deleteSectionHint": "It and everything inside it stop matching quotes. It can be restored from Deleted.",
+      "map": {
+        "unavailable": "The map isn't set up yet: type the centre's coordinates below.",
+        "pin": "Drag to move the centre",
+        "hint": "Drag the pin or click the map to move the centre. The circle is the radius.",
+        "hintEmpty": "Click the map to drop the pin at the centre."
+      }
     },
     "fleet": {
       "loadingTrips": "Loading trips…",

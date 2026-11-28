@@ -5,7 +5,8 @@ import { MAX_RADIUS } from "@terhal/contracts";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { LocationPicker, type PickedLocation } from "../LocationPicker";
-import { parseNumber } from "./shared";
+import { LocationMap } from "./LocationMap";
+import { parseNumber, toMeters } from "./shared";
 
 export type LocationDraft = {
   nameEn: string;
@@ -42,12 +43,23 @@ type Props = {
   errors: Partial<Record<keyof LocationDraft, string>>;
 };
 
-// Names, parent, centre and radius: the same fields to add a place or change one.
+// Names, parent, centre and radius: the same fields to add a place or change one. The centre can be typed or set by
+// dragging the pin on the map.
 export function LocationFields({ draft, onChange, errors }: Props) {
   const t = useTranslations("staff.locations");
   const fields = useTranslations("common.fields");
   const set = <K extends keyof LocationDraft>(key: K, value: LocationDraft[K]) =>
     onChange({ ...draft, [key]: value });
+  const latitude = parseNumber(draft.latitude);
+  const longitude = parseNumber(draft.longitude);
+  const radius = parseNumber(draft.radiusKm);
+  const center =
+    latitude !== null &&
+    longitude !== null &&
+    Math.abs(latitude) <= 90 &&
+    Math.abs(longitude) <= 180
+      ? { lat: latitude, lng: longitude }
+      : null;
 
   return (
     <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
@@ -83,6 +95,15 @@ export function LocationFields({ draft, onChange, errors }: Props) {
           endAdornment={<span className="text-xs">{t("km")}</span>}
         />
       </Field>
+      <div className="sm:col-span-2">
+        <LocationMap
+          center={center}
+          radius={radius === null ? null : toMeters(radius)}
+          onMove={(point) =>
+            onChange({ ...draft, latitude: String(point.lat), longitude: String(point.lng) })
+          }
+        />
+      </div>
       <Field label={t("latitude")} error={errors.latitude}>
         <Input
           inputMode="decimal"
