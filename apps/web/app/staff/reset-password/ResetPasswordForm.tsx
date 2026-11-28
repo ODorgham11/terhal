@@ -52,7 +52,7 @@ export function ResetPasswordForm() {
           toast.success(t("done"));
           router.replace(staffRoutes.signIn);
         }}
-        className="flex flex-col gap-5"
+        className="gap-5"
       >
         <FormError />
         <FormField name="password" label={fields("newPassword")} hint={t("passwordHint")}>

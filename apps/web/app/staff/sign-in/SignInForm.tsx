@@ -42,7 +42,7 @@ export function SignInForm() {
 
   return (
     <AuthCard title={t("title")} description={t("description")}>
-      <Form form={form} onSubmit={signIn} className="flex flex-col gap-5">
+      <Form form={form} onSubmit={signIn} className="gap-5">
         <FormError />
         <FormField name="email" label={fields("email")}>
           <Input

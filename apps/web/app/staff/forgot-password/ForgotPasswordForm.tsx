@@ -52,7 +52,7 @@ export function ForgotPasswordForm() {
           await call(staffApi.auth.password.reset.request.$post({ json }));
           setSentTo(json.email);
         }}
-        className="flex flex-col gap-5"
+        className="gap-5"
       >
         <FormError />
         <FormField name="email" label={fields("email")}>

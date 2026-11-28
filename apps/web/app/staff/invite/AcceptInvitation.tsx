@@ -92,10 +92,10 @@ function InvitationForm({
           client.setQueryData(sessionKey("staff"), { status: "signed-in", user: staff });
           router.replace("/");
         }}
-        className="flex flex-col gap-5"
+        className="gap-5"
       >
         <FormError />
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
           <FormField name="firstName" label={fields("firstName")}>
             <Input autoComplete="given-name" {...form.register("firstName")} />
           </FormField>
