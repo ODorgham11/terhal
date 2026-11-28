@@ -5,7 +5,7 @@ import {
   tripEventActions,
   type BookTrip,
   type CarBody,
-  type Pin,
+  type TripPin,
   type ResolvedLocation,
   type StaffBookTrip,
   type TripPriceState,
@@ -45,8 +45,8 @@ interface Load {
 interface LegPlan {
   leg: Leg;
   pickupDate: Date;
-  pickupPin: Pin;
-  dropoffPin: Pin;
+  pickupPin: TripPin;
+  dropoffPin: TripPin;
   pickup: ResolvedLocation;
   dropoff: ResolvedLocation;
   totalPrice: string | null;
@@ -129,7 +129,7 @@ const assertClassActive = async (classId: string) => {
 // Both ends of each leg resolved to covered, different places (B3, P3), the return defaulting to the outbound reversed
 // (R2 a).
 const routes = async (
-  input: { pickup: Pin; dropoff: Pin; return?: { pickup?: Pin; dropoff?: Pin } },
+  input: { pickup: TripPin; dropoff: TripPin; return?: { pickup?: TripPin; dropoff?: TripPin } },
   hasReturn: boolean,
 ) => {
   const outbound = await resolveRoute(input.pickup, input.dropoff);

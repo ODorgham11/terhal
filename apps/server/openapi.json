@@ -111,6 +111,7 @@
               "LOCATION_NOT_RESTORABLE",
               "LOCATION_COUNT_MISMATCH",
               "GOVERNORATE_READ_ONLY",
+              "LOCATION_NOT_FLEXIBLE",
               "OUT_OF_COVERAGE",
               "TRIP_CLASS_NAME_TAKEN",
               "BRAND_NAME_TAKEN",
@@ -3130,6 +3131,37 @@
             "type": "boolean",
             "description": "Whether a governorate has its outline."
           },
+          "flexible": {
+            "type": "boolean",
+            "description": "A governorate that can be booked as a whole (the spot agreed with the client). Always false for districts and areas."
+          },
+          "pin": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "longitude": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              }
+            },
+            "required": [
+              "latitude",
+              "longitude"
+            ],
+            "example": {
+              "latitude": 29.9602,
+              "longitude": 31.2569
+            },
+            "description": "Where a trip to the whole of a flexible governorate is pinned: its outline's centre. Null otherwise."
+          },
           "deletedAt": {
             "type": [
               "string",
@@ -3153,6 +3185,8 @@
           "nameAr",
           "center",
           "hasBoundary",
+          "flexible",
+          "pin",
           "deletedAt",
           "deletedWithId"
         ]
@@ -3212,6 +3246,37 @@
             "type": "boolean",
             "description": "Whether a governorate has its outline."
           },
+          "flexible": {
+            "type": "boolean",
+            "description": "A governorate that can be booked as a whole (the spot agreed with the client). Always false for districts and areas."
+          },
+          "pin": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "longitude": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              }
+            },
+            "required": [
+              "latitude",
+              "longitude"
+            ],
+            "example": {
+              "latitude": 29.9602,
+              "longitude": 31.2569
+            },
+            "description": "Where a trip to the whole of a flexible governorate is pinned: its outline's centre. Null otherwise."
+          },
           "deletedAt": {
             "type": [
               "string",
@@ -3270,6 +3335,8 @@
           "nameAr",
           "center",
           "hasBoundary",
+          "flexible",
+          "pin",
           "deletedAt",
           "deletedWithId",
           "boundary",
@@ -3395,6 +3462,10 @@
             "type": "string",
             "minLength": 2,
             "maxLength": 80
+          },
+          "flexible": {
+            "type": "boolean",
+            "description": "Governorates with an outline only: book it as a whole."
           },
           "center": {
             "type": "object",
@@ -4302,10 +4373,10 @@
         "type": "object",
         "properties": {
           "pickup": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "dropoff": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "passengers": {
             "type": "integer",
@@ -4334,10 +4405,10 @@
             "type": "object",
             "properties": {
               "pickup": {
-                "$ref": "#/components/schemas/Pin"
+                "$ref": "#/components/schemas/TripPin"
               },
               "dropoff": {
-                "$ref": "#/components/schemas/Pin"
+                "$ref": "#/components/schemas/TripPin"
               }
             },
             "description": "Also price a return leg. Its pins default to the outbound's, reversed; give them when the return starts or ends elsewhere."
@@ -4349,7 +4420,7 @@
           "passengers"
         ]
       },
-      "Pin": {
+      "TripPin": {
         "type": "object",
         "properties": {
           "latitude": {
@@ -4361,16 +4432,18 @@
             "type": "number",
             "minimum": -180,
             "maximum": 180
+          },
+          "locationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "A flexible governorate to book as this end, the exact spot agreed with the client. Its `pin` from the location list is the usual pin."
           }
         },
         "required": [
           "latitude",
           "longitude"
-        ],
-        "example": {
-          "latitude": 29.9602,
-          "longitude": 31.2569
-        }
+        ]
       },
       "SiteBooking": {
         "type": "object",
@@ -4647,10 +4720,10 @@
             "$ref": "#/components/schemas/CarBody"
           },
           "pickup": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "dropoff": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "pickupDate": {
             "type": "string",
@@ -4720,16 +4793,18 @@
                     "type": "number",
                     "minimum": -180,
                     "maximum": 180
+                  },
+                  "locationId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "A flexible governorate to book as this end, the exact spot agreed with the client. Its `pin` from the location list is the usual pin."
                   }
                 },
                 "required": [
                   "latitude",
                   "longitude"
                 ],
-                "example": {
-                  "latitude": 29.9602,
-                  "longitude": 31.2569
-                },
                 "description": "Defaults to the outbound's drop-off."
               },
               "dropoff": {
@@ -4744,16 +4819,18 @@
                     "type": "number",
                     "minimum": -180,
                     "maximum": 180
+                  },
+                  "locationId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "A flexible governorate to book as this end, the exact spot agreed with the client. Its `pin` from the location list is the usual pin."
                   }
                 },
                 "required": [
                   "latitude",
                   "longitude"
                 ],
-                "example": {
-                  "latitude": 29.9602,
-                  "longitude": 31.2569
-                },
                 "description": "Defaults to the outbound's pickup."
               },
               "expectedPrice": {
@@ -5157,10 +5234,10 @@
             "$ref": "#/components/schemas/CarBody"
           },
           "pickup": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "dropoff": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "pickupDate": {
             "type": "string",
@@ -5250,16 +5327,18 @@
                     "type": "number",
                     "minimum": -180,
                     "maximum": 180
+                  },
+                  "locationId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "A flexible governorate to book as this end, the exact spot agreed with the client. Its `pin` from the location list is the usual pin."
                   }
                 },
                 "required": [
                   "latitude",
                   "longitude"
                 ],
-                "example": {
-                  "latitude": 29.9602,
-                  "longitude": 31.2569
-                },
                 "description": "Defaults to the outbound's drop-off."
               },
               "dropoff": {
@@ -5274,16 +5353,18 @@
                     "type": "number",
                     "minimum": -180,
                     "maximum": 180
+                  },
+                  "locationId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "A flexible governorate to book as this end, the exact spot agreed with the client. Its `pin` from the location list is the usual pin."
                   }
                 },
                 "required": [
                   "latitude",
                   "longitude"
                 ],
-                "example": {
-                  "latitude": 29.9602,
-                  "longitude": 31.2569
-                },
                 "description": "Defaults to the outbound's pickup."
               },
               "totalPrice": {
@@ -5794,10 +5875,10 @@
             "example": "2026-12-01T08:00:00Z"
           },
           "pickup": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "dropoff": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "classId": {
             "type": "string",
@@ -16733,6 +16814,21 @@
           },
           {
             "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": false,
+              "description": "true lists only places a trip can go to by name: districts, areas and flexible governorates."
+            },
+            "required": false,
+            "description": "true lists only places a trip can go to by name: districts, areas and flexible governorates.",
+            "name": "bookable",
+            "in": "query"
+          },
+          {
+            "schema": {
               "type": "integer",
               "minimum": 1,
               "maximum": 200,
@@ -17397,6 +17493,21 @@
             "required": false,
             "description": "true lists only deleted locations.",
             "name": "deleted",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": false,
+              "description": "true lists only places a trip can go to by name: districts, areas and flexible governorates."
+            },
+            "required": false,
+            "description": "true lists only places a trip can go to by name: districts, areas and flexible governorates.",
+            "name": "bookable",
             "in": "query"
           },
           {

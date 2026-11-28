@@ -43,11 +43,9 @@ export type TripClass = z.infer<typeof TripClass>;
 // A row of the staff list: the class plus how much it's used, for deciding what archiving it touches.
 export const StaffTripClass = TripClass.extend({
   prices: z.int().meta({ description: "Price rows for this class." }),
-  tripsThisMonth: z
-    .int()
-    .meta({
-      description: "Trips picked up this Cairo month in this class, cancelled ones left out.",
-    }),
+  tripsThisMonth: z.int().meta({
+    description: "Trips picked up this Cairo month in this class, cancelled ones left out.",
+  }),
 }).meta({ id: "StaffTripClass" });
 export type StaffTripClass = z.infer<typeof StaffTripClass>;
 

@@ -26,6 +26,10 @@ model Location {
   longitude Decimal?                @db.Decimal(9, 6)
   radius    Int?
 
+  // A governorate that can be booked as a whole (a trip to "Alexandria", the spot agreed with the client): it shows in
+  // the trip pickers. Only governorates with an outline (the Location_flexible check); off for everything else.
+  flexible Boolean @default(false)
+
   departures Pricing[] @relation("PricingFrom")
   arrivals   Pricing[] @relation("PricingTo")
   pickups    Trip[]    @relation("TripPickup")

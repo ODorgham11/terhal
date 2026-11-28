@@ -214,6 +214,40 @@ describe("quotes", () => {
     expect(nested.response.status).toBe(200);
   });
 
+  it("book the whole of a flexible governorate when an end names it", async () => {
+    const { alexandria, degla, smouha } = await world();
+
+    // Smouha's pin, but the whole of Alexandria asked for: not flexible yet.
+    const refused = await ask({
+      pickup: pins.degla,
+      dropoff: { ...pins.smouha, locationId: alexandria.id },
+    });
+    expect(refused.response.status).toBe(422);
+    expect(refused.body).toMatchObject({
+      code: "LOCATION_NOT_FLEXIBLE",
+      end: "dropoff",
+      leg: "outbound",
+    });
+
+    await prisma.location.update({ where: { id: alexandria.id }, data: { flexible: true } });
+    const whole = await ask({
+      pickup: pins.degla,
+      dropoff: { ...pins.smouha, locationId: alexandria.id },
+    });
+    expect(whole.response.status).toBe(200);
+    expect(whole.body).toMatchObject({
+      pickup: { id: degla.id },
+      dropoff: { id: alexandria.id, locality: "GOVERNORATE", ancestors: [] },
+    });
+
+    // A district or an area isn't booked by name: the pin decides, as before.
+    const byPin = await ask({
+      pickup: pins.degla,
+      dropoff: { ...pins.smouha, locationId: smouha.id },
+    });
+    expect(byPin.body).toMatchObject({ code: "LOCATION_NOT_FLEXIBLE" });
+  });
+
   it("check the request", async () => {
     const { body, response } = await ask({
       pickup: pins.degla,

@@ -89,6 +89,8 @@ export const errorCodes = [
   "LOCATION_COUNT_MISMATCH",
   // Governorates come from the seed: they can only be renamed, never created, moved or deleted.
   "GOVERNORATE_READ_ONLY",
+  // A trip end names a location to book as a whole that isn't a live, flexible governorate. `end` says which one.
+  "LOCATION_NOT_FLEXIBLE",
   // A pin isn't inside any place the platform serves. `end` says which one (pickup or dropoff), `leg` which trip.
   "OUT_OF_COVERAGE",
 

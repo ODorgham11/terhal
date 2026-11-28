@@ -9,7 +9,10 @@ beforeEach(async () => {
 const MINUTE = 60_000;
 const gate = { job: "test-job", signal: "test" };
 const at = (ms: number) => new Date(Date.UTC(2026, 10, 27, 10, 0) + ms);
-const run = (next: Date | null = null) => () => Promise.resolve(next);
+const run =
+  (next: Date | null = null) =>
+  () =>
+    Promise.resolve(next);
 
 describe("job gate", () => {
   it("runs the first time, then skips while nothing changed", async () => {

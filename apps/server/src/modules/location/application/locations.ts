@@ -6,6 +6,7 @@ import {
   type Locality,
   type Location,
   type LocationDetail,
+  type Pin,
   type UpdateLocation,
 } from "@terhal/contracts";
 import type { Prisma } from "../../../../generated/prisma/client";
@@ -19,6 +20,7 @@ import {
   locationDeleted,
   locationNotFound,
   nameTaken,
+  notFlexible,
   notRestorable,
   parentInvalid,
 } from "./errors";
@@ -33,6 +35,7 @@ const select = {
   latitude: true,
   longitude: true,
   radius: true,
+  flexible: true,
   deletedAt: true,
   deletedWithId: true,
 } satisfies Prisma.LocationSelect;
@@ -44,15 +47,18 @@ const centerOf = (row: Pick<Row, "latitude" | "longitude" | "radius">) =>
     ? { latitude: Number(row.latitude), longitude: Number(row.longitude), radius: row.radius }
     : null;
 
-// Prisma models never leave the server: every response is an explicit DTO.
-const toLocation = (row: Row, hasBoundary: boolean): Location => ({
+// Prisma models never leave the server: every response is an explicit DTO. `outline` is the governorate outline's
+// centre, when it has one.
+const toLocation = (row: Row, outline: Pin | undefined): Location => ({
   id: row.id,
   parentId: row.parentId,
   locality: row.locality,
   nameEn: row.nameEn,
   nameAr: row.nameAr,
   center: centerOf(row),
-  hasBoundary,
+  hasBoundary: outline !== undefined,
+  flexible: row.flexible,
+  pin: row.flexible ? (outline ?? null) : null,
   deletedAt: row.deletedAt?.toISOString() ?? null,
   deletedWithId: row.deletedWithId,
 });
@@ -64,6 +70,7 @@ const snapshot = (row: Row) => ({
   nameEn: row.nameEn,
   nameAr: row.nameAr,
   center: centerOf(row),
+  flexible: row.flexible,
 });
 
 const audit = (
@@ -129,6 +136,7 @@ export const listLocations = async ({
   locality,
   q,
   deleted,
+  bookable,
   limit,
   cursor,
 }: ListLocations) => {
@@ -139,7 +147,13 @@ export const listLocations = async ({
       parentId,
       locality,
       deletedAt: deleted ? { not: null } : null,
-      AND: words.map((word) => ({ search: { contains: word } })),
+      AND: [
+        ...words.map((word) => ({ search: { contains: word } })),
+        // A trip goes to a district or an area by its centre, or to the whole of a flexible governorate.
+        ...(bookable
+          ? [{ OR: [{ locality: { not: "GOVERNORATE" as const } }, { flexible: true }] }]
+          : []),
+      ],
     },
     orderBy: [{ nameEn: "asc" }, { id: "asc" }],
     take: limit + 1,
@@ -151,7 +165,7 @@ export const listLocations = async ({
   const outlined = await withBoundary(
     page.filter((row) => row.locality === "GOVERNORATE").map((row) => row.id),
   );
-  const data = page.map((row) => toLocation(row, outlined.has(row.id)));
+  const data = page.map((row) => toLocation(row, outlined.get(row.id)));
   return { data, nextCursor: rows.length > limit ? (data.at(-1)?.id ?? null) : null };
 };
 
@@ -171,9 +185,10 @@ export const getLocation = async (id: string): Promise<LocationDetail> => {
   });
   if (!row) throw locationNotFound();
 
-  const [chains, boundaries, subtree, [pricing]] = await Promise.all([
+  const [chains, boundaries, outlined, subtree, [pricing]] = await Promise.all([
     chainsOf([id]),
     boundariesOf([id]),
+    withBoundary([id]),
     liveSubtree(id),
     prisma.$queryRaw<{ count: number }[]>`
       SELECT count(*)::int AS "count" FROM "Pricing" WHERE "fromId" = ${id} OR "toId" = ${id}`,
@@ -181,7 +196,7 @@ export const getLocation = async (id: string): Promise<LocationDetail> => {
   const boundary = boundaries.get(id) ?? null;
 
   return {
-    ...toLocation(row, boundary !== null),
+    ...toLocation(row, outlined.get(id)),
     boundary,
     ancestors: (chains.get(id) ?? []).slice(1).reverse(),
     subtreeSize: subtree.length,
@@ -217,7 +232,7 @@ export const createLocation = async (input: CreateLocation, actor: AuditActor) =
         { after: snapshot(created) },
         tx,
       );
-      return toLocation(created, false);
+      return toLocation(created, undefined);
     }),
   );
 
@@ -231,6 +246,15 @@ export const updateLocation = async (id: string, input: UpdateLocation, actor: A
       if (locked.locality === "GOVERNORATE" && (input.parentId !== undefined || input.center)) {
         throw governorateReadOnly();
       }
+      if (input.flexible !== undefined) {
+        if (locked.locality !== "GOVERNORATE")
+          throw notFlexible("Only a governorate can be booked as a whole.");
+        if (input.flexible && !(await withBoundary([id], tx)).has(id)) {
+          throw notFlexible(
+            "This governorate has no outline to pin its trips on. Seed its outline first.",
+          );
+        }
+      }
       if (input.parentId !== undefined && input.parentId !== locked.parentId) {
         if (input.parentId === id) throw parentInvalid("A location can't sit in itself.");
         await requireParent(tx, input.parentId, locked.locality);
@@ -243,6 +267,7 @@ export const updateLocation = async (id: string, input: UpdateLocation, actor: A
           parentId: input.parentId,
           nameEn: input.nameEn,
           nameAr: input.nameAr,
+          flexible: input.flexible,
           ...(input.center && {
             latitude: input.center.latitude.toFixed(6),
             longitude: input.center.longitude.toFixed(6),
@@ -259,7 +284,7 @@ export const updateLocation = async (id: string, input: UpdateLocation, actor: A
         tx,
       );
       const outlined = await withBoundary([id], tx);
-      return toLocation(after, outlined.has(id));
+      return toLocation(after, outlined.get(id));
     }),
   );
 

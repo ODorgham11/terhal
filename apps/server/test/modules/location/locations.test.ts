@@ -481,3 +481,51 @@ describe("reading locations", () => {
     });
   });
 });
+
+describe("flexible governorates", () => {
+  it("can be booked as a whole once turned on, and only governorates with an outline can be", async () => {
+    const { agent } = await signedInStaff(["pricing"]);
+    const alexandria = await createGovernorate(
+      "Alexandria",
+      "الإسكندرية",
+      squareAround(29.9, 31.2),
+    );
+    const bare = await createGovernorate("Matrouh");
+    const smouha = await createPlace(alexandria.id, "DISTRICT", "Smouha");
+
+    const set = (id: string, flexible: boolean) =>
+      agent.request(`/v1/staff/locations/${id}`, { method: "PATCH", json: { flexible } });
+
+    const on = await set(alexandria.id, true);
+    expect(on.status).toBe(200);
+    expect(await on.json()).toMatchObject({
+      flexible: true,
+      pin: { latitude: 31.2, longitude: 29.9 },
+    });
+
+    for (const id of [bare.id, smouha.id]) {
+      const refused = await set(id, true);
+      expect(refused.status).toBe(409);
+      expect(await codeOf(refused)).toBe("LOCATION_NOT_FLEXIBLE");
+    }
+
+    // The trip pickers list districts, areas and flexible governorates only.
+    const bookable = (await (await agent.request("/v1/staff/locations?bookable=true")).json()) as {
+      data: { nameEn: string; flexible: boolean }[];
+    };
+    expect(bookable.data.map((row) => row.nameEn)).toEqual(["Alexandria", "Smouha"]);
+
+    await set(alexandria.id, false);
+    const after = (await (await agent.request("/v1/staff/locations?bookable=true")).json()) as {
+      data: { nameEn: string }[];
+    };
+    expect(after.data.map((row) => row.nameEn)).toEqual(["Smouha"]);
+  });
+
+  it("are held by the database: only governorates with an outline", async () => {
+    const bare = await createGovernorate("Matrouh");
+    await expect(
+      prisma.location.update({ where: { id: bare.id }, data: { flexible: true } }),
+    ).rejects.toThrow(/Location_flexible/);
+  });
+});
