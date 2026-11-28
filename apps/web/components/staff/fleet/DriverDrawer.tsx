@@ -127,7 +127,7 @@ function DriverFields({
     <Form
       id="driver-form"
       form={form}
-      className="gap-4.5"
+      className="gap-6"
       onSubmit={async ({ kind: chosen, officeId: office, nationalId, notes, ...values }) => {
         const json = {
           ...values,
@@ -149,7 +149,7 @@ function DriverFields({
       }}
     >
       <FormError />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
         <FormField name="firstName" label={fields("firstName")}>
           <Input autoComplete="off" {...form.register("firstName")} />
         </FormField>
@@ -164,7 +164,7 @@ function DriverFields({
           render={({ field }) => <PhoneInput {...field} autoComplete="off" />}
         />
       </FormField>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
         <FormField name="licenseNumber" label={fields("licenseNumber")}>
           <Input autoComplete="off" dir="ltr" {...form.register("licenseNumber")} />
         </FormField>
@@ -186,7 +186,7 @@ function DriverFields({
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={fade.transition}
-            className="-mt-4.5 overflow-hidden"
+            className="-mt-6 overflow-hidden"
           >
             <div className="pt-3">
               <Alert tone="warning" title={t("licenceExpired")} />
@@ -221,9 +221,9 @@ function DriverFields({
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={fade.transition}
-            className="-mt-4.5 overflow-hidden"
+            className="-mt-6 overflow-hidden"
           >
-            <div className="pt-4.5">
+            <div className="pt-6">
               <FormField name="officeId" label={fields("office")}>
                 {offices.data ? (
                   <Select placeholder={t("chooseOffice")} {...form.register("officeId")}>
