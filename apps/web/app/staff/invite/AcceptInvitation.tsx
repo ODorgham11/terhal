@@ -113,10 +113,14 @@ function InvitationForm({
           />
         </FormField>
         <FormField name="password" label={fields("password")} hint={t("passwordHint")}>
-          <PasswordInput autoComplete="new-password" {...form.register("password")} />
+          <PasswordInput lock={false} autoComplete="new-password" {...form.register("password")} />
         </FormField>
         <FormField name="confirmPassword" label={fields("confirmPassword")}>
-          <PasswordInput autoComplete="new-password" {...form.register("confirmPassword")} />
+          <PasswordInput
+            lock={false}
+            autoComplete="new-password"
+            {...form.register("confirmPassword")}
+          />
         </FormField>
         <Button type="submit" className="w-full" loading={form.formState.isSubmitting}>
           {t("submit")}

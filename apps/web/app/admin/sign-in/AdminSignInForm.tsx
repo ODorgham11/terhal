@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
-import { IconMail, IconShieldLock } from "@tabler/icons-react";
+import { IconShieldLock } from "@tabler/icons-react";
 import { AdminSignIn } from "@terhal/contracts";
 import { CodeStep } from "@/components/admin/CodeStep";
 import { AuthCard, AuthIcon } from "@/components/staff/AuthCard";
@@ -71,15 +71,14 @@ export function AdminSignInForm() {
       >
         <FormError />
         <FormField name="email" label={fields("email")}>
-          <Input
-            type="email"
-            autoComplete="username"
-            startAdornment={<IconMail aria-hidden className="size-4.5" stroke={1.75} />}
-            {...form.register("email")}
-          />
+          <Input type="email" autoComplete="username" {...form.register("email")} />
         </FormField>
         <FormField name="password" label={fields("password")}>
-          <PasswordInput autoComplete="current-password" {...form.register("password")} />
+          <PasswordInput
+            lock={false}
+            autoComplete="current-password"
+            {...form.register("password")}
+          />
         </FormField>
         <Button type="submit" className="w-full" loading={form.formState.isSubmitting}>
           {t("submit")}

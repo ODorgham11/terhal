@@ -5,10 +5,14 @@ import { useTranslations } from "next-intl";
 import { IconEye, IconEyeOff, IconLock } from "@tabler/icons-react";
 import { Input } from "./Input";
 
-// A password box with a lock at the start and a show/hide toggle at the end.
+// A password box with a lock at the start (unless `lock={false}`, as on the plain signed-out pages) and a show/hide
+// toggle at the end.
 //
 //   <FormField name="password" label={fields("password")}><PasswordInput autoComplete="current-password" {...form.register("password")} /></FormField>
-export function PasswordInput(props: Omit<ComponentProps<typeof Input>, "type">) {
+export function PasswordInput({
+  lock = true,
+  ...props
+}: Omit<ComponentProps<typeof Input>, "type"> & { lock?: boolean }) {
   const t = useTranslations("common.ui");
   const [visible, setVisible] = useState(false);
   const Toggle = visible ? IconEyeOff : IconEye;
@@ -17,7 +21,9 @@ export function PasswordInput(props: Omit<ComponentProps<typeof Input>, "type">)
     <Input
       {...props}
       type={visible ? "text" : "password"}
-      startAdornment={<IconLock aria-hidden className="size-4.5" stroke={1.75} />}
+      startAdornment={
+        lock ? <IconLock aria-hidden className="size-4.5" stroke={1.75} /> : undefined
+      }
       endAdornment={
         <button
           type="button"

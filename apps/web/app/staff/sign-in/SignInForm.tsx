@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
-import { IconMail } from "@tabler/icons-react";
 import { StaffSignIn } from "@terhal/contracts";
 import type { z } from "zod";
 import { AuthCard } from "@/components/staff/AuthCard";
@@ -45,12 +44,7 @@ export function SignInForm() {
       <Form form={form} onSubmit={signIn} className="gap-5">
         <FormError />
         <FormField name="email" label={fields("email")}>
-          <Input
-            type="email"
-            autoComplete="username"
-            startAdornment={<IconMail aria-hidden className="size-4.5" stroke={1.75} />}
-            {...form.register("email")}
-          />
+          <Input type="email" autoComplete="username" {...form.register("email")} />
         </FormField>
         <FormField
           name="password"
@@ -64,7 +58,11 @@ export function SignInForm() {
             </Link>
           }
         >
-          <PasswordInput autoComplete="current-password" {...form.register("password")} />
+          <PasswordInput
+            lock={false}
+            autoComplete="current-password"
+            {...form.register("password")}
+          />
         </FormField>
         <Button type="submit" className="w-full" loading={form.formState.isSubmitting}>
           {t("submit")}

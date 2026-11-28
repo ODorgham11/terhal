@@ -137,10 +137,14 @@ function Steps({ token, email }: { token: string; email: string }) {
           </FormField>
         </div>
         <FormField name="password" label={fields("password")} hint={t("passwordHint")}>
-          <PasswordInput autoComplete="new-password" {...form.register("password")} />
+          <PasswordInput lock={false} autoComplete="new-password" {...form.register("password")} />
         </FormField>
         <FormField name="confirmPassword" label={fields("confirmPassword")}>
-          <PasswordInput autoComplete="new-password" {...form.register("confirmPassword")} />
+          <PasswordInput
+            lock={false}
+            autoComplete="new-password"
+            {...form.register("confirmPassword")}
+          />
         </FormField>
         <Button type="submit" className="w-full">
           {t("next")}

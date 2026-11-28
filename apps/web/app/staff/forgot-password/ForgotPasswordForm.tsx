@@ -56,12 +56,7 @@ export function ForgotPasswordForm() {
       >
         <FormError />
         <FormField name="email" label={fields("email")}>
-          <Input
-            type="email"
-            autoComplete="username"
-            startAdornment={<IconMail aria-hidden className="size-4.5" stroke={1.75} />}
-            {...form.register("email")}
-          />
+          <Input type="email" autoComplete="username" {...form.register("email")} />
         </FormField>
         <div className="flex flex-col gap-3">
           <Button type="submit" className="w-full" loading={form.formState.isSubmitting}>
