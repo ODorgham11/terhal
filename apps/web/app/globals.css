@@ -11,10 +11,10 @@
   --foreground: #231e1b;
   --surface: #ffffff;
   --surface-muted: #f5f1ed;
-  /* What a row, a menu item or a ghost button turns on hover: a soft cream, solid so it reads the same on white rows
-     and on the page, and yellower than the page, the muted surface and table headers so it never passes for one of
-     them, and nothing like the maroon. */
-  --hover: #f8f0df;
+  /* What a row, a menu item or a ghost button turns on hover: a plain, quiet gray, solid so it reads the same on white
+     rows and on the page. It's neutral where the page, the muted surface and the table headers are warm, so it never
+     passes for one of them, and nothing like the maroon. */
+  --hover: #f4f4f4;
   --muted: #766d66;
   --border: #ede7e1;
   --input: #ddd5cd;
@@ -58,7 +58,7 @@
     --foreground: #f3eee9;
     --surface: #221d1b;
     --surface-muted: #2b2522;
-    --hover: #30291f;
+    --hover: #2c2c2c;
     --muted: #a89e96;
     --border: #36302c;
     --input: #463e39;
