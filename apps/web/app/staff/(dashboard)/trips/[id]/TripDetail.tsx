@@ -252,7 +252,7 @@ function Loaded({ trip, staff }: { trip: TripDetail; staff: Staff }) {
               {trip.brand ? trip.brand.nameEn : t("terhal")}
             </Badge>
           </div>
-          <p className="text-base text-muted">
+          <p className="text-sm text-muted">
             {route(trip)} · {dateTime(trip.pickupDate)}
           </p>
         </div>
