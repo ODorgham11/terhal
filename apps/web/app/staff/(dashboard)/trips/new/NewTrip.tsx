@@ -222,7 +222,7 @@ function Booking({ customerId }: { customerId?: string }) {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold text-foreground">{t("title")}</h1>
-          <p className="text-base text-muted">{t("description")}</p>
+          <p className="text-sm text-muted">{t("description")}</p>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="ghost">
