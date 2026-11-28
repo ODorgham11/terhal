@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useFormatter, useNow } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   IconAlertTriangle,
@@ -14,6 +14,7 @@ import {
 } from "@tabler/icons-react";
 import type { StaffNotification } from "@terhal/contracts";
 import { call, staffApi } from "@/lib/api";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/cn";
 
 const looks: Record<StaffNotification["kind"], { icon: Icon; tone: string }> = {
@@ -85,5 +86,25 @@ export function NotificationItem({ notification, compact, onOpen }: Props) {
     <button type="button" onClick={open} className={classes}>
       {body}
     </button>
+  );
+}
+
+// Notifications in gray, shaped like them: a round icon, a title, a line and the time.
+export function NotificationsLoading({ rows = 5 }: { rows?: number }) {
+  const t = useTranslations("common.ui");
+  return (
+    <div role="status" className="divide-y divide-border">
+      <span className="sr-only">{t("loading")}</span>
+      {Array.from({ length: rows }, (_, row) => (
+        <div key={row} aria-hidden className="flex items-start gap-3 px-4 py-3">
+          <Skeleton className="size-9 shrink-0 rounded-full" />
+          <div className="flex flex-1 flex-col gap-1.5 pt-0.5">
+            <Skeleton className={cn("h-3.5", row % 2 ? "w-56" : "w-72 max-w-full")} />
+            <Skeleton className={cn("h-3", row % 2 ? "w-80 max-w-full" : "w-64 max-w-full")} />
+            <Skeleton className="h-3 w-16" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

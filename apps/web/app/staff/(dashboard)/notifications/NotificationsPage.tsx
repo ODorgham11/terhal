@@ -9,6 +9,7 @@ import { RequireStaff } from "@/components/session/RequireSession";
 import { ListPagination, useCursorList } from "@/components/staff/CursorList";
 import {
   NotificationItem,
+  NotificationsLoading,
   notificationsKey,
 } from "@/components/staff/notifications/NotificationItem";
 import { unreadCountQuery } from "@/components/staff/queries";
@@ -16,7 +17,6 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FadeText, Swap, fade } from "@/components/ui/Motion";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { toast } from "@/components/ui/Toast";
 import { call, staffApi, useErrorMessage } from "@/lib/api";
@@ -111,7 +111,7 @@ function Inbox() {
           }
         >
           {result.isPending ? (
-            <InboxLoading />
+            <NotificationsLoading />
           ) : result.isError ? (
             <p className="p-8 text-center text-sm text-danger">{errorMessage(result.error)}</p>
           ) : rows.length === 0 ? (
@@ -133,25 +133,5 @@ function Inbox() {
       </div>
       <ListPagination list={inbox} />
     </>
-  );
-}
-
-// Notifications in gray, shaped like them: a round icon, a title, a line and the time.
-function InboxLoading() {
-  const t = useTranslations("common.ui");
-  return (
-    <div role="status" className="divide-y divide-border">
-      <span className="sr-only">{t("loading")}</span>
-      {[0, 1, 2, 3, 4].map((row) => (
-        <div key={row} aria-hidden className="flex items-start gap-3 px-4 py-3">
-          <Skeleton className="size-9 shrink-0 rounded-full" />
-          <div className="flex flex-1 flex-col gap-1.5 pt-0.5">
-            <Skeleton className={cn("h-3.5", row % 2 ? "w-56" : "w-72 max-w-full")} />
-            <Skeleton className={cn("h-3", row % 2 ? "w-80 max-w-full" : "w-64 max-w-full")} />
-            <Skeleton className="h-3 w-16" />
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }

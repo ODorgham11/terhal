@@ -6,10 +6,9 @@ import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Popover } from "radix-ui";
 import { IconBell } from "@tabler/icons-react";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { call, staffApi } from "@/lib/api";
 import { unreadCountQuery } from "../queries";
-import { NotificationItem, notificationsKey } from "./NotificationItem";
+import { NotificationItem, NotificationsLoading, notificationsKey } from "./NotificationItem";
 
 // The top bar's bell: a dot while anything is unread, and the latest few in a panel.
 export function NotificationBell() {
@@ -48,7 +47,7 @@ export function NotificationBell() {
         <Popover.Content
           align="end"
           sideOffset={8}
-          className="z-50 flex w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-lg"
+          className="z-50 flex w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg"
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <p className="text-sm font-semibold text-foreground">{t("title")}</p>
@@ -64,12 +63,9 @@ export function NotificationBell() {
           </div>
           <div className="max-h-[26rem] divide-y divide-border overflow-y-auto">
             {latest.isPending ? (
-              <div className="flex flex-col gap-3 p-4">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-              </div>
+              <NotificationsLoading rows={3} />
             ) : latest.isError ? (
-              <p className="p-6 text-center text-sm text-muted">{t("loadFailed")}</p>
+              <p className="p-6 text-center text-sm text-danger">{t("loadFailed")}</p>
             ) : latest.data.data.length === 0 ? (
               <p className="p-6 text-center text-sm text-muted">{t("empty")}</p>
             ) : (
