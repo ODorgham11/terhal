@@ -79,9 +79,9 @@ export function TableEmpty({ columns, title, description, action }: TableEmptyPr
   return (
     <tr>
       <td colSpan={columns} className="px-4 py-12 text-center">
-        <div className="flex flex-col items-center gap-2">
-          <p className="font-medium text-foreground">{title ?? t("noResults")}</p>
-          {description && <p className="text-sm text-muted">{description}</p>}
+        <div className="flex flex-col items-center gap-1.5">
+          <p className="text-base font-semibold text-foreground">{title ?? t("noResults")}</p>
+          {description && <p className="text-[0.8125rem] text-muted">{description}</p>}
           {action}
         </div>
       </td>
