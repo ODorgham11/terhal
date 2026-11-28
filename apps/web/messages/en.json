@@ -1563,7 +1563,6 @@
         "website": "Website",
         "isDefault": "Default for staff bookings",
         "isDefaultHint": "Pre-selected on New trip; only one brand can be the default. Site bookings always use Terhal.",
-        "preview": "Preview: confirmation email and driver WhatsApp",
         "from": "From",
         "namePlaceholder": "Brand name",
         "previewTitle": "Your trip is confirmed",
@@ -1576,7 +1575,13 @@
         "restoreTitle": "Restore this brand",
         "restoreHint": "It can be picked for trips again.",
         "restore": "Restore brand",
-        "restored": "Brand restored"
+        "restored": "Brand restored",
+        "showPreview": "Preview messages",
+        "previewDialogTitle": "Message preview",
+        "previewDialogDescription": "The confirmation email and the driver's WhatsApp message as they'll go out under this brand.",
+        "previewEmail": "Confirmation email",
+        "previewDriver": "Driver WhatsApp",
+        "closePreview": "Close"
       }
     },
     "booking": {

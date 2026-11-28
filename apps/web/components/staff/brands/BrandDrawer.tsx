@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Controller } from "react-hook-form";
+import { IconEye } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { CreateBrand, type Brand } from "@terhal/contracts";
 import { Button } from "@/components/ui/Button";
+import { Dialog, DialogClose, DialogContent, DialogFooter } from "@/components/ui/Dialog";
 import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { Form, FormError, FormField } from "@/components/ui/Form";
 import { Input } from "@/components/ui/Input";
@@ -70,6 +73,7 @@ function BrandFields({ brand, onDone }: { brand?: Brand; onDone: () => void }) {
     },
   });
   const values = form.watch();
+  const [previewing, setPreviewing] = useState(false);
   const refresh = () => client.invalidateQueries({ queryKey: ["staff", "brands"] });
 
   const archive = async (target: Brand) => {
@@ -135,29 +139,16 @@ function BrandFields({ brand, onDone }: { brand?: Brand; onDone: () => void }) {
         {...form.register("isDefault")}
       />
 
-      <section className="flex flex-col gap-2">
-        <p className="text-sm font-medium text-foreground">{t("preview")}</p>
-        <div className="overflow-hidden rounded-xl border border-border">
-          <p className="truncate bg-surface-muted px-4 py-2 text-xs text-muted" dir="ltr">
-            {t("from")}: {values.nameEn || t("namePlaceholder")} &lt;{values.senderEmail || "…"}&gt;
-          </p>
-          <div className="flex flex-col gap-2 p-4">
-            <BrandMark name={values.nameEn || "?"} />
-            <p className="text-base font-semibold text-foreground">{t("previewTitle")}</p>
-            <p className="text-sm text-foreground">{t("previewBody")}</p>
-            <p className="text-xs text-muted">
-              {[values.nameEn, values.phone && displayPhone(values.phone), values.website]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-          </div>
-        </div>
-        <div className="rounded-xl bg-primary-soft/60 p-4 text-sm text-foreground">
-          {t("previewWhatsApp", { name: values.nameEn || t("namePlaceholder") })}
-          <br />—{" "}
-          {[values.nameEn, values.phone && displayPhone(values.phone)].filter(Boolean).join(" · ")}
-        </div>
-      </section>
+      {/* The messages as they'll look, in a modal over the panel, so the form stays short. */}
+      <button
+        type="button"
+        onClick={() => setPreviewing(true)}
+        className="-mt-2 inline-flex items-center gap-1.5 self-start rounded-md text-sm font-medium text-primary transition-colors duration-200 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      >
+        <IconEye aria-hidden className="size-4" stroke={1.75} />
+        {t("showPreview")}
+      </button>
+      <BrandPreview values={values} open={previewing} onOpenChange={setPreviewing} />
 
       {brand && (
         <section className="flex flex-col items-start gap-2 rounded-xl border border-border p-4">
@@ -173,5 +164,62 @@ function BrandFields({ brand, onDone }: { brand?: Brand; onDone: () => void }) {
         </section>
       )}
     </Form>
+  );
+}
+
+// What a customer and a driver get under the brand: the confirmation email and the report link on WhatsApp.
+function BrandPreview({
+  values,
+  open,
+  onOpenChange,
+}: {
+  values: BrandForm;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const t = useTranslations("staff.brands.form");
+  const name = values.nameEn || t("namePlaceholder");
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        title={t("previewDialogTitle")}
+        description={t("previewDialogDescription")}
+        className="max-w-lg"
+      >
+        <section className="flex flex-col gap-2">
+          <h3 className="text-[0.8125rem] font-medium text-muted">{t("previewEmail")}</h3>
+          <div className="overflow-hidden rounded-xl border border-border">
+            <p className="truncate bg-surface-muted px-4 py-2 text-xs text-muted" dir="ltr">
+              {t("from")}: {name} &lt;{values.senderEmail || "…"}&gt;
+            </p>
+            <div className="flex flex-col gap-2 p-4">
+              <BrandMark name={values.nameEn || "?"} />
+              <p className="text-base font-semibold text-foreground">{t("previewTitle")}</p>
+              <p className="text-sm text-foreground">{t("previewBody")}</p>
+              <p className="text-xs text-muted">
+                {[values.nameEn, values.phone && displayPhone(values.phone), values.website]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            </div>
+          </div>
+        </section>
+        <section className="flex flex-col gap-2">
+          <h3 className="text-[0.8125rem] font-medium text-muted">{t("previewDriver")}</h3>
+          <div className="rounded-xl bg-primary-soft/60 p-4 text-sm text-foreground">
+            {t("previewWhatsApp", { name })}
+            <br />—{" "}
+            {[values.nameEn, values.phone && displayPhone(values.phone)]
+              .filter(Boolean)
+              .join(" · ")}
+          </div>
+        </section>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="secondary">{t("closePreview")}</Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
