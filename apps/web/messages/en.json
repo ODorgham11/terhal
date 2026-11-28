@@ -1762,6 +1762,13 @@
       "description": "Who can use the staff dashboard, and what each can do.",
       "firstTitle": "No staff yet",
       "firstBody": "Invite the first staff member with team access. They can then invite everyone else from the dashboard's Team page."
+    },
+    "nav": {
+      "label": "Admin menu",
+      "home": "Terhal admin home",
+      "openMenu": "Open the menu",
+      "staff": "Staff",
+      "badge": "Admin panel"
     }
   }
 }
