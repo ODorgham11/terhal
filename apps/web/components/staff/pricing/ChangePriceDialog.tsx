@@ -8,7 +8,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogClose, DialogContent, DialogFooter } from "@/components/ui/Dialog";
 import { Field } from "@/components/ui/Field";
-import { Input } from "@/components/ui/Input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { toast } from "@/components/ui/Toast";
 import { call, staffApi, useErrorMessage } from "@/lib/api";
 import { toLatinDigits } from "@/lib/digits";
@@ -75,14 +75,10 @@ function ChangeForm({ rows, onDone }: { rows: PricingRow[]; onDone: () => void }
     <div className="flex flex-col gap-4">
       {error && <Alert tone="danger" title={error} />}
       <Field label={t("price")}>
-        <Input
-          inputMode="decimal"
-          autoComplete="off"
+        <MoneyInput
           autoFocus
           value={price}
           onChange={(event) => setPrice(toLatinDigits(event.target.value).replace(/,/g, ""))}
-          startAdornment={<span className="text-xs font-medium">EGP</span>}
-          className="ps-12"
         />
       </Field>
       <DialogFooter>

@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { Select } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
@@ -475,26 +476,18 @@ function Booking({ customerId }: { customerId?: string }) {
                     : undefined
               }
             >
-              <Input
-                inputMode="decimal"
-                autoComplete="off"
+              <MoneyInput
                 value={price}
                 placeholder={option?.price ?? ""}
                 onChange={(event) => setPrice(event.target.value)}
-                startAdornment={<span className="text-xs font-medium">EGP</span>}
-                className="ps-12"
               />
             </Field>
             {withReturn && (
               <Field label={t("quote.returnPrice")} optional>
-                <Input
-                  inputMode="decimal"
-                  autoComplete="off"
+                <MoneyInput
                   value={returnPrice}
                   placeholder={option?.returnPrice ?? ""}
                   onChange={(event) => setReturnPrice(event.target.value)}
-                  startAdornment={<span className="text-xs font-medium">EGP</span>}
-                  className="ps-12"
                 />
               </Field>
             )}

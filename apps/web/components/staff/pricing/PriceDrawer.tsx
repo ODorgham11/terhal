@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { Field } from "@/components/ui/Field";
-import { Input } from "@/components/ui/Input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Select } from "@/components/ui/Select";
 import { toast } from "@/components/ui/Toast";
 import { call, staffApi, useErrorMessage } from "@/lib/api";
@@ -107,13 +107,9 @@ function PriceFields({ onDone }: { onDone: () => void }) {
         </Field>
       </div>
       <Field label={t("price")}>
-        <Input
-          inputMode="decimal"
-          autoComplete="off"
+        <MoneyInput
           value={price}
           onChange={(event) => setPrice(toLatinDigits(event.target.value).replace(/,/g, ""))}
-          startAdornment={<span className="text-xs font-medium">EGP</span>}
-          className="ps-12"
         />
       </Field>
       <Checkbox

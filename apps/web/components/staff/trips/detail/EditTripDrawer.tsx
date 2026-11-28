@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
@@ -249,14 +250,7 @@ function EditForm({ trip, onDone }: { trip: Trip; onDone: () => void }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t("price")} hint={trip.totalPrice ? undefined : t("priceHint")}>
-          <Input
-            inputMode="decimal"
-            autoComplete="off"
-            value={price}
-            onChange={(event) => setPrice(event.target.value)}
-            startAdornment={<span className="text-xs font-medium">EGP</span>}
-            className="ps-12"
-          />
+          <MoneyInput value={price} onChange={(event) => setPrice(event.target.value)} />
         </Field>
         <Field label={t("payment")}>
           <Select value={payment} onChange={(event) => setPayment(event.target.value)}>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog, DialogClose, DialogContent, DialogFooter } from "@/components/ui/Dialog";
 import { Form, FormError, FormField } from "@/components/ui/Form";
-import { Input } from "@/components/ui/Input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Textarea } from "@/components/ui/Textarea";
 import { call, staffApi } from "@/lib/api";
 import { useZodForm } from "@/lib/forms/useZodForm";
@@ -51,13 +51,7 @@ export function ProposePriceDialog({ trip, canSaveToPricing, open, onOpenChange 
         >
           <FormError />
           <FormField name="totalPrice" label={fields("totalPrice")}>
-            <Input
-              inputMode="decimal"
-              autoComplete="off"
-              startAdornment={<span className="text-xs font-medium">EGP</span>}
-              className="ps-12"
-              {...form.register("totalPrice")}
-            />
+            <MoneyInput {...form.register("totalPrice")} />
           </FormField>
           <FormField name="note" label={fields("note")} optional hint={t("noteHint")}>
             <Textarea
