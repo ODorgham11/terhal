@@ -1760,43 +1760,8 @@
     "staff": {
       "title": "Staff",
       "description": "Who can use the staff dashboard, and what each can do.",
-      "invite": "Invite staff",
-      "members": "Members",
-      "invitations": "Open invitations",
       "firstTitle": "No staff yet",
-      "firstBody": "Invite the first staff member with team access. They can then invite everyone else from the dashboard's Team page.",
-      "columns": {
-        "member": "Member",
-        "access": "Access",
-        "status": "Status",
-        "email": "Email",
-        "expires": "Expires",
-        "actions": "Actions"
-      },
-      "noMembers": "No staff yet.",
-      "noInvitations": "No open invitations.",
-      "menu": "Actions for {name}",
-      "editAccess": "Edit access",
-      "suspend": "Suspend",
-      "suspended": "Access suspended",
-      "reactivate": "Restore access",
-      "reactivated": "Access restored",
-      "resend": "Resend",
-      "resent": "Sent again to {email}",
-      "revoke": "Revoke",
-      "revoked": "Invitation revoked",
-      "inviteDialog": {
-        "title": "Invite a staff member",
-        "description": "They get an email with a link to set a password for the staff dashboard. The link works for 7 days.",
-        "cancel": "Cancel",
-        "submit": "Send invitation",
-        "sent": "Invitation sent to {email}"
-      },
-      "accessDialog": {
-        "cancel": "Cancel",
-        "save": "Save access",
-        "saved": "Access saved"
-      }
+      "firstBody": "Invite the first staff member with team access. They can then invite everyone else from the dashboard's Team page."
     }
   }
 }
