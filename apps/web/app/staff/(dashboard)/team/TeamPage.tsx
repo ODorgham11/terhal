@@ -439,7 +439,7 @@ function Invitations({
           ) : query.isError || !query.data ? (
             <CardsError message={errorMessage(query.error)} />
           ) : query.data.data.length === 0 ? (
-            <motion.li {...fade} className="flex flex-col items-center gap-1.5 py-10 text-center">
+            <motion.li {...fade} className="flex flex-col items-center gap-0.5 py-10 text-center">
               <span className="text-base font-semibold text-foreground">{t("noInvitations")}</span>
               <span className="text-[0.8125rem] text-muted">{t("noInvitationsHint")}</span>
               <span className="pt-4">{inviteButton}</span>

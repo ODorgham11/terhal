@@ -105,7 +105,7 @@ function Customers({ staff }: { staff: Staff }) {
               {errorMessage(result.error)}
             </motion.li>
           ) : rows.length === 0 ? (
-            <motion.li {...fade} className="flex flex-col items-center gap-1.5 py-10 text-center">
+            <motion.li {...fade} className="flex flex-col items-center gap-0.5 py-10 text-center">
               <span className="text-base font-semibold text-foreground">{t("empty")}</span>
               <span className="text-[0.8125rem] text-muted">{t("emptyHint")}</span>
             </motion.li>

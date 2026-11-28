@@ -98,7 +98,7 @@ function TripClasses() {
               {errorMessage(shown.error)}
             </motion.li>
           ) : shown.data.data.length === 0 ? (
-            <motion.li {...fade} className="flex flex-col items-center gap-1.5 py-10 text-center">
+            <motion.li {...fade} className="flex flex-col items-center gap-0.5 py-10 text-center">
               <span className="text-base font-semibold text-foreground">
                 {tab === "false" ? t("empty") : t("emptyArchived")}
               </span>
