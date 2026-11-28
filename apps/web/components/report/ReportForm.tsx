@@ -200,8 +200,8 @@ export function ReportForm({ trip, token }: { trip: DriverTrip; token: string })
 
   return (
     <section className="flex flex-col gap-5 rounded-2xl border border-border bg-white p-5 shadow-xs">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-semibold text-foreground">{t("title")}</h2>
+      <div className="flex flex-col gap-0.5">
+        <h2 className="text-lg leading-6 font-semibold text-foreground">{t("title")}</h2>
         <p className="text-sm text-muted">{t("description")}</p>
       </div>
       <AnimatePresence initial={false}>
