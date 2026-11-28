@@ -44,9 +44,9 @@ export function DrawerContent({
         )}
         {...props}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-border p-5">
+        <div className="flex items-start justify-between gap-4 border-b border-border px-5 pt-5 pb-4">
           <div className="flex flex-col gap-1">
-            <Primitive.Title className="text-lg font-semibold text-foreground">
+            <Primitive.Title className="text-xl leading-7 font-semibold text-foreground">
               {title}
             </Primitive.Title>
             {description && (
