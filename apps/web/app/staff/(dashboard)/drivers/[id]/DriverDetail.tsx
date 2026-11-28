@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "motion/react";
 import {
   IconArchive,
   IconCash,
@@ -25,15 +26,16 @@ import { FleetTrips } from "@/components/staff/fleet/FleetTrips";
 import { useTripDates } from "@/components/staff/trips/format";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { AutoHeight, FadeText, fade } from "@/components/ui/Motion";
 import { Skeleton } from "@/components/ui/Skeleton";
 import {
+  MotionTableRow,
   Table,
   TableBody,
   TableCell,
   TableEmpty,
   TableHead,
   TableHeader,
-  TableLoading,
   TableRow,
 } from "@/components/ui/Table";
 import { call, isApiError, staffApi, useErrorMessage } from "@/lib/api";
@@ -49,7 +51,7 @@ function Detail({ id }: { id: string }) {
     queryFn: () => call(staffApi.drivers[":id"].$get({ param: { id } })),
     retry: (count, error) => !(isApiError(error) && error.status === 404) && count < 1,
   });
-  if (driver.isPending) return <Skeleton className="h-64 w-full" />;
+  if (driver.isPending) return <DriverLoading />;
   if (driver.isError) {
     return isApiError(driver.error) && driver.error.status === 404 ? (
       <SystemState kind="notFound" />
@@ -72,7 +74,7 @@ function Loaded({ driver }: { driver: Driver }) {
   const archived = driver.archivedAt !== null;
 
   return (
-    <>
+    <motion.div {...fade} className="flex flex-col gap-6">
       <nav aria-label={t("breadcrumb")} className="flex items-center gap-2 text-xs">
         <Link href="/drivers" className="text-primary hover:underline">
           {nav("drivers")}
@@ -88,7 +90,7 @@ function Loaded({ driver }: { driver: Driver }) {
             <KindBadge item={driver} />
             {archived && <Badge tone="neutral">{t("archived")}</Badge>}
           </div>
-          <p className="text-base text-muted">
+          <p className="text-sm text-muted">
             {t("subtitle", {
               kind: kinds(driver.office ? "office" : driver.isExternal ? "external" : "internal"),
               date: format.dateTime(new Date(driver.createdAt), {
@@ -147,7 +149,51 @@ function Loaded({ driver }: { driver: Driver }) {
         open={dialog === "payment"}
         onOpenChange={(open) => setDialog(open ? "payment" : null)}
       />
-    </>
+    </motion.div>
+  );
+}
+
+// The page's own shape in gray: breadcrumb, header and both columns of cards.
+function DriverLoading() {
+  const t = useTranslations("common.ui");
+  const card = (lines: number, key: number) => (
+    <div
+      key={key}
+      className="flex flex-col gap-2.5 rounded-xl border border-border bg-surface p-5 shadow-xs"
+    >
+      <div className="flex h-8 items-center">
+        <Skeleton className="h-4.5 w-32" />
+      </div>
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: lines }, (_, line) => (
+          <Skeleton key={line} className={line % 2 ? "h-4 w-2/3" : "h-4 w-full"} />
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <motion.div {...fade} role="status" className="flex flex-col gap-6">
+      <span className="sr-only">{t("loading")}</span>
+      <Skeleton className="h-3.5 w-36" />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-8 w-44" />
+            <Skeleton className="h-5.5 w-20 rounded-full" />
+          </div>
+          <Skeleton className="h-4 w-64 max-w-full" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-28 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+          <Skeleton className="h-10 w-40 rounded-lg" />
+        </div>
+      </div>
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="flex min-w-0 flex-col gap-5">{[3, 5, 3].map(card)}</div>
+        <div className="flex flex-col gap-5">{[5, 3].map(card)}</div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -177,8 +223,8 @@ function BalanceCard({ driver }: { driver: Driver }) {
                 ? t("companyOwes", { name: driver.firstName })
                 : t("driverOwes", { name: driver.firstName })}
           </span>
-          <span className={cn("text-[2rem] leading-10 font-semibold tabular-nums", balance.tone)}>
-            {price(Math.abs(amount).toFixed(2))}
+          <span className={cn("text-2xl leading-8 font-semibold tabular-nums", balance.tone)}>
+            <FadeText value={price(Math.abs(amount).toFixed(2))} />
           </span>
           <span className="max-w-sm text-xs text-muted">
             {amount === 0 ? t("settledHint") : amount > 0 ? t("owedHint") : t("owesHint")}
@@ -194,9 +240,13 @@ function BalanceCard({ driver }: { driver: Driver }) {
           ).map(([key, value]) => (
             <div key={key} className="flex flex-col gap-0.5 rounded-lg bg-surface-muted px-3 py-2">
               <span className="text-xs text-muted">{t(key)}</span>
-              <span className="text-sm font-medium text-foreground tabular-nums">
-                {value === undefined ? "…" : price(value)}
-              </span>
+              {value === undefined ? (
+                <Skeleton className="my-0.75 h-3.5 w-16" />
+              ) : (
+                <span className="text-sm font-medium text-foreground tabular-nums">
+                  <FadeText value={price(value)} />
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -221,30 +271,37 @@ function LedgerCard({ driver }: { driver: Driver }) {
     call(staffApi.drivers[":id"].transactions.$get({ param: { id: driver.id }, query })),
   );
 
+  const stale = ledger.result.isPlaceholderData;
+
   return (
     <SectionCard title={t("title")}>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("date")}</TableHead>
-            <TableHead>{t("entry")}</TableHead>
-            <TableHead>{t("trip")}</TableHead>
-            <TableHead>{t("by")}</TableHead>
-            <TableHead className="text-end">{t("amount")}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {ledger.result.isPending ? (
-            <TableLoading columns={5} rows={3} />
-          ) : ledger.result.isError ? (
-            <TableEmpty columns={5} title={errorMessage(ledger.result.error)} />
-          ) : ledger.rows.length === 0 ? (
-            <TableEmpty columns={5} title={t("empty")} />
-          ) : (
-            ledger.rows.map((entry) => <LedgerRow key={entry.id} entry={entry} />)
-          )}
-        </TableBody>
-      </Table>
+      <AutoHeight>
+        <Table
+          aria-busy={ledger.result.isFetching || undefined}
+          className={cn("transition-opacity", stale && "opacity-60")}
+        >
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("date")}</TableHead>
+              <TableHead>{t("entry")}</TableHead>
+              <TableHead>{t("trip")}</TableHead>
+              <TableHead>{t("by")}</TableHead>
+              <TableHead className="text-end">{t("amount")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {ledger.result.isPending ? (
+              <LedgerRowsLoading />
+            ) : ledger.result.isError ? (
+              <TableEmpty columns={5} title={errorMessage(ledger.result.error)} />
+            ) : ledger.rows.length === 0 ? (
+              <TableEmpty columns={5} title={t("empty")} />
+            ) : (
+              ledger.rows.map((entry) => <LedgerRow key={entry.id} entry={entry} />)
+            )}
+          </TableBody>
+        </Table>
+      </AutoHeight>
       <ListPagination list={ledger} />
       <p className="text-xs text-muted">{t("hint", { name: driver.firstName })}</p>
     </SectionCard>
@@ -256,7 +313,7 @@ function LedgerRow({ entry }: { entry: DriverTransaction }) {
   const { day, price } = useTripDates();
   const amount = Number(entry.amount);
   return (
-    <TableRow>
+    <MotionTableRow {...fade}>
       <TableCell className="whitespace-nowrap">{day(entry.createdAt)}</TableCell>
       <TableCell>
         <div className="flex flex-col">
@@ -291,7 +348,40 @@ function LedgerRow({ entry }: { entry: DriverTransaction }) {
           {price(Math.abs(amount).toFixed(2))}
         </span>
       </TableCell>
-    </TableRow>
+    </MotionTableRow>
+  );
+}
+
+function LedgerRowsLoading() {
+  const t = useTranslations("common.ui");
+  return (
+    <>
+      {[0, 1, 2].map((row) => (
+        <motion.tr
+          key={row}
+          {...fade}
+          className="border-b border-border"
+          aria-hidden={row > 0 || undefined}
+        >
+          <TableCell>
+            {row === 0 && <span className="sr-only">{t("loading")}</span>}
+            <Skeleton className="h-3.5 w-20" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className={cn("h-3.5", row % 2 ? "w-24" : "w-32")} />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-3.5 w-22" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-3.5 w-24" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="ms-auto h-3.5 w-20" />
+          </TableCell>
+        </motion.tr>
+      ))}
+    </>
   );
 }
 
@@ -336,10 +426,21 @@ function MonthCard({ driver }: { driver: Driver }) {
   return (
     <SectionCard title={t("title")}>
       <InfoList>
-        <InfoRow label={t("trips")}>{month ? format.number(month.tripsCompleted) : "…"}</InfoRow>
-        <InfoRow label={t("kilometres")}>{month ? format.number(month.kilometres) : "…"}</InfoRow>
-        <InfoRow label={t("fees")}>{month ? price(month.fees) : "…"}</InfoRow>
+        <InfoRow label={t("trips")}>
+          {month ? <FadeText value={format.number(month.tripsCompleted)} /> : <Pending />}
+        </InfoRow>
+        <InfoRow label={t("kilometres")}>
+          {month ? <FadeText value={format.number(month.kilometres)} /> : <Pending />}
+        </InfoRow>
+        <InfoRow label={t("fees")}>
+          {month ? <FadeText value={price(month.fees)} /> : <Pending />}
+        </InfoRow>
       </InfoList>
     </SectionCard>
   );
+}
+
+// A value still on its way: a line its size, not an ellipsis.
+function Pending() {
+  return <Skeleton className="my-0.75 inline-block h-3.5 w-12 align-middle" />;
 }
