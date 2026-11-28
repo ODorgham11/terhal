@@ -236,10 +236,6 @@
         "confirmBody": "You'll fill in the report next.",
         "done": "Trip ended"
       },
-      "awaiting": {
-        "title": "Trip ended",
-        "body": "Fill in the report below and send it to the office."
-      },
       "sent": {
         "title": "Report sent",
         "body": "Thank you. The office will review it and complete the trip."

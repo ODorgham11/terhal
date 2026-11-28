@@ -211,7 +211,8 @@ function TripPage({ trip, token }: { trip: DriverTrip; token: string }) {
     sent: <StateCard icon={IconCircleCheck} tone="success" {...copy(t, "sent")} />,
     cancelled: <StateCard icon={IconBan} tone="danger" {...copy(t, "cancelled")} />,
     pending: <StateCard icon={IconClockHour4} tone="muted" {...copy(t, "pending")} />,
-    awaiting: <StateCard icon={IconRoute} tone="primary" {...copy(t, "awaiting")} />,
+    // The form below says what to do once the trip's over; a card saying so too would only push it down.
+    awaiting: null,
     confirmed: (
       <StateCard
         icon={IconPlayerPlay}
@@ -242,21 +243,15 @@ function TripPage({ trip, token }: { trip: DriverTrip; token: string }) {
 
   return (
     <motion.div {...fade} className="flex flex-col gap-4">
-      <Swap state={stage}>{stateCard}</Swap>
-      {/* Before the trip ends, the trip comes first, with a way to reach the passenger. After it, the report does: the
-          driver is reporting, not contacting anyone, so the trip is only there for reference. */}
-      {beforeEnd ? (
-        <>
-          <TripCard trip={trip} contact />
-          {fillsReport && <ReportForm trip={trip} token={token} />}
-        </>
-      ) : (
-        <>
-          {fillsReport && <ReportForm trip={trip} token={token} />}
-          {report && <ReportSummary report={report} />}
-          <TripCard trip={trip} />
-        </>
-      )}
+      {/* The trip first, then where it stands, then the report. The passenger can only be messaged before the trip
+          ends: after it, the driver is reporting, not contacting anyone. */}
+      <TripCard trip={trip} contact={beforeEnd} />
+      <div>
+        {/* The card carries its own space below, so when there's none (trip ended) nothing is left behind. */}
+        <Swap state={stage}>{stateCard && <div className="pb-4">{stateCard}</div>}</Swap>
+        {fillsReport && <ReportForm trip={trip} token={token} />}
+        {report && <ReportSummary report={report} />}
+      </div>
       <p className="text-center text-xs text-muted">
         {t("linkExpires", {
           date: format.dateTime(new Date(trip.linkExpiresAt), {
@@ -318,31 +313,31 @@ function TripCard({ trip, contact = false }: { trip: DriverTrip; contact?: boole
             <span
               aria-hidden
               className={cn(
-                "absolute -start-6 top-0.5 size-3 rounded-full border-[3px] bg-white",
+                "absolute -start-6 top-1 size-3 rounded-full border-[3px] bg-white",
                 end === "pickup" ? "border-primary" : "border-accent",
               )}
             />
-            <span className="text-xs text-muted">{t(end)}</span>
-            <span className="text-sm font-medium text-foreground">{name(trip[end])}</span>
+            <span className="text-[0.8125rem] text-muted">{t(end)}</span>
+            <span className="text-[0.9375rem] font-medium text-foreground">{name(trip[end])}</span>
           </li>
         ))}
       </ol>
 
-      <dl className="grid grid-cols-2 gap-3 border-t border-border pt-4 text-sm">
+      <dl className="grid grid-cols-2 gap-4 border-t border-border pt-4 text-[0.9375rem]">
         <Detail label={t("when")}>{dateTime(trip.pickupDate)}</Detail>
         <Detail label={t("car")}>
           {name(trip.class)} · {cars(trip.car)}
         </Detail>
         <Detail label={t("passenger")}>
           {trip.clientName}
-          <span className="block text-xs text-muted">
+          <span className="block text-[0.8125rem] font-normal text-muted">
             {t("load", { passengers: trip.passengers, luggage })}
           </span>
         </Detail>
         {trip.vehicle && (
           <Detail label={t("vehicle")}>
             {trip.vehicle.make} {trip.vehicle.model}
-            <span className="block text-xs text-muted" dir="ltr">
+            <span className="block text-[0.8125rem] font-normal text-muted" dir="ltr">
               {trip.vehicle.plateNumber} · {trip.vehicle.color}
             </span>
           </Detail>
@@ -360,8 +355,8 @@ function TripCard({ trip, contact = false }: { trip: DriverTrip; contact?: boole
 
       {trip.notes && (
         <div className="flex flex-col gap-1 rounded-lg bg-surface-muted p-3">
-          <span className="text-xs text-muted">{t("notes")}</span>
-          <p className="text-sm whitespace-pre-line text-foreground">{trip.notes}</p>
+          <span className="text-[0.8125rem] text-muted">{t("notes")}</span>
+          <p className="text-[0.9375rem] whitespace-pre-line text-foreground">{trip.notes}</p>
         </div>
       )}
     </section>
@@ -371,7 +366,7 @@ function TripCard({ trip, contact = false }: { trip: DriverTrip; contact?: boole
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
-      <dt className="text-xs text-muted">{label}</dt>
+      <dt className="text-[0.8125rem] text-muted">{label}</dt>
       <dd className="font-medium text-foreground">{children}</dd>
     </div>
   );
