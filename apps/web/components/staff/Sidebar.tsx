@@ -112,18 +112,18 @@ function SidebarLink({ item, label, count, active, rail, onNavigate }: SidebarLi
       title={rail ? label : undefined}
       className={cn(
         // No outline: a key-focused link takes the hover's background instead.
-        "relative flex shrink-0 items-center rounded-lg text-sm transition-colors outline-none",
-        rail ? "size-10 justify-center" : "h-10 w-full gap-3 px-3",
+        "relative flex shrink-0 items-center rounded-lg text-[0.8125rem] transition-colors outline-none",
+        rail ? "size-9 justify-center" : "h-9 w-full gap-2.5 px-2.5",
         active
           ? "bg-primary-soft font-medium text-primary"
-          : "text-foreground hover:bg-surface-muted focus-visible:bg-surface-muted",
+          : "text-foreground hover:bg-hover focus-visible:bg-hover",
       )}
     >
-      <Icon aria-hidden className="size-5 shrink-0" stroke={1.75} />
+      <Icon aria-hidden className="size-4.5 shrink-0" stroke={1.75} />
       {!rail && <span className="min-w-0 flex-1 truncate">{label}</span>}
       {showCount &&
         (rail ? (
-          <span aria-hidden className="absolute end-2 top-2 size-2 rounded-full bg-accent" />
+          <span aria-hidden className="absolute end-1.5 top-1.5 size-2 rounded-full bg-accent" />
         ) : (
           <span className="rounded-full bg-accent px-1.5 text-xs leading-4 font-medium text-primary-foreground">
             {count}
@@ -189,7 +189,7 @@ function SidebarUser({
         onClick={() => void signOut()}
         aria-label={t("signOut")}
         title={t("signOut")}
-        className="rounded-md p-1 text-muted transition-colors hover:bg-surface-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="rounded-md p-1 text-muted transition-colors hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <DirectionalIcon icon={IconLogout} className="size-5" stroke={1.75} />
       </button>
