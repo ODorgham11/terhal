@@ -35,7 +35,7 @@ import {
 import { AutoHeight, fade } from "@/components/ui/Motion";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
 import {
   MotionTableRow,
   Table,
@@ -298,16 +298,6 @@ function DriverCard({ driver }: { driver: Driver }) {
   );
 }
 
-// Two lines, like the cells they stand in for.
-function Lines({ first, second }: { first: string; second?: string }) {
-  return (
-    <div className="flex flex-col gap-1.5 py-0.5">
-      <Skeleton className={cn("h-3.5", first)} />
-      {second && <Skeleton className={cn("h-3", second)} />}
-    </div>
-  );
-}
-
 // The first page loading: rows shaped like the drivers they stand in for, so nothing moves when they arrive.
 function DriverRowsLoading() {
   const t = useTranslations("common.ui");
@@ -324,7 +314,7 @@ function DriverRowsLoading() {
             {row === 0 && <span className="sr-only">{t("loading")}</span>}
             <div className="flex items-center gap-2.5">
               <Skeleton className="size-8 shrink-0 rounded-full" />
-              <Lines first={row % 2 ? "w-32" : "w-28"} second="w-24" />
+              <SkeletonLines first={row % 2 ? "w-32" : "w-28"} second="w-24" />
             </div>
           </TableCell>
           <TableCell>
@@ -334,7 +324,7 @@ function DriverRowsLoading() {
             <Skeleton className="h-3.5 w-24" />
           </TableCell>
           <TableCell>
-            <Lines first="w-16" second="w-24" />
+            <SkeletonLines first="w-16" second="w-24" />
           </TableCell>
           <TableCell>
             <Skeleton className="h-3.5 w-20" />
@@ -361,12 +351,12 @@ function DriverCardsLoading() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <Skeleton className="size-8 rounded-full" />
-              <Lines first="w-32" second="w-24" />
+              <SkeletonLines first="w-32" second="w-24" />
             </div>
             <Skeleton className="h-5.5 w-20 rounded-full" />
           </div>
           <div className="flex items-end justify-between border-t border-border pt-3">
-            <Lines first="w-16" second="w-24" />
+            <SkeletonLines first="w-16" second="w-24" />
             <Skeleton className="h-3.5 w-20" />
           </div>
         </motion.li>

@@ -35,7 +35,7 @@ import {
 import { AutoHeight, fade } from "@/components/ui/Motion";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
 import {
   MotionTableRow,
   Table,
@@ -315,16 +315,6 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   );
 }
 
-// Two lines, like the cells they stand in for.
-function Lines({ first, second }: { first: string; second?: string }) {
-  return (
-    <div className="flex flex-col gap-1.5 py-0.5">
-      <Skeleton className={cn("h-3.5", first)} />
-      {second && <Skeleton className={cn("h-3", second)} />}
-    </div>
-  );
-}
-
 // The first page loading: rows shaped like the vehicles they stand in for, so nothing moves when they arrive.
 function VehicleRowsLoading() {
   const t = useTranslations("common.ui");
@@ -341,7 +331,7 @@ function VehicleRowsLoading() {
             {row === 0 && <span className="sr-only">{t("loading")}</span>}
             <div className="flex items-center gap-2.5">
               <Skeleton className="size-10 shrink-0 rounded-lg" />
-              <Lines first={row % 2 ? "w-40" : "w-32"} second="w-28" />
+              <SkeletonLines first={row % 2 ? "w-40" : "w-32"} second="w-28" />
             </div>
           </TableCell>
           <TableCell>
@@ -378,7 +368,7 @@ function VehicleCardsLoading() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <Skeleton className="size-10 rounded-lg" />
-              <Lines first="w-36" second="w-28" />
+              <SkeletonLines first="w-36" second="w-28" />
             </div>
             <Skeleton className="h-5.5 w-20 rounded-full" />
           </div>

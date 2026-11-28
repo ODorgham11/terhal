@@ -14,6 +14,7 @@ import {
 } from "@tabler/icons-react";
 import type { Driver, DriverTransaction } from "@terhal/contracts";
 import { DirectionalIcon } from "@/components/DirectionalIcon";
+import { DetailLoading } from "@/components/staff/DetailLoading";
 import { RequireStaff } from "@/components/session/RequireSession";
 import { ListPagination, useCursorList } from "@/components/staff/CursorList";
 import { InfoList, InfoRow, SectionCard } from "@/components/staff/SectionCard";
@@ -51,7 +52,8 @@ function Detail({ id }: { id: string }) {
     queryFn: () => call(staffApi.drivers[":id"].$get({ param: { id } })),
     retry: (count, error) => !(isApiError(error) && error.status === 404) && count < 1,
   });
-  if (driver.isPending) return <DriverLoading />;
+  if (driver.isPending)
+    return <DetailLoading buttons={["w-28", "w-24", "w-40"]} main={[3, 5, 3]} />;
   if (driver.isError) {
     return isApiError(driver.error) && driver.error.status === 404 ? (
       <SystemState kind="notFound" />
@@ -149,50 +151,6 @@ function Loaded({ driver }: { driver: Driver }) {
         open={dialog === "payment"}
         onOpenChange={(open) => setDialog(open ? "payment" : null)}
       />
-    </motion.div>
-  );
-}
-
-// The page's own shape in gray: breadcrumb, header and both columns of cards.
-function DriverLoading() {
-  const t = useTranslations("common.ui");
-  const card = (lines: number, key: number) => (
-    <div
-      key={key}
-      className="flex flex-col gap-2.5 rounded-xl border border-border bg-surface p-5 shadow-xs"
-    >
-      <div className="flex h-8 items-center">
-        <Skeleton className="h-4.5 w-32" />
-      </div>
-      <div className="flex flex-col gap-3">
-        {Array.from({ length: lines }, (_, line) => (
-          <Skeleton key={line} className={line % 2 ? "h-4 w-2/3" : "h-4 w-full"} />
-        ))}
-      </div>
-    </div>
-  );
-  return (
-    <motion.div {...fade} role="status" className="flex flex-col gap-6">
-      <span className="sr-only">{t("loading")}</span>
-      <Skeleton className="h-3.5 w-36" />
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex flex-col gap-2.5">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-8 w-44" />
-            <Skeleton className="h-5.5 w-20 rounded-full" />
-          </div>
-          <Skeleton className="h-4 w-64 max-w-full" />
-        </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-10 w-28 rounded-lg" />
-          <Skeleton className="h-10 w-24 rounded-lg" />
-          <Skeleton className="h-10 w-40 rounded-lg" />
-        </div>
-      </div>
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="flex min-w-0 flex-col gap-5">{[3, 5, 3].map(card)}</div>
-        <div className="flex flex-col gap-5">{[5, 3].map(card)}</div>
-      </div>
     </motion.div>
   );
 }

@@ -46,7 +46,7 @@ import {
   TableRow,
   MotionTableRow,
 } from "@/components/ui/Table";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { toast } from "@/components/ui/Toast";
 import { call, endpoint, staffApi, useErrorMessage } from "@/lib/api";
@@ -494,16 +494,6 @@ function TripCard({ trip }: { trip: Trip }) {
   );
 }
 
-// Two lines, like the cells they stand in for.
-function Lines({ first, second }: { first: string; second?: string }) {
-  return (
-    <div className="flex flex-col gap-1.5 py-0.5">
-      <Skeleton className={cn("h-3.5", first)} />
-      {second && <Skeleton className={cn("h-3", second)} />}
-    </div>
-  );
-}
-
 // The first page loading: rows shaped like the trips they stand in for, so nothing moves when they arrive.
 function TripRowsLoading() {
   const t = useTranslations("common.ui");
@@ -524,19 +514,19 @@ function TripRowsLoading() {
             <Skeleton className="h-5.5 w-24 rounded-full" />
           </TableCell>
           <TableCell className="min-w-56">
-            <Lines first={row % 2 ? "w-48" : "w-40"} second="w-36" />
+            <SkeletonLines first={row % 2 ? "w-48" : "w-40"} second="w-36" />
           </TableCell>
           <TableCell>
-            <Lines first="w-20" second="w-12" />
+            <SkeletonLines first="w-20" second="w-12" />
           </TableCell>
           <TableCell>
-            <Lines first="w-24" second="w-14" />
+            <SkeletonLines first="w-24" second="w-14" />
           </TableCell>
           <TableCell>
             <Skeleton className="h-3.5 w-18" />
           </TableCell>
           <TableCell>
-            <Lines first="w-28" second="w-20" />
+            <SkeletonLines first="w-28" second="w-20" />
           </TableCell>
           <TableCell className="w-11 px-2">
             <Skeleton className="size-8 rounded-lg" />
@@ -561,13 +551,13 @@ function TripCardsLoading() {
             <Skeleton className="h-3.5 w-22" />
             <Skeleton className="h-5.5 w-24 rounded-full" />
           </div>
-          <Lines first="w-48" second="w-36" />
+          <SkeletonLines first="w-48" second="w-36" />
           <div className="flex items-end justify-between">
-            <Lines first="w-20" second="w-12" />
+            <SkeletonLines first="w-20" second="w-12" />
             <Skeleton className="h-3.5 w-18" />
           </div>
           <div className="border-t border-border pt-3">
-            <Lines first="w-28" second="w-20" />
+            <SkeletonLines first="w-28" second="w-20" />
           </div>
         </motion.li>
       ))}
