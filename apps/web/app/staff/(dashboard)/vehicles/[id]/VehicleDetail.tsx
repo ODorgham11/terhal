@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "motion/react";
 import {
   IconArchive,
   IconChevronLeft,
@@ -34,6 +35,7 @@ import { KindBadge } from "@/components/staff/fleet/format";
 import { useArchive } from "@/components/staff/fleet/useArchive";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { FadeText, ease, fade } from "@/components/ui/Motion";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { toast } from "@/components/ui/Toast";
 import { call, isApiError, staffApi, useErrorMessage } from "@/lib/api";
@@ -54,7 +56,7 @@ function Detail({ id }: { id: string }) {
     staleTime: 10 * 60_000,
     refetchInterval: 10 * 60_000,
   });
-  if (vehicle.isPending) return <Skeleton className="h-64 w-full" />;
+  if (vehicle.isPending) return <VehicleLoading />;
   if (vehicle.isError) {
     return isApiError(vehicle.error) && vehicle.error.status === 404 ? (
       <SystemState kind="notFound" />
@@ -79,7 +81,7 @@ function Loaded({ vehicle }: { vehicle: Vehicle }) {
   const smaller = carBodies.slice(0, carBodies.indexOf(vehicle.body));
 
   return (
-    <>
+    <motion.div {...fade} className="flex flex-col gap-6">
       <nav aria-label={t("breadcrumb")} className="flex items-center gap-2 text-xs">
         <Link href="/vehicles" className="text-primary hover:underline">
           {nav("vehicles")}
@@ -95,7 +97,7 @@ function Loaded({ vehicle }: { vehicle: Vehicle }) {
             <KindBadge item={vehicle} />
             {archived && <Badge tone="neutral">{t("archived")}</Badge>}
           </div>
-          <p className="text-base text-muted">
+          <p className="text-sm text-muted">
             <span dir="ltr">{vehicle.plateNumber}</span> · {vehicle.color} · {cars(vehicle.body)}
           </p>
         </div>
@@ -161,7 +163,66 @@ function Loaded({ vehicle }: { vehicle: Vehicle }) {
       </div>
 
       <VehicleDrawer vehicle={vehicle} open={editing} onOpenChange={setEditing} />
-    </>
+    </motion.div>
+  );
+}
+
+// The page's own shape in gray: breadcrumb, header, the photo and trips on one side, the details on the other.
+function VehicleLoading() {
+  const t = useTranslations("common.ui");
+  const card = (lines: number, key: number) => (
+    <div
+      key={key}
+      className="flex flex-col gap-2.5 rounded-xl border border-border bg-surface p-5 shadow-xs"
+    >
+      <div className="flex h-8 items-center">
+        <Skeleton className="h-4.5 w-32" />
+      </div>
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: lines }, (_, line) => (
+          <Skeleton key={line} className={line % 2 ? "h-4 w-2/3" : "h-4 w-full"} />
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <motion.div {...fade} role="status" className="flex flex-col gap-6">
+      <span className="sr-only">{t("loading")}</span>
+      <Skeleton className="h-3.5 w-36" />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-5.5 w-20 rounded-full" />
+          </div>
+          <Skeleton className="h-4 w-48 max-w-full" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-28 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+        </div>
+      </div>
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="flex min-w-0 flex-col gap-5">
+          <div className="flex flex-col gap-2.5 rounded-xl border border-border bg-surface p-5 shadow-xs">
+            <div className="flex h-8 items-center justify-between">
+              <Skeleton className="h-4.5 w-24" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+            <div className="flex flex-col gap-4">
+              <Skeleton className="aspect-[16/9] w-full rounded-lg" />
+              <div className="flex gap-2">
+                {[0, 1, 2].map((thumb) => (
+                  <Skeleton key={thumb} className="h-14 w-20 rounded-md" />
+                ))}
+              </div>
+            </div>
+          </div>
+          {card(3, 0)}
+        </div>
+        <div className="flex flex-col gap-5">{[7, 4].map(card)}</div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -228,24 +289,46 @@ function Photos({ vehicle }: { vehicle: Vehicle }) {
       title={t("title")}
       aside={
         <span className="text-xs text-muted">
-          {t("count", { count: images.length, limit: VEHICLE_IMAGE_LIMIT })}
+          <FadeText value={t("count", { count: images.length, limit: VEHICLE_IMAGE_LIMIT })} />
         </span>
       }
     >
       <div className="relative flex aspect-[16/9] items-center justify-center overflow-hidden rounded-lg bg-surface-muted text-muted">
-        {current ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element -- signed storage links */}
-            <img
-              src={current.url}
-              alt={t("photoAlt", { number: current.position + 1 })}
-              className="size-full object-cover"
-            />
-            {current.position === 0 && (
-              <span className="absolute start-3 top-3 rounded-md bg-surface px-2 py-1 text-xs font-medium text-foreground shadow-xs">
-                {t("cover")}
-              </span>
+        {/* Photos crossfade into each other as one is picked, added or removed. */}
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={current?.id ?? "none"}
+            {...fade}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            {current ? (
+              // eslint-disable-next-line @next/next/no-img-element -- signed storage links
+              <img
+                src={current.url}
+                alt={t("photoAlt", { number: current.position + 1 })}
+                className="size-full object-cover"
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <IconPhoto aria-hidden className="size-8" stroke={1.5} />
+                <span className="text-sm">{t("none")}</span>
+              </div>
             )}
+          </motion.div>
+        </AnimatePresence>
+        {current && (
+          <>
+            <AnimatePresence initial={false}>
+              {current.position === 0 && (
+                <motion.span
+                  key="cover"
+                  {...fade}
+                  className="absolute start-3 top-3 rounded-md bg-surface px-2 py-1 text-xs font-medium text-foreground shadow-xs"
+                >
+                  {t("cover")}
+                </motion.span>
+              )}
+            </AnimatePresence>
             <div className="absolute end-3 top-3 flex gap-1.5">
               {current.position > 0 && (
                 <Button
@@ -280,54 +363,64 @@ function Photos({ vehicle }: { vehicle: Vehicle }) {
               </Button>
             </div>
           </>
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            <IconPhoto aria-hidden className="size-8" stroke={1.5} />
-            <span className="text-sm">{t("none")}</span>
-          </div>
         )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        {images.map((image, index) => (
-          <div key={image.id} className="flex flex-col items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setSelected(index)}
-              aria-label={t("photoAlt", { number: index + 1 })}
-              aria-pressed={current?.id === image.id}
-              className={cn(
-                "h-14 w-20 overflow-hidden rounded-md border-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                current?.id === image.id ? "border-primary" : "border-transparent",
-              )}
+        <AnimatePresence initial={false}>
+          {images.map((image, index) => (
+            // Slides to its new place when the order changes, and fades in or out when added or removed.
+            <motion.div
+              key={image.id}
+              layout
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={ease}
+              className="flex flex-col items-center gap-1"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- signed storage links */}
-              <img src={image.url} alt="" className="size-full object-cover" />
-            </button>
-            {current?.id === image.id && images.length > 1 && (
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  disabled={busy || index === 0}
-                  onClick={() => move(index, index - 1)}
-                  aria-label={t("moveEarlier")}
-                  className="rounded p-0.5 text-muted hover:text-foreground disabled:opacity-40"
-                >
-                  <DirectionalIcon icon={IconChevronLeft} className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  disabled={busy || index === images.length - 1}
-                  onClick={() => move(index, index + 1)}
-                  aria-label={t("moveLater")}
-                  className="rounded p-0.5 text-muted hover:text-foreground disabled:opacity-40"
-                >
-                  <DirectionalIcon icon={IconChevronRight} className="size-4" />
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+              <button
+                type="button"
+                onClick={() => setSelected(index)}
+                aria-label={t("photoAlt", { number: index + 1 })}
+                aria-pressed={current?.id === image.id}
+                className={cn(
+                  "h-14 w-20 overflow-hidden rounded-md border-2 transition-[border-color,opacity] duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  current?.id === image.id
+                    ? "border-primary"
+                    : "border-transparent opacity-80 hover:opacity-100",
+                )}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- signed storage links */}
+                <img src={image.url} alt="" className="size-full object-cover" />
+              </button>
+              <AnimatePresence initial={false}>
+                {current?.id === image.id && images.length > 1 && (
+                  <motion.div key="move" {...fade} className="flex gap-1">
+                    <button
+                      type="button"
+                      disabled={busy || index === 0}
+                      onClick={() => move(index, index - 1)}
+                      aria-label={t("moveEarlier")}
+                      className="rounded p-0.5 text-muted transition-colors hover:text-foreground disabled:opacity-40"
+                    >
+                      <DirectionalIcon icon={IconChevronLeft} className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy || index === images.length - 1}
+                      onClick={() => move(index, index + 1)}
+                      aria-label={t("moveLater")}
+                      className="rounded p-0.5 text-muted transition-colors hover:text-foreground disabled:opacity-40"
+                    >
+                      <DirectionalIcon icon={IconChevronRight} className="size-4" />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </AnimatePresence>
         {!full && (
           <>
             <input
@@ -342,7 +435,7 @@ function Photos({ vehicle }: { vehicle: Vehicle }) {
             <Button asChild variant="secondary" size="sm" disabled={busy}>
               <label htmlFor="vehicle-photos" className="cursor-pointer">
                 <IconUpload aria-hidden className="size-4" stroke={1.75} />
-                {busy ? t("uploading") : t("add")}
+                <FadeText value={busy ? t("uploading") : t("add")} />
               </label>
             </Button>
           </>
