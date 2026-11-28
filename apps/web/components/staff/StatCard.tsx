@@ -1,14 +1,20 @@
+"use client";
+
 import type { ReactNode } from "react";
 import type { Icon } from "@tabler/icons-react";
+import { FadeText } from "@/components/ui/Motion";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/cn";
 
 type StatCardProps = {
   icon: Icon;
   label: ReactNode;
   value: ReactNode;
-  // A line under the number; `noteTone` colors it when it's a warning.
+  // A line under the number; `noteTone` colors it when it's a warning. `noteLoading` holds its place while it loads,
+  // so the card doesn't grow when it arrives.
   note?: ReactNode;
   noteTone?: "muted" | "warning" | "accent" | "danger";
+  noteLoading?: boolean;
   className?: string;
 };
 
@@ -19,13 +25,14 @@ const noteTones = {
   danger: "text-danger",
 };
 
-// One number with its label: the overview's and analytics' KPIs.
+// One number with its label: the overview's and analytics' KPIs. The number and note fade when they change.
 export function StatCard({
   icon: Icon,
   label,
   value,
   note,
   noteTone = "muted",
+  noteLoading = false,
   className,
 }: StatCardProps) {
   return (
@@ -42,9 +49,17 @@ export function StatCard({
         <p className="min-w-0 flex-1 truncate text-sm text-muted">{label}</p>
       </div>
       <p className="text-[1.75rem] leading-8.5 font-semibold text-foreground tabular-nums">
-        {value}
+        <FadeText value={value} />
       </p>
-      {note && <p className={cn("text-xs", noteTones[noteTone])}>{note}</p>}
+      {noteLoading ? (
+        <Skeleton className="h-4 w-28" />
+      ) : (
+        note && (
+          <p className={cn("truncate text-xs transition-colors", noteTones[noteTone])}>
+            <FadeText value={note} />
+          </p>
+        )
+      )}
     </div>
   );
 }

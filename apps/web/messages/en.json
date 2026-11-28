@@ -258,10 +258,11 @@
         "today": "Trips today",
         "tomorrow": "{count, plural, =0 {None booked for tomorrow yet} one {# tomorrow} other {# tomorrow}}",
         "unassigned": "No driver yet",
-        "overdue": "{count, plural, one {# past its pickup time} other {# past their pickup time}}",
+        "overdue": "{count, plural, =0 {None past their pickup time} one {# past its pickup time} other {# past their pickup time}}",
         "priceRequests": "Need a price",
+        "priceRequestsNote": "Customers waiting on a quote",
         "awaitingReport": "Awaiting report",
-        "inProgress": "{count, plural, one {# trip on the road} other {# trips on the road}}"
+        "inProgress": "{count, plural, =0 {None on the road right now} one {# trip on the road} other {# trips on the road}}"
       },
       "needsAction": {
         "title": "Needs action",
