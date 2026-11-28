@@ -15,14 +15,19 @@ type PageHeaderProps = {
 export function PageHeader({ title, description, eyebrow, actions, className }: PageHeaderProps) {
   return (
     <header
-      className={cn("flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between", className)}
+      // Side by side only once there's room for both, with a clear gap between the words and the buttons; until then the
+      // buttons sit on their own line under them.
+      className={cn(
+        "flex flex-col gap-x-12 gap-y-4 lg:flex-row lg:items-end lg:justify-between",
+        className,
+      )}
     >
       <div className="flex min-w-0 flex-col gap-1">
         {eyebrow}
         <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
-        {description && <p className="text-sm text-muted">{description}</p>}
+        {description && <p className="max-w-2xl text-sm text-muted">{description}</p>}
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2.5">{actions}</div>}
     </header>
   );
 }

@@ -1,4 +1,4 @@
-import type { Locality, LocationSummary, ResolvedLocation } from "@terhal/contracts";
+import type { Locality, LocationSummary, Pin, ResolvedLocation } from "@terhal/contracts";
 import type { Prisma } from "../../../../generated/prisma/client";
 import { prisma } from "../../../platform/db/prisma";
 import { parsePolygon, toGeoJson } from "../domain/outline";
@@ -64,12 +64,32 @@ export const liveSubtree = async (id: string, client: Client = prisma) => {
   return rows.map((row) => row.id);
 };
 
-// Which of these locations have an outline. Prisma can't read the polygon column, so it's asked for directly.
+// Which of these locations have an outline, with the outline's centre (Postgres's @@, the mean of its points): where
+// a trip to the whole of a flexible governorate is pinned. Prisma can't read the polygon column, so it's asked for
+// directly.
 export const withBoundary = async (ids: readonly string[], client: Client = prisma) => {
-  if (ids.length === 0) return new Set<string>();
-  const rows = await client.$queryRaw<{ id: string }[]>`
-    SELECT "id" FROM "Location" WHERE "id" = ANY(${[...ids]}::text[]) AND "boundary" IS NOT NULL`;
-  return new Set(rows.map((row) => row.id));
+  if (ids.length === 0) return new Map<string, Pin>();
+  const rows = await client.$queryRaw<{ id: string; latitude: number; longitude: number }[]>`
+    SELECT "id", (@@ "boundary")[1] AS "latitude", (@@ "boundary")[0] AS "longitude"
+    FROM "Location" WHERE "id" = ANY(${[...ids]}::text[]) AND "boundary" IS NOT NULL`;
+  return new Map(
+    rows.map((row) => [
+      row.id,
+      { latitude: Number(row.latitude.toFixed(6)), longitude: Number(row.longitude.toFixed(6)) },
+    ]),
+  );
+};
+
+// A live flexible governorate, named with itself only (a governorate has no ancestors), or null.
+export const flexibleGovernorate = async (
+  id: string,
+  client: Client = prisma,
+): Promise<ResolvedLocation | null> => {
+  const row = await client.location.findFirst({
+    where: { id, locality: "GOVERNORATE", flexible: true, deletedAt: null },
+    select: { id: true, locality: true, nameEn: true, nameAr: true },
+  });
+  return row && { ...row, ancestors: [] };
 };
 
 // Live governorates' outlines as GeoJSON, by id.

@@ -1,8 +1,12 @@
-import type { Vehicle } from "@terhal/contracts";
+import type { Vehicle, VehicleImageUpload } from "@terhal/contracts";
 import { beforeEach, describe, expect, it } from "vitest";
 import { routes } from "../../../src/http/router";
 import { prisma } from "../../../src/platform/db/prisma";
 import { storage } from "../../../src/platform/storage/index";
+import {
+  nextSweep,
+  sweepVehicleImageUploads,
+} from "../../../src/modules/fleet/application/vehicle-images";
 import { resetDatabase } from "../../support/database";
 import { bodyOf, createTrip, signedInStaff, type Agent, type Page } from "../../support/fleet";
 import { resetRedis } from "../../support/redis";
@@ -41,15 +45,35 @@ const JPEG = [0xff, 0xd8, 0xff, 0xe0];
 const WEBP = [0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50];
 const GIF = [0x47, 0x49, 0x46, 0x38, 0x39, 0x61];
 
-const upload = (
+// The dashboard's three steps: ask for a link, put the file there, confirm it. Answers with the first step that failed,
+// or the confirm.
+const requestUpload = (agent: Agent, vehicleId: string, json: Record<string, unknown>) =>
+  agent.request(`/v1/staff/vehicles/${vehicleId}/images/uploads`, { method: "POST", json });
+
+const putFile = (
+  link: VehicleImageUpload,
+  bytes: Uint8Array<ArrayBuffer>,
+  headers = link.headers,
+) => {
+  const { pathname, search } = new URL(link.url);
+  return routes.request(pathname + search, { method: link.method, headers, body: bytes });
+};
+
+const confirm = (agent: Agent, vehicleId: string, uploadId: string) =>
+  agent.request(`/v1/staff/vehicles/${vehicleId}/images`, { method: "POST", json: { uploadId } });
+
+const upload = async (
   agent: Agent,
   vehicleId: string,
   bytes: Uint8Array<ArrayBuffer>,
-  name = "photo.png",
+  contentType = "image/png",
 ) => {
-  const form = new FormData();
-  form.append("file", new File([bytes], name, { type: "image/png" }));
-  return agent.request(`/v1/staff/vehicles/${vehicleId}/images`, { method: "POST", body: form });
+  const requested = await requestUpload(agent, vehicleId, { contentType, size: bytes.byteLength });
+  if (requested.status !== 201) return requested;
+  const link = await bodyOf<VehicleImageUpload>(requested);
+  const put = await putFile(link, bytes);
+  if (put.status !== 200) return put;
+  return confirm(agent, vehicleId, link.uploadId);
 };
 
 const fetchSigned = (url: string) => {
@@ -207,31 +231,101 @@ describe("vehicle images", () => {
     const { agent } = await signedInStaff();
     const vehicle = await addVehicle(agent);
     for (const bytes of [withHeader(GIF), new TextEncoder().encode("<svg></svg>")]) {
-      const response = await upload(agent, vehicle.id, bytes, "photo.png");
+      const response = await upload(agent, vehicle.id, bytes);
       expect(response.status).toBe(422);
       expect((await bodyOf(response)).code).toBe("IMAGE_TYPE_NOT_ALLOWED");
     }
-    const missing = await agent.request(`/v1/staff/vehicles/${vehicle.id}/images`, {
-      method: "POST",
-      body: new FormData(),
-    });
-    expect(missing.status).toBe(400);
+    // Nor are they asked for.
+    for (const json of [{ contentType: "image/gif", size: 100 }, {}]) {
+      expect((await requestUpload(agent, vehicle.id, json)).status).toBe(400);
+    }
     expect(await prisma.vehicleImage.count()).toBe(0);
+    // A refused file is deleted, its upload with it.
+    expect(await prisma.vehicleImageUpload.count()).toBe(0);
   });
 
   it("refuses an image over 5 MB", async () => {
     const { agent } = await signedInStaff();
     const vehicle = await addVehicle(agent);
 
+    // Refused when asked for...
     const justOver = await upload(agent, vehicle.id, withHeader(PNG, 5 * 1024 * 1024 + 1));
-    expect(justOver.status).toBe(413);
-    expect((await bodyOf(justOver)).code).toBe("PAYLOAD_TOO_LARGE");
+    expect(justOver.status).toBe(400);
 
-    const wayOver = await upload(agent, vehicle.id, withHeader(PNG, 6 * 1024 * 1024));
-    expect(wayOver.status).toBe(413);
-    expect((await bodyOf(wayOver)).code).toBe("PAYLOAD_TOO_LARGE");
+    // ...when put, if the file is bigger than it said...
+    const link = await bodyOf<VehicleImageUpload>(
+      await requestUpload(agent, vehicle.id, { contentType: "image/png", size: 256 }),
+    );
+    expect((await putFile(link, withHeader(PNG, 6 * 1024 * 1024))).status).toBe(413);
+
+    // ...and when confirmed, whatever reached storage (a bucket doesn't check the size).
+    const bucket = await bodyOf<VehicleImageUpload>(
+      await requestUpload(agent, vehicle.id, { contentType: "image/png", size: 256 }),
+    );
+    const { key } = await prisma.vehicleImageUpload.findUniqueOrThrow({
+      where: { id: bucket.uploadId },
+    });
+    await storage.put(key, withHeader(PNG, 5 * 1024 * 1024 + 1), "image/png");
+    const confirmed = await confirm(agent, vehicle.id, bucket.uploadId);
+    expect(confirmed.status).toBe(413);
+    expect((await bodyOf(confirmed)).code).toBe("PAYLOAD_TOO_LARGE");
+    expect(await storage.get(key)).toBeNull();
 
     expect((await upload(agent, vehicle.id, withHeader(PNG, 5 * 1024 * 1024))).status).toBe(201);
+  });
+
+  it("puts files only where and as the link was signed for, and confirms only what arrived", async () => {
+    const { agent } = await signedInStaff();
+    const vehicle = await addVehicle(agent);
+    const link = await bodyOf<VehicleImageUpload>(
+      await requestUpload(agent, vehicle.id, { contentType: "image/png", size: 256 }),
+    );
+    expect(link.method).toBe("PUT");
+    expect(link.headers).toEqual({ "Content-Type": "image/png" });
+
+    // Another content type, or another key, breaks the signature.
+    expect((await putFile(link, withHeader(PNG), { "Content-Type": "image/jpeg" })).status).toBe(
+      403,
+    );
+    const elsewhere = new URL(link.url);
+    elsewhere.searchParams.set("key", `vehicles/${vehicle.id}/other`);
+    expect((await putFile({ ...link, url: elsewhere.href }, withHeader(PNG))).status).toBe(403);
+
+    // Nothing there yet.
+    const early = await confirm(agent, vehicle.id, link.uploadId);
+    expect(early.status).toBe(409);
+    expect((await bodyOf(early)).code).toBe("UPLOAD_INCOMPLETE");
+
+    expect((await putFile(link, withHeader(PNG))).status).toBe(200);
+    // Only whoever asked for it can confirm it, and only for this vehicle.
+    const { agent: other } = await signedInStaff(["fleet"], "other@terhal.co");
+    expect((await confirm(other, vehicle.id, link.uploadId)).status).toBe(404);
+    expect((await confirm(agent, "missing", link.uploadId)).status).toBe(404);
+
+    expect((await confirm(agent, vehicle.id, link.uploadId)).status).toBe(201);
+    // Once.
+    expect((await confirm(agent, vehicle.id, link.uploadId)).status).toBe(404);
+    expect(await prisma.vehicleImage.count({ where: { vehicleId: vehicle.id } })).toBe(1);
+  });
+
+  it("sweeps uploads never confirmed, with their files, once their link is long gone", async () => {
+    const { agent } = await signedInStaff();
+    const vehicle = await addVehicle(agent);
+    const link = await bodyOf<VehicleImageUpload>(
+      await requestUpload(agent, vehicle.id, { contentType: "image/png", size: 256 }),
+    );
+    await putFile(link, withHeader(PNG));
+    const { key, expiresAt } = await prisma.vehicleImageUpload.findUniqueOrThrow({
+      where: { id: link.uploadId },
+    });
+
+    expect(await sweepVehicleImageUploads(new Date(expiresAt.getTime() + 30 * 60_000))).toBe(0);
+    expect(await nextSweep()).toEqual(new Date(expiresAt.getTime() + 60 * 60_000));
+
+    expect(await sweepVehicleImageUploads(new Date(expiresAt.getTime() + 61 * 60_000))).toBe(1);
+    expect(await prisma.vehicleImageUpload.count()).toBe(0);
+    expect(await storage.get(key)).toBeNull();
+    expect(await nextSweep()).toBeNull();
   });
 
   it("keeps at most 5 per vehicle", async () => {

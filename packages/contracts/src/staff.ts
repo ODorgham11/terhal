@@ -82,6 +82,7 @@ export const StaffInvitation = z
     id: "StaffInvitation",
     description: "An invitation not accepted or revoked yet, expired or not.",
   });
+export type StaffInvitation = z.infer<typeof StaffInvitation>;
 
 // Only checks the password is there: rule changes must never lock out passwords set under the old rules.
 export const StaffSignIn = z

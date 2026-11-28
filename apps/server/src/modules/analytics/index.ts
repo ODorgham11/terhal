@@ -7,3 +7,4 @@ export {
   scheduleAnalyticsJobs,
 } from "./application/reports";
 export { analyticsRoutes } from "./http/routes";
+export { cairoMonthOf, monthBounds } from "./domain/months";

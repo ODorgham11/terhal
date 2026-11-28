@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useLocale } from "next-intl";
+import { MotionConfig } from "motion/react";
 import { Direction } from "radix-ui";
 import { Toaster } from "@/components/ui/Toast";
 import { directionOf } from "@/i18n/locales";
@@ -15,7 +16,7 @@ function SignedOutWatcher({ audience }: { audience: Audience }) {
 }
 
 // Everything a host's pages need: the query cache, the direction for Radix (menus, tabs and toasts follow it), the
-// toasts, and a watch on the host's sessions so a refused refresh signs the page out at once. next-intl's provider is
+// toasts, motion that honours reduced-motion settings, and a watch on the host's sessions so a refused refresh signs the page out at once. next-intl's provider is
 // in the root layout, shared by every host.
 function HostProviders({ audiences, children }: { audiences: Audience[]; children: ReactNode }) {
   const locale = useLocale();
@@ -23,11 +24,13 @@ function HostProviders({ audiences, children }: { audiences: Audience[]; childre
   return (
     <QueryProvider>
       <Direction.Provider dir={directionOf(locale)}>
-        {audiences.map((audience) => (
-          <SignedOutWatcher key={audience} audience={audience} />
-        ))}
-        {children}
-        <Toaster />
+        <MotionConfig reducedMotion="user">
+          {audiences.map((audience) => (
+            <SignedOutWatcher key={audience} audience={audience} />
+          ))}
+          {children}
+          <Toaster />
+        </MotionConfig>
       </Direction.Provider>
     </QueryProvider>
   );

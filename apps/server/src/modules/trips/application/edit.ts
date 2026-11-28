@@ -51,14 +51,32 @@ export const updateTrip = async (id: string, staffId: string, input: UpdateTrip)
 
   // A new pin resolves again, against the other end (covered, not the same place), and takes the new place's names.
   if (input.pickup ?? input.dropoff) {
-    const pickupPin = input.pickup ?? {
-      latitude: trip.pickupLatitude.toNumber(),
-      longitude: trip.pickupLongitude.toNumber(),
-    };
-    const dropoffPin = input.dropoff ?? {
-      latitude: trip.dropoffLatitude.toNumber(),
-      longitude: trip.dropoffLongitude.toNumber(),
-    };
+    // An end that isn't changing keeps its place when it's a flexible governorate: the trip was booked to the whole of
+    // it, so it stays there rather than landing on whichever district its pin falls in.
+    const governorates = new Set(
+      (
+        await prisma.location.findMany({
+          where: {
+            id: { in: [trip.pickupId, trip.dropoffId] },
+            locality: "GOVERNORATE",
+            flexible: true,
+            deletedAt: null,
+          },
+          select: { id: true },
+        })
+      ).map((location) => location.id),
+    );
+    const kept = (locationId: string, latitude: number, longitude: number) => ({
+      latitude,
+      longitude,
+      ...(governorates.has(locationId) && { locationId }),
+    });
+    const pickupPin =
+      input.pickup ??
+      kept(trip.pickupId, trip.pickupLatitude.toNumber(), trip.pickupLongitude.toNumber());
+    const dropoffPin =
+      input.dropoff ??
+      kept(trip.dropoffId, trip.dropoffLatitude.toNumber(), trip.dropoffLongitude.toNumber());
     const route = await resolveRoute(pickupPin, dropoffPin);
     Object.assign(set, {
       pickupId: route.pickup.id,

@@ -1,6 +1,7 @@
 import type { TripEventAction, TripStatus } from "@terhal/contracts";
 import type { Prisma, Trip } from "../../../../generated/prisma/client";
 import type { AppError } from "../../../platform/errors/app-error";
+import { markChanged } from "../../../platform/jobs/gate";
 import { afterTripEvent } from "./hooks";
 import { jsonValue, lockTrip, statusConflict, tripNotFound, tripWriteError } from "./shared";
 
@@ -40,8 +41,13 @@ const actorColumns = (actor: TripActor) => ({
   system: "system" in actor ? actor.system : null,
 });
 
-// Writes the event, then runs the hook for it (notifications), inside the caller's transaction.
+// The job gate's signal for the trips' jobs: any trip event may give them work.
+export const TRIPS_SIGNAL = "trips";
+
+// Writes the event, then runs the hook for it (notifications), inside the caller's transaction. Marks the trips as
+// changed, so their jobs look again (platform/jobs/gate.ts).
 export const recordTripEvent = async (tx: Prisma.TransactionClient, event: TripEventInput) => {
+  await markChanged(TRIPS_SIGNAL);
   const row = await tx.tripEvent.create({
     data: {
       tripId: event.tripId,

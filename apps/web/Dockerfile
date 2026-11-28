@@ -9,7 +9,11 @@ WORKDIR /app
 
 FROM base AS build
 ARG NEXT_PUBLIC_API_URL
+# Optional: without them the locations editor leaves out its map and the coordinates are typed in.
+ARG NEXT_PUBLIC_GOOGLE_MAPS_KEY=""
+ARG NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID=""
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_GOOGLE_MAPS_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_KEY NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID=$NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 RUN test -n "$NEXT_PUBLIC_API_URL" || (echo "NEXT_PUBLIC_API_URL build arg is required" && exit 1)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/server/package.json apps/server/

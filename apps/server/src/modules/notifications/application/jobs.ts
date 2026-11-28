@@ -1,15 +1,18 @@
 import type { Job } from "bullmq";
 import { prisma } from "../../../platform/db/prisma";
+import { runGated } from "../../../platform/jobs/gate";
 import type { JobData } from "../../../platform/jobs/queues";
 import { logger } from "../../../platform/logger/logger";
 import { reminderKinds, type ReminderKind } from "../domain/rules";
 import { deliver } from "./delivery";
-import { queueDeliveries, sweepOutbox } from "./outbox";
+import { OUTBOX_SIGNAL, queueDeliveries, sweepOutbox } from "./outbox";
 import { fireReminder } from "./reminders";
 
 // The notifications queue's jobs: `deliver` and `remind` are queued by the outbox sweep, which itself runs on a schedule.
 
-// Every 5 seconds: emails go out within seconds of the change that caused them.
+// Every 5 seconds: emails go out within seconds of the change that caused them. Through the job gate, it only queries
+// Postgres after a trip event wrote to the outbox, and on the hour for anything lost (a job Redis dropped, a reminder
+// whose job never cleared its row).
 export const notificationJobs = {
   "sweep-notifications": { every: 5_000 },
 };
@@ -51,7 +54,11 @@ export const processNotificationJob = async (job: NotificationJob) => {
       await remind(job);
       return;
     case "sweep-notifications":
-      await sweepOutbox();
+      await runGated({ job: "sweep-notifications", signal: OUTBOX_SIGNAL }, async () => {
+        const { deliveries, reminders } = await sweepOutbox();
+        // Found some: there may be more than a batch, so look again next time.
+        return deliveries + reminders > 0 ? new Date() : null;
+      });
       return;
     default:
       throw new Error(`Unknown notifications job: ${job.name}`);

@@ -31,13 +31,14 @@ model Staff {
   lastLoginAt DateTime?
   locale      Locale    @default(ar)
 
-  sessions      StaffSession[]
-  invitations   StaffInvitation[]
-  trips         Trip[]
-  events        TripEvent[]
-  notifications Notification[]
-  auditLogs     AuditLog[]
-  transactions  DriverTransaction[]
+  sessions            StaffSession[]
+  invitations         StaffInvitation[]
+  trips               Trip[]
+  events              TripEvent[]
+  notifications       Notification[]
+  auditLogs           AuditLog[]
+  transactions        DriverTransaction[]
+  vehicleImageUploads VehicleImageUpload[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

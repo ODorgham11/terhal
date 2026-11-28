@@ -7,6 +7,7 @@ import { routePath } from "hono/route";
 import { timeout as honoTimeout } from "hono/timeout";
 import { runWithContext } from "../platform/context/request-context";
 import { logger } from "../platform/logger/logger";
+import { LOCAL_FILES_PATH } from "../platform/storage/local";
 
 // Takes the client's X-Request-Id when it is a short, safe token (so the web app can correlate its
 // own logs), otherwise generates one. Echoed back on every response.
@@ -42,8 +43,8 @@ export const timeout = honoTimeout(
   new HTTPException(503, { message: "Request timed out." }),
 );
 
-// JSON bodies stay small. The only uploads are vehicle images (5 MB each, checked again by their route, which answers
-// with its own message); their routes get room for the file plus the multipart framing.
+// JSON bodies stay small. Files go straight to storage on signed links; only in local development does that link point
+// back at the API (PUT /v1/files), which gets room for one image (5 MB, checked again when the upload is confirmed).
 const jsonLimit = honoBodyLimit({
   maxSize: 100 * 1024,
   onError: () => {
@@ -52,16 +53,14 @@ const jsonLimit = honoBodyLimit({
 });
 
 const uploadLimit = honoBodyLimit({
-  maxSize: VEHICLE_IMAGE_MAX_BYTES + 64 * 1024,
+  maxSize: VEHICLE_IMAGE_MAX_BYTES,
   onError: () => {
     throw new HTTPException(413, { message: "An image can be 5 MB at most." });
   },
 });
 
-const uploadRoutes = [/^\/v1\/staff\/vehicles\/[^/]+\/images$/];
-
 export const bodyLimit = createMiddleware((c, next) =>
-  c.req.method === "POST" && uploadRoutes.some((route) => route.test(c.req.path))
+  c.req.method === "PUT" && c.req.path === LOCAL_FILES_PATH
     ? uploadLimit(c, next)
     : jsonLimit(c, next),
 );

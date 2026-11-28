@@ -324,6 +324,22 @@ describe("the driver, through the link", () => {
       [{ stops: undefined }, "stops"],
       [{ endMileage: 100 }, "endMileage"],
       [{ dropoffAt: hour(start, 0.5) }, "dropoffAt"],
+      [{ pickupAt: hour(start, -1) }, "pickupAt"],
+      [{ dropoffAt: hour(start, 1) }, "dropoffAt"],
+      [{ endedAt: hour(start, 4) }, "endedAt"],
+      [
+        { stops: [{ address: "Early", startedAt: hour(start, 0.5), endedAt: hour(start, 0.8) }] },
+        "stops.0.startedAt",
+      ],
+      [
+        {
+          stops: [
+            { address: "First", startedAt: hour(start, 2), endedAt: hour(start, 3) },
+            { address: "Overlaps", startedAt: hour(start, 2.5), endedAt: hour(start, 3.5) },
+          ],
+        },
+        "stops.1.startedAt",
+      ],
       [{ cashCollected: "-5" }, "cashCollected"],
       [
         {
@@ -426,9 +442,9 @@ describe("the database", () => {
         vehiclePickup: "A",
         startMileage: 1,
         pickupAt: now,
-        dropoffAt: now,
+        dropoffAt: new Date(now.getTime() + 1 * 60_000),
         vehicleDropoff: "B",
-        endedAt: now,
+        endedAt: new Date(now.getTime() + 2 * 60_000),
         endMileage: 2,
       },
     });

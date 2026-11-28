@@ -142,6 +142,7 @@ export const ReportStop = z
         code: "custom",
         path: ["endedAt"],
         message: "A stop can't end before it starts.",
+        params: { rule: "stopEnd" },
       });
     }
   })
@@ -152,8 +153,10 @@ export const ReportExpense = z
   .meta({ id: "ReportExpense" });
 
 // The whole report, every field required (D3 a): drafts stay in the browser, so what's sent is final. The times run in
-// order (start, pickup, drop-off, end), stops fall within them, and the odometer never goes back (TripReport_chronology,
-// TripReport_mileage).
+// the order a trip does: the car is taken at or before the pickup, the passenger is dropped off after the pickup, and
+// the car goes back after the drop-off. Stops are on the way, so they fall between the pickup and the drop-off, one
+// after another in the order they're listed. The odometer never goes back (TripReport_chronology, TripReport_mileage).
+// Each problem names its rule in `params.rule`, so a form can say which one in its own words.
 export const SubmitReport = z
   .object({
     startedAt: Instant("Start time"),
@@ -173,13 +176,17 @@ export const SubmitReport = z
       .max(REPORT_MAX_EXPENSES, `A report has ${String(REPORT_MAX_EXPENSES)} expenses at most.`),
   })
   .superRefine((report, ctx) => {
+    // [field, the step before it, whether the two may be the same minute, message]
     const steps = [
-      ["pickupAt", report.startedAt, report.pickupAt, "The pickup can't be before the start."],
-      ["dropoffAt", report.pickupAt, report.dropoffAt, "The drop-off can't be before the pickup."],
-      ["endedAt", report.dropoffAt, report.endedAt, "The end can't be before the drop-off."],
+      ["pickupAt", report.startedAt, true, "The pickup can't be before the car was taken."],
+      ["dropoffAt", report.pickupAt, false, "The drop-off has to be after the pickup."],
+      ["endedAt", report.dropoffAt, false, "The car has to be returned after the drop-off."],
     ] as const;
-    for (const [field, before, after, message] of steps) {
-      if (time(after) < time(before)) ctx.addIssue({ code: "custom", path: [field], message });
+    for (const [field, before, same, message] of steps) {
+      const gap = time(report[field]) - time(before);
+      if (same ? gap < 0 : gap <= 0) {
+        ctx.addIssue({ code: "custom", path: [field], message, params: { rule: "order" } });
+      }
     }
     if (report.endMileage < report.startMileage) {
       ctx.addIssue({
@@ -189,14 +196,23 @@ export const SubmitReport = z
       });
     }
     report.stops.forEach((stop, index) => {
+      const previous = report.stops[index - 1];
       if (
-        time(stop.startedAt) < time(report.startedAt) ||
-        time(stop.endedAt) > time(report.endedAt)
+        time(stop.startedAt) < time(report.pickupAt) ||
+        time(stop.endedAt) > time(report.dropoffAt)
       ) {
         ctx.addIssue({
           code: "custom",
           path: ["stops", index, "startedAt"],
-          message: "A stop must fall between the trip's start and end.",
+          message: "A stop must fall between the pickup and the drop-off.",
+          params: { rule: "stopWithinTrip" },
+        });
+      } else if (previous && time(stop.startedAt) < time(previous.endedAt)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["stops", index, "startedAt"],
+          message: "A stop can't start before the one before it ends.",
+          params: { rule: "stopSequence" },
         });
       }
     });

@@ -28,6 +28,22 @@ export const Pin = z
   .meta({ id: "Pin", example: { latitude: 29.9602, longitude: 31.2569 } });
 export type Pin = z.infer<typeof Pin>;
 
+// A trip's pickup or drop-off: a pin, resolved to the most specific place covering it, or the whole of a flexible
+// governorate named by `locationId` (the pin is then only where the trip shows on a map).
+export const TripPin = Pin.extend({
+  locationId: z
+    .string()
+    .trim()
+    .min(1, "Location is required.")
+    .max(100, "Location must contain 100 characters at most.")
+    .optional()
+    .meta({
+      description:
+        "A flexible governorate to book as this end, the exact spot agreed with the client. Its `pin` from the location list is the usual pin.",
+    }),
+}).meta({ id: "TripPin" });
+export type TripPin = z.infer<typeof TripPin>;
+
 const Radius = z
   .number({ error: "Radius must be a number." })
   .int("Radius must be a whole number of meters.")
@@ -88,6 +104,14 @@ export const Location = z
       description: "A district's or an area's; null for a governorate.",
     }),
     hasBoundary: z.boolean().meta({ description: "Whether a governorate has its outline." }),
+    flexible: z.boolean().meta({
+      description:
+        "A governorate that can be booked as a whole (the spot agreed with the client). Always false for districts and areas.",
+    }),
+    pin: Pin.nullable().meta({
+      description:
+        "Where a trip to the whole of a flexible governorate is pinned: its outline's centre. Null otherwise.",
+    }),
     deletedAt: z.iso.datetime().nullable(),
     deletedWithId: z.string().nullable().meta({
       description:
@@ -129,6 +153,10 @@ export const ListLocations = z.object({
   deleted: flag("Deleted")
     .default(false)
     .meta({ description: "true lists only deleted locations." }),
+  bookable: flag("Bookable").default(false).meta({
+    description:
+      "true lists only places a trip can go to by name: districts, areas and flexible governorates.",
+  }),
   limit: z.coerce
     .number({ error: "Limit must be a number." })
     .int("Limit must be a whole number.")
@@ -152,7 +180,7 @@ export const CreateLocation = z
   .meta({ id: "CreateLocation" });
 export type CreateLocation = z.output<typeof CreateLocation>;
 
-// Send only what changes. A governorate only takes names. Locality never changes: it decides the shape.
+// Send only what changes. A governorate only takes names and `flexible`. Locality never changes: it decides the shape.
 export const UpdateLocation = z
   .object({
     parentId: Id("Parent")
@@ -160,6 +188,10 @@ export const UpdateLocation = z
       .meta({ description: "Moves the location, children included." }),
     nameEn: LocationName("English name").optional(),
     nameAr: LocationName("Arabic name").optional(),
+    flexible: z
+      .boolean({ error: "Flexible must be true or false." })
+      .optional()
+      .meta({ description: "Governorates with an outline only: book it as a whole." }),
     center: z
       .object({ latitude: Latitude, longitude: Longitude, radius: Radius.optional() })
       .optional()

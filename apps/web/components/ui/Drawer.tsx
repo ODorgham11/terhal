@@ -1,6 +1,13 @@
 "use client";
 
-import type { ComponentProps, ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from "react";
 import { useTranslations } from "next-intl";
 import { Dialog as Primitive } from "radix-ui";
 import { IconX } from "@tabler/icons-react";
@@ -32,6 +39,36 @@ export function DrawerContent({
   ...props
 }: DrawerContentProps) {
   const t = useTranslations("common.ui");
+  // How far the body has scrolled: at the top the header sits flat on the page with its full title; once the body
+  // moves under it, the header draws its line and the title settles a size smaller. The footer's line shows only
+  // while there's more below it.
+  const body = useRef<HTMLDivElement | null>(null);
+  const [edges, setEdges] = useState({ top: true, bottom: true });
+  const measure = useCallback(() => {
+    const element = body.current;
+    if (!element) return;
+    const top = element.scrollTop <= 1;
+    const bottom = element.scrollTop + element.clientHeight >= element.scrollHeight - 1;
+    setEdges((current) =>
+      current.top === top && current.bottom === bottom ? current : { top, bottom },
+    );
+  }, []);
+  // The body grows and shrinks (a field opening, data arriving) without scrolling, so it's measured then too.
+  const observer = useRef<ResizeObserver | null>(null);
+  const attach = useCallback(
+    (element: HTMLDivElement | null) => {
+      observer.current?.disconnect();
+      body.current = element;
+      if (!element) return;
+      observer.current = new ResizeObserver(measure);
+      observer.current.observe(element);
+      for (const child of Array.from(element.children)) observer.current.observe(child);
+      measure();
+    },
+    [measure],
+  );
+  useEffect(() => () => observer.current?.disconnect(), []);
+  const scrolled = !edges.top;
 
   return (
     <Primitive.Portal>
@@ -44,9 +81,19 @@ export function DrawerContent({
         )}
         {...props}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-border p-5">
+        <div
+          className={cn(
+            "flex items-start justify-between gap-4 border-b px-5 transition-[padding,border-color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+            scrolled ? "border-border pt-4 pb-3" : "border-transparent pt-7 pb-4",
+          )}
+        >
           <div className="flex flex-col gap-1">
-            <Primitive.Title className="text-lg font-semibold text-foreground">
+            <Primitive.Title
+              className={cn(
+                "font-semibold text-foreground transition-[font-size,line-height] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                scrolled ? "text-lg leading-6" : "text-xl leading-7",
+              )}
+            >
               {title}
             </Primitive.Title>
             {description && (
@@ -57,14 +104,23 @@ export function DrawerContent({
           </div>
           <Primitive.Close
             aria-label={t("close")}
-            className="rounded-md p-1 text-muted transition-colors hover:bg-surface-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="rounded-md p-1 text-muted transition-colors hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
             <IconX aria-hidden className="size-4" />
           </Primitive.Close>
         </div>
-        <div className="flex-1 overflow-y-auto p-5">{children}</div>
+        <div ref={attach} onScroll={measure} className="flex-1 overflow-y-auto px-5 pt-1 pb-5">
+          {children}
+        </div>
         {footer && (
-          <div className="flex justify-end gap-2 border-t border-border p-4">{footer}</div>
+          <div
+            className={cn(
+              "flex justify-end gap-2 border-t p-4 transition-colors duration-300",
+              edges.bottom ? "border-transparent" : "border-border",
+            )}
+          >
+            {footer}
+          </div>
         )}
       </Primitive.Content>
     </Primitive.Portal>

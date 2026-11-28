@@ -44,7 +44,7 @@ import {
 } from "../platform/http/authenticate";
 import { requireOrigin } from "../platform/http/origin";
 import { createRouter } from "../platform/http/router";
-import { LOCAL_FILES_PATH, serveLocalFile } from "../platform/storage/index";
+import { LOCAL_FILES_PATH, receiveLocalUpload, serveLocalFile } from "../platform/storage/index";
 import { notFound, onError } from "./errors";
 import { health } from "./health";
 import { accessLog, bodyLimit, requestContext, requestId, timeout } from "./middleware";
@@ -80,7 +80,15 @@ router.use("/v1/site/*", ...audience("site"));
 
 // The local storage driver's signed links (a bucket serves its own). Outside the versioned routes: it's not part of the
 // API's contract, and the link itself is the credential.
-if (env.STORAGE_DRIVER === "local") router.get(LOCAL_FILES_PATH, serveLocalFile);
+// Uploads come from the dashboard's own origin, like a bucket's CORS rules allow them (deploy/r2-cors.json).
+if (env.STORAGE_DRIVER === "local") {
+  router.use(
+    LOCAL_FILES_PATH,
+    cors({ origin: origins.staff, allowMethods: ["GET", "PUT"], allowHeaders: ["Content-Type"] }),
+  );
+  router.get(LOCAL_FILES_PATH, serveLocalFile);
+  router.put(LOCAL_FILES_PATH, receiveLocalUpload);
+}
 
 // Every module's routes, versioned. Chained, so the type below carries every route for the web app's RPC client.
 const v1 = createRouter()

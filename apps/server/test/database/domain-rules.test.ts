@@ -159,6 +159,40 @@ const driver = (data: { isExternal?: boolean; officeId?: string } = {}) =>
     },
   });
 
+describe("a driver's identity", () => {
+  it("has a 14-digit national ID, and no national ID or licence twice", async () => {
+    await expect(
+      prisma.driver.create({
+        data: { firstName: "D", lastName: "R", phone: "+201011111111", nationalId: "123" },
+      }),
+    ).rejects.toThrow(/Driver_national_id_format/);
+    await prisma.driver.create({
+      data: {
+        firstName: "D",
+        lastName: "R",
+        phone: "+201011111112",
+        nationalId: "29801011234567",
+        licenseNumber: "Ab-1",
+      },
+    });
+    await expect(
+      prisma.driver.create({
+        data: {
+          firstName: "D",
+          lastName: "R",
+          phone: "+201011111113",
+          nationalId: "29801011234567",
+        },
+      }),
+    ).rejects.toThrow(/nationalId/);
+    await expect(
+      prisma.driver.create({
+        data: { firstName: "D", lastName: "R", phone: "+201011111114", licenseNumber: "AB-1" },
+      }),
+    ).rejects.toThrow(/Driver_licenseNumber_key|Unique constraint/);
+  });
+});
+
 describe("the driver ledger", () => {
   it("is the only thing that moves a driver's balance", async () => {
     const { id } = await driver();
@@ -386,10 +420,19 @@ describe("a driver's report", () => {
     await expect(prisma.tripReport.create({ data: { ...base, pickupAt: at(70) } })).rejects.toThrow(
       /TripReport_chronology/,
     );
+    // Taking the car at the pickup minute is fine; dropping off at the pickup, or returning the car at the drop-off, isn't.
+    await expect(
+      prisma.tripReport.create({ data: { ...base, dropoffAt: base.pickupAt } }),
+    ).rejects.toThrow(/TripReport_chronology/);
+    await expect(
+      prisma.tripReport.create({ data: { ...base, endedAt: base.dropoffAt } }),
+    ).rejects.toThrow(/TripReport_chronology/);
     await expect(prisma.tripReport.create({ data: { ...base, endMileage: 900 } })).rejects.toThrow(
       /TripReport_mileage/,
     );
-    await expect(prisma.tripReport.create({ data: base })).resolves.toBeDefined();
+    await expect(
+      prisma.tripReport.create({ data: { ...base, startedAt: base.pickupAt } }),
+    ).resolves.toBeDefined();
   });
 
   it("has stops that are an address or a pin, never both", async () => {
@@ -431,5 +474,43 @@ describe("prices", () => {
     await expect(
       prisma.pricing.create({ data: { ...row, price: "250.00" } }),
     ).resolves.toBeDefined();
+  });
+});
+
+describe("whole numbers", () => {
+  it("are never negative", async () => {
+    await expect(
+      prisma.tripClass.create({ data: { nameEn: "Economy", nameAr: "اقتصادي", sortOrder: -1 } }),
+    ).rejects.toThrow(/TripClass_sortOrder_range/);
+    await expect(
+      prisma.tripClass.create({ data: { nameEn: "Economy", nameAr: "اقتصادي", sortOrder: 0 } }),
+    ).resolves.toBeDefined();
+
+    const vehicle = {
+      make: "Toyota",
+      model: "Corolla",
+      plateNumber: "ABC 123",
+      color: "White",
+      body: "SEDAN" as const,
+    };
+    await expect(prisma.vehicle.create({ data: { ...vehicle, year: -2020 } })).rejects.toThrow(
+      /Vehicle_year_range/,
+    );
+    await expect(
+      prisma.vehicle.create({ data: { ...vehicle, year: 2020 } }),
+    ).resolves.toBeDefined();
+
+    await expect(
+      prisma.customer.create({
+        data: {
+          firstName: "Mona",
+          lastName: "Adel",
+          phone: "+201000000001",
+          email: "mona@terhal.co",
+          passwordHash: "x",
+          verificationAttempts: -1,
+        },
+      }),
+    ).rejects.toThrow(/Customer_verificationAttempts_nonnegative/);
   });
 });

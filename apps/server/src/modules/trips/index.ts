@@ -14,6 +14,7 @@ export { processTripJob, tripJobs } from "./application/jobs";
 export {
   customerTripTotals,
   customerTrips,
+  driverCompletedTrips,
   driverTrips,
   liveOfficeTrips,
 } from "./application/queries";

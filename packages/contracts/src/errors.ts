@@ -53,8 +53,10 @@ export const errorCodes = [
   // Fleet and offices
   // Archiving a driver, a vehicle or an office while it's on a live trip (pending, confirmed or in progress).
   "HAS_UPCOMING_TRIPS",
-  // Another driver has this phone, another vehicle this plate, another office this name.
+  // Another driver has this phone, national ID or licence number, another vehicle this plate, another office this name.
   "DRIVER_PHONE_TAKEN",
+  "DRIVER_NATIONAL_ID_TAKEN",
+  "DRIVER_LICENSE_TAKEN",
   "PLATE_NUMBER_TAKEN",
   "OFFICE_NAME_TAKEN",
   // Only an external driver or vehicle can come through an office.
@@ -67,6 +69,8 @@ export const errorCodes = [
   "IMAGE_TYPE_NOT_ALLOWED",
   // A vehicle already has the most images it can have.
   "IMAGE_LIMIT_REACHED",
+  // Confirming an upload whose file never reached storage (the PUT to its link didn't finish).
+  "UPLOAD_INCOMPLETE",
 
   // Managing staff and customers
   // The change would leave no active staff member with the team permission, so nobody in the dashboard could manage the
@@ -89,6 +93,8 @@ export const errorCodes = [
   "LOCATION_COUNT_MISMATCH",
   // Governorates come from the seed: they can only be renamed, never created, moved or deleted.
   "GOVERNORATE_READ_ONLY",
+  // A trip end names a location to book as a whole that isn't a live, flexible governorate. `end` says which one.
+  "LOCATION_NOT_FLEXIBLE",
   // A pin isn't inside any place the platform serves. `end` says which one (pickup or dropoff), `leg` which trip.
   "OUT_OF_COVERAGE",
 
