@@ -181,6 +181,147 @@
   "site": {
     "title": "Terhal"
   },
+  "report": {
+    "title": "Trip report",
+    "logo": "Terhal",
+    "loading": "Opening your trip…",
+    "linkExpires": "This link works until {date}.",
+    "help": "Questions? Call the office.",
+    "states": {
+      "missing": {
+        "title": "This link is incomplete",
+        "body": "Open the link exactly as it was sent to you, or ask the office for a new one."
+      },
+      "invalid": {
+        "title": "This link doesn't work any more",
+        "body": "It may have been replaced by a newer one. Ask the office to send you the latest link."
+      },
+      "expired": {
+        "title": "This link has expired",
+        "body": "Report links work for 7 days after the pickup. Call the office to add your report."
+      },
+      "failed": {
+        "title": "We couldn't open your trip",
+        "body": "Check your connection and try again.",
+        "retry": "Try again"
+      },
+      "limited": {
+        "title": "Too many tries",
+        "body": "Wait a minute, then try again."
+      },
+      "cancelled": {
+        "title": "This trip was cancelled",
+        "body": "There's nothing to report. If you think this is a mistake, call the office."
+      },
+      "pending": {
+        "title": "This trip isn't confirmed yet",
+        "body": "You can start it once the office confirms it."
+      },
+      "confirmed": {
+        "title": "Ready when you are",
+        "body": "Start the trip when you set off for the pickup. You'll fill in the report at the end.",
+        "action": "Start trip",
+        "confirmTitle": "Start the trip?",
+        "confirmBody": "The office will see the trip as on the road.",
+        "done": "Trip started"
+      },
+      "inProgress": {
+        "title": "On the road",
+        "body": "Once the passenger is dropped off and the car is back, end the trip and fill in the report below.",
+        "action": "End trip",
+        "confirmTitle": "End the trip?",
+        "confirmBody": "You'll fill in the report next.",
+        "done": "Trip ended"
+      },
+      "awaiting": {
+        "title": "Trip ended",
+        "body": "Fill in the report below and send it to the office."
+      },
+      "sent": {
+        "title": "Report sent",
+        "body": "Thank you. The office will review it and complete the trip."
+      },
+      "completed": {
+        "title": "Trip completed",
+        "body": "The office reviewed your report and closed the trip."
+      }
+    },
+    "trip": {
+      "pickup": "Pickup",
+      "dropoff": "Drop-off",
+      "when": "Pickup time",
+      "passenger": "Passenger",
+      "call": "Call {name}",
+      "car": "Car",
+      "load": "{passengers, plural, one {# passenger} other {# passengers}} · {luggage, plural, =0 {no luggage} one {# bag} other {# bags}}",
+      "vehicle": "Vehicle",
+      "notes": "Notes from the office"
+    },
+    "form": {
+      "title": "Your report",
+      "description": "Fill in everything below. Your answers stay on this phone until you send them.",
+      "vehicleOut": "Picking up the car",
+      "theTrip": "The trip",
+      "vehicleBack": "Returning the car",
+      "money": "Cash and expenses",
+      "startedAt": "Picked up the car at",
+      "vehiclePickup": "Where you picked it up",
+      "startMileage": "Odometer at pickup",
+      "pickupAt": "Picked up the passenger at",
+      "dropoffAt": "Dropped them off at",
+      "endedAt": "Returned the car at",
+      "vehicleDropoff": "Where you returned it",
+      "endMileage": "Odometer at return",
+      "km": "km",
+      "cashCollected": "Cash collected from the passenger",
+      "cashHint": "0 if you didn't collect anything.",
+      "stops": "Stops on the way",
+      "noStops": "No stops.",
+      "addStop": "Add a stop",
+      "stop": "Stop {number}",
+      "stopAddress": "Where",
+      "stopFrom": "From",
+      "stopTo": "Until",
+      "expenses": "Expenses you paid",
+      "noExpenses": "No expenses.",
+      "addExpense": "Add an expense",
+      "expense": "Expense {number}",
+      "expenseType": "Type",
+      "amount": "Amount",
+      "notes": "Notes",
+      "remove": "Remove",
+      "date": "Date",
+      "time": "Time",
+      "submit": "Send report",
+      "confirmTitle": "Send your report?",
+      "confirmBody": "Once it's sent you can't change it. The office can still correct it.",
+      "fix": "Some answers need fixing. Check the fields marked in red.",
+      "saved": "Saved on this phone",
+      "errors": {
+        "required": "Fill this in.",
+        "number": "Enter a whole number of kilometres.",
+        "amount": "Enter an amount in pounds, with up to 2 decimals.",
+        "order": "This can't be before the step above it.",
+        "mileage": "This can't be less than the odometer at pickup.",
+        "stopTimes": "A stop must fall between picking up and returning the car, and can't end before it starts.",
+        "invalid": "Check this answer."
+      }
+    },
+    "summary": {
+      "title": "What you sent",
+      "sentAt": "Sent {date}",
+      "car": "The car",
+      "out": "Out {time} · {place}",
+      "back": "Back {time} · {place}",
+      "distance": "Distance",
+      "passenger": "With the passenger",
+      "passengerTimes": "{from} – {to}",
+      "cash": "Cash collected",
+      "stops": "{count, plural, =0 {No stops} one {# stop} other {# stops}}",
+      "expenses": "Expenses",
+      "noExpenses": "None"
+    }
+  },
   "staff": {
     "title": "Staff dashboard",
     "nav": {
