@@ -3,6 +3,7 @@
 import { Controller } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "motion/react";
 import { z } from "zod";
 import { CreateDriver, type Driver } from "@terhal/contracts";
 import { Button } from "@/components/ui/Button";
@@ -10,11 +11,14 @@ import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { Form, FormError, FormField } from "@/components/ui/Form";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Input } from "@/components/ui/Input";
+import { fade } from "@/components/ui/Motion";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { Radio, RadioGroup } from "@/components/ui/Radio";
 import { Select } from "@/components/ui/Select";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Textarea } from "@/components/ui/Textarea";
 import { toast } from "@/components/ui/Toast";
+import { WholeNumberInput } from "@/components/ui/WholeNumberInput";
 import { call, staffApi } from "@/lib/api";
 import { useZodForm } from "@/lib/forms/useZodForm";
 import { officesQuery } from "../queries";
@@ -170,12 +174,7 @@ function DriverFields({
         </FormField>
       </div>
       <FormField name="nationalId" label={fields("nationalId")} optional>
-        <Input
-          autoComplete="off"
-          dir="ltr"
-          inputMode="numeric"
-          {...form.register("nationalId", { setValueAs: blank })}
-        />
+        <WholeNumberInput dir="ltr" {...form.register("nationalId", { setValueAs: blank })} />
       </FormField>
       <RadioGroup legend={t("kind")}>
         {(["internal", "external", "office"] as const).map((value) => (
@@ -188,17 +187,35 @@ function DriverFields({
           />
         ))}
       </RadioGroup>
-      {kind === "office" && (
-        <FormField name="officeId" label={fields("office")}>
-          <Select placeholder={t("chooseOffice")} {...form.register("officeId")}>
-            {offices.data?.data.map((office) => (
-              <option key={office.id} value={office.id}>
-                {office.name}
-              </option>
-            ))}
-          </Select>
-        </FormField>
-      )}
+      {/* Opens under the choice when it's an office's driver, and closes again when it isn't. */}
+      <AnimatePresence initial={false}>
+        {kind === "office" && (
+          <motion.div
+            key="office"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={fade.transition}
+            className="-mt-4 overflow-hidden"
+          >
+            <div className="pt-4">
+              <FormField name="officeId" label={fields("office")}>
+                {offices.data ? (
+                  <Select placeholder={t("chooseOffice")} {...form.register("officeId")}>
+                    {offices.data.data.map((office) => (
+                      <option key={office.id} value={office.id}>
+                        {office.name}
+                      </option>
+                    ))}
+                  </Select>
+                ) : (
+                  <Skeleton className="h-10 w-full rounded-lg" />
+                )}
+              </FormField>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <FormField name="notes" label={fields("notes")} optional>
         <Textarea rows={3} {...form.register("notes", { setValueAs: blank })} />
       </FormField>
