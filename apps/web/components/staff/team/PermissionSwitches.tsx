@@ -11,6 +11,7 @@ import {
   type Icon,
 } from "@tabler/icons-react";
 import { staffPermissions, type StaffPermission } from "@terhal/contracts";
+import { Badge } from "@/components/ui/Badge";
 import { Switch } from "@/components/ui/Switch";
 
 const icons: Record<StaffPermission, Icon> = {
@@ -63,21 +64,22 @@ export function PermissionSwitches({ value, onChange, disabled }: Props) {
 export function PermissionChips({ permissions }: { permissions: StaffPermission[] }) {
   const t = useTranslations("staff.permissions");
   const team = useTranslations("staff.team");
-  const chip = "rounded-full px-2 py-0.5 text-xs font-medium";
-  if (permissions.length === staffPermissions.length) {
-    return <span className={`${chip} bg-primary-soft text-primary`}>{team("fullAccess")}</span>;
-  }
   if (permissions.length === 0)
     return <span className="text-xs text-muted">{team("noAccess")}</span>;
+  // Always in a wrapping row, so each chip keeps its pill shape even where its parent stretches its children.
   return (
-    <span className="flex flex-wrap gap-1.5">
-      {staffPermissions
-        .filter((permission) => permissions.includes(permission))
-        .map((permission) => (
-          <span key={permission} className={`${chip} bg-surface-muted text-foreground`}>
-            {t(`${permission}.name`)}
-          </span>
-        ))}
+    <span className="flex flex-wrap items-center gap-1.5">
+      {permissions.length === staffPermissions.length ? (
+        <Badge tone="primary">{team("fullAccess")}</Badge>
+      ) : (
+        staffPermissions
+          .filter((permission) => permissions.includes(permission))
+          .map((permission) => (
+            <Badge key={permission} tone="neutral">
+              {t(`${permission}.name`)}
+            </Badge>
+          ))
+      )}
     </span>
   );
 }
