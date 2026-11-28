@@ -10,7 +10,6 @@ import type { Driver } from "@terhal/contracts";
 import { DirectionalIcon } from "@/components/DirectionalIcon";
 import { RequireStaff } from "@/components/session/RequireSession";
 import { DetailLoading } from "@/components/staff/DetailLoading";
-import { SectionCard } from "@/components/staff/SectionCard";
 import { SystemState } from "@/components/staff/SystemState";
 import { LedgerTable } from "@/components/staff/fleet/Ledger";
 import { RecordPaymentDialog } from "@/components/staff/fleet/RecordPaymentDialog";
@@ -32,7 +31,7 @@ function Ledger({ id }: { id: string }) {
     retry: (count, error) => !(isApiError(error) && error.status === 404) && count < 1,
   });
   if (driver.isPending) {
-    return <DetailLoading buttons={["w-40"]} badge={false} main={[10]} side={[]} />;
+    return <DetailLoading buttons={["w-40"]} badge={false} main={[]} side={[]} />;
   }
   if (driver.isError) {
     return isApiError(driver.error) && driver.error.status === 404 ? (
@@ -92,10 +91,8 @@ function Loaded({ driver }: { driver: Driver }) {
         </Button>
       </header>
 
-      <SectionCard title={t("ledger.all")}>
-        <LedgerTable driverId={driver.id} pageSize={25} paginated />
-        <p className="text-xs text-muted">{t("ledger.hint", { name: driver.firstName })}</p>
-      </SectionCard>
+      <LedgerTable driverId={driver.id} pageSize={25} paginated />
+      <p className="-mt-2 text-xs text-muted">{t("ledger.hint", { name: driver.firstName })}</p>
 
       <RecordPaymentDialog driver={driver} open={paying} onOpenChange={setPaying} />
     </motion.div>

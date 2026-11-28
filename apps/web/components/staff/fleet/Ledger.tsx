@@ -44,7 +44,30 @@ export function LedgerTable({
 
   return (
     <>
-      <AutoHeight>
+      {/* Phones, on the full ledger: one card per entry. */}
+      {paginated && (
+        <AutoHeight className="md:hidden">
+          <ul
+            aria-busy={ledger.result.isFetching || undefined}
+            className={cn("flex flex-col gap-3 transition-opacity", stale && "opacity-60")}
+          >
+            {ledger.result.isPending ? (
+              <LedgerCardsLoading />
+            ) : ledger.result.isError ? (
+              <motion.li {...fade} className="py-10 text-center text-sm text-danger">
+                {errorMessage(ledger.result.error)}
+              </motion.li>
+            ) : ledger.rows.length === 0 ? (
+              <motion.li {...fade} className="py-10 text-center text-base font-semibold">
+                {t("empty")}
+              </motion.li>
+            ) : (
+              ledger.rows.map((entry) => <LedgerCard key={entry.id} entry={entry} />)
+            )}
+          </ul>
+        </AutoHeight>
+      )}
+      <AutoHeight className={paginated ? "hidden md:block" : undefined}>
         <Table
           aria-busy={ledger.result.isFetching || undefined}
           className={cn("transition-opacity", stale && "opacity-60")}
@@ -85,10 +108,89 @@ const entryKeys = {
   ADJUSTMENT: "adjustment",
 } as const;
 
+// The amount, signed and coloured: plus is more owed to the driver, minus less.
+function Amount({ value }: { value: string }) {
+  const { price } = useTripDates();
+  const amount = Number(value);
+  return (
+    <span
+      dir="ltr"
+      className={cn(
+        "font-medium whitespace-nowrap tabular-nums",
+        amount > 0 ? "text-success" : "text-danger",
+      )}
+    >
+      {amount > 0 ? "+ " : "− "}
+      {price(Math.abs(amount).toFixed(2))}
+    </span>
+  );
+}
+
+function LedgerCard({ entry }: { entry: DriverTransaction }) {
+  const t = useTranslations("staff.fleet.driver.ledger");
+  const { day } = useTripDates();
+  return (
+    <motion.li
+      {...fade}
+      className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col">
+          <span className="text-sm font-medium text-foreground">
+            {t(`entries.${entryKeys[entry.type]}`)}
+          </span>
+          {entry.note && <span className="text-xs text-muted">{entry.note}</span>}
+        </div>
+        <span className="text-sm">
+          <Amount value={entry.amount} />
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-3 border-t border-border pt-3 text-xs text-muted">
+        <span>
+          {day(entry.createdAt)} ·{" "}
+          {entry.staff ? `${entry.staff.firstName} ${entry.staff.lastName}` : t("system")}
+        </span>
+        {entry.trip && (
+          <Link
+            href={`/trips/${entry.trip.id}`}
+            dir="ltr"
+            className="font-medium text-primary hover:underline"
+          >
+            {entry.trip.code}
+          </Link>
+        )}
+      </div>
+    </motion.li>
+  );
+}
+
+function LedgerCardsLoading() {
+  return (
+    <>
+      {[0, 1, 2].map((card) => (
+        <motion.li
+          key={card}
+          {...fade}
+          aria-hidden
+          className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4"
+        >
+          <div className="flex justify-between">
+            <Skeleton className="h-3.5 w-28" />
+            <Skeleton className="h-3.5 w-20" />
+          </div>
+          <div className="flex justify-between border-t border-border pt-3">
+            <Skeleton className="h-3 w-36" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        </motion.li>
+      ))}
+    </>
+  );
+}
+
 function LedgerRow({ entry }: { entry: DriverTransaction }) {
   const t = useTranslations("staff.fleet.driver.ledger");
-  const { day, price } = useTripDates();
-  const amount = Number(entry.amount);
+  const { day } = useTripDates();
   return (
     <MotionTableRow {...fade}>
       <TableCell className="whitespace-nowrap">{day(entry.createdAt)}</TableCell>
@@ -114,16 +216,8 @@ function LedgerRow({ entry }: { entry: DriverTransaction }) {
       <TableCell className="text-muted">
         {entry.staff ? `${entry.staff.firstName} ${entry.staff.lastName}` : t("system")}
       </TableCell>
-      <TableCell
-        className={cn(
-          "text-end font-medium whitespace-nowrap tabular-nums",
-          amount > 0 ? "text-success" : "text-danger",
-        )}
-      >
-        <span dir="ltr">
-          {amount > 0 ? "+ " : "− "}
-          {price(Math.abs(amount).toFixed(2))}
-        </span>
+      <TableCell className="text-end">
+        <Amount value={entry.amount} />
       </TableCell>
     </MotionTableRow>
   );

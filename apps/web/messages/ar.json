@@ -1057,8 +1057,7 @@
             "adjustment": "تسوية"
           },
           "viewAll": "عرض الكل",
-          "pageTitle": "سجل {name}",
-          "all": "كل القيود"
+          "pageTitle": "سجل {name}"
         },
         "profile": {
           "title": "الملف",
