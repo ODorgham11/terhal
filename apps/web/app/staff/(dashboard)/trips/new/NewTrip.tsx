@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "motion/react";
 import { IconArrowsExchange, IconChevronRight } from "@tabler/icons-react";
 import {
   carBodies,
@@ -28,9 +29,11 @@ import { useLocalName, useTripDates } from "@/components/staff/trips/format";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
+import { AutoHeight, FadeText, Swap, fade } from "@/components/ui/Motion";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { Select } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
@@ -256,51 +259,61 @@ function Booking({ customerId }: { customerId?: string }) {
               />
             }
           >
-            {booker === "customer" ? (
-              <Field
-                label={t("booker.customer")}
-                hint={
-                  customer
-                    ? t("booker.tripsSoFar", { count: customer.tripCount })
-                    : t("booker.searchHint")
-                }
-                error={show(problems.customer) ? t("errors.customer") : undefined}
-              >
-                <CustomerPicker
-                  value={customer}
-                  onChange={choose}
-                  invalid={show(problems.customer)}
-                />
-              </Field>
-            ) : (
-              <p className="text-sm text-muted">{t("booker.guestHint")}</p>
-            )}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field
-                label={t("booker.passengerName")}
-                error={show(problems.clientName) ? t("errors.clientName") : undefined}
-              >
-                <Input
-                  autoComplete="off"
-                  value={clientName}
-                  onChange={(event) => setClientName(event.target.value)}
-                />
-              </Field>
-              <Field
-                label={t("booker.passengerPhone")}
-                error={show(problems.clientPhone) ? t("errors.clientPhone") : undefined}
-              >
-                <PhoneInput
-                  countries="all"
-                  autoComplete="off"
-                  value={clientPhone}
-                  onChange={setClientPhone}
-                />
-              </Field>
-            </div>
-            {booker === "customer" && (
-              <p className="text-xs text-muted">{t("booker.passengerHint")}</p>
-            )}
+            <AutoHeight>
+              <div className="flex flex-col gap-4">
+                <Swap state={booker}>
+                  {booker === "customer" ? (
+                    <Field
+                      label={t("booker.customer")}
+                      hint={
+                        customer
+                          ? t("booker.tripsSoFar", { count: customer.tripCount })
+                          : t("booker.searchHint")
+                      }
+                      error={show(problems.customer) ? t("errors.customer") : undefined}
+                    >
+                      <CustomerPicker
+                        value={customer}
+                        onChange={choose}
+                        invalid={show(problems.customer)}
+                      />
+                    </Field>
+                  ) : (
+                    <p className="text-sm text-muted">{t("booker.guestHint")}</p>
+                  )}
+                </Swap>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field
+                    label={t("booker.passengerName")}
+                    error={show(problems.clientName) ? t("errors.clientName") : undefined}
+                  >
+                    <Input
+                      autoComplete="off"
+                      value={clientName}
+                      onChange={(event) => setClientName(event.target.value)}
+                    />
+                  </Field>
+                  <Field
+                    label={t("booker.passengerPhone")}
+                    error={show(problems.clientPhone) ? t("errors.clientPhone") : undefined}
+                  >
+                    <PhoneInput
+                      countries="all"
+                      autoComplete="off"
+                      value={clientPhone}
+                      onChange={setClientPhone}
+                    />
+                  </Field>
+                </div>
+                <AnimatePresence initial={false}>
+                  {booker === "customer" && (
+                    <motion.p key="hint" {...fade} className="text-xs text-muted">
+                      {t("booker.passengerHint")}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </div>
+            </AutoHeight>
           </SectionCard>
 
           <SectionCard title={t("route.title")}>
@@ -314,7 +327,8 @@ function Booking({ customerId }: { customerId?: string }) {
               <Button
                 variant="secondary"
                 size="icon"
-                className="sm:mt-7"
+                // Level with the inputs: below the label's line (1.25rem) and the gap under it (0.375rem).
+                className="sm:mt-[1.625rem]"
                 aria-label={t("route.swap")}
                 onClick={() => {
                   setPickup(dropoff);
@@ -345,20 +359,32 @@ function Booking({ customerId }: { customerId?: string }) {
                   show(problems.when) ? (inPast ? t("errors.past") : t("errors.when")) : undefined
                 }
               >
-                <Input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+                <DatePicker value={date} onChange={setDate} />
               </Field>
               <Field label={t("when.time")} hint={t("when.cairo")}>
                 <Input type="time" value={time} onChange={(event) => setTime(event.target.value)} />
               </Field>
             </div>
-            {inPast && (
-              <Checkbox
-                label={t("when.backdated")}
-                description={t("when.backdatedHint")}
-                checked={backdated}
-                onChange={(event) => setBackdated(event.target.checked)}
-              />
-            )}
+            <AnimatePresence initial={false}>
+              {inPast && (
+                <motion.div
+                  key="backdated"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={fade.transition}
+                  className="-mb-4 overflow-hidden"
+                >
+                  <Checkbox
+                    label={t("when.backdated")}
+                    description={t("when.backdatedHint")}
+                    checked={backdated}
+                    onChange={(event) => setBackdated(event.target.checked)}
+                    className="pb-4"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={fields("class")}>
                 <Select value={chosenClass} onChange={(event) => setClassId(event.target.value)}>
@@ -426,27 +452,34 @@ function Booking({ customerId }: { customerId?: string }) {
               checked={withReturn}
               onChange={(event) => setWithReturn(event.target.checked)}
             />
-            {withReturn && (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label={t("extras.returnDate")}
-                  error={show(problems.returnWhen) ? t("errors.returnWhen") : undefined}
+            <AnimatePresence initial={false}>
+              {withReturn && (
+                <motion.div
+                  key="return"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={fade.transition}
+                  className="-mt-4 overflow-hidden"
                 >
-                  <Input
-                    type="date"
-                    value={returnDate}
-                    onChange={(event) => setReturnDate(event.target.value)}
-                  />
-                </Field>
-                <Field label={t("extras.returnTime")}>
-                  <Input
-                    type="time"
-                    value={returnTime}
-                    onChange={(event) => setReturnTime(event.target.value)}
-                  />
-                </Field>
-              </div>
-            )}
+                  <div className="grid gap-4 pt-4 sm:grid-cols-2">
+                    <Field
+                      label={t("extras.returnDate")}
+                      error={show(problems.returnWhen) ? t("errors.returnWhen") : undefined}
+                    >
+                      <DatePicker value={returnDate} min={date} onChange={setReturnDate} />
+                    </Field>
+                    <Field label={t("extras.returnTime")}>
+                      <Input
+                        type="time"
+                        value={returnTime}
+                        onChange={(event) => setReturnTime(event.target.value)}
+                      />
+                    </Field>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </SectionCard>
         </div>
 
@@ -483,21 +516,32 @@ function Booking({ customerId }: { customerId?: string }) {
                 onChange={(event) => setPrice(event.target.value)}
               />
             </Field>
-            {withReturn && (
-              <Field label={t("quote.returnPrice")} optional>
-                <MoneyInput
-                  value={returnPrice}
-                  placeholder={option?.returnPrice ?? ""}
-                  onChange={(event) => setReturnPrice(event.target.value)}
-                />
-              </Field>
-            )}
+            <AnimatePresence initial={false}>
+              {withReturn && (
+                <motion.div
+                  key="returnPrice"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={fade.transition}
+                  className="-mt-4 overflow-hidden"
+                >
+                  <Field label={t("quote.returnPrice")} optional className="pt-4">
+                    <MoneyInput
+                      value={returnPrice}
+                      placeholder={option?.returnPrice ?? ""}
+                      onChange={(event) => setReturnPrice(event.target.value)}
+                    />
+                  </Field>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <Button size="lg" onClick={() => void book()} loading={busy}>
               {t("submit")}
             </Button>
             {tried && blocked && <p className="text-xs text-danger">{t("errors.fixAbove")}</p>}
           </QuoteCard>
-          <SectionCard title={t("onRequest.title")}>
+          <SectionCard title={t("onRequest.title")} className="gap-1">
             <p className="text-xs text-muted">{t("onRequest.body")}</p>
           </SectionCard>
         </aside>
@@ -568,22 +612,26 @@ function QuoteCard({
 
   return (
     <SectionCard title={t("title")}>
-      {!ready ? (
-        <p className="text-sm text-muted">{t("pickRoute")}</p>
-      ) : quoteError ? (
-        <Alert tone="danger" title={quoteError} />
-      ) : (
-        <div className="flex flex-col gap-3">
-          {leg(t("outbound"), pickup, dropoff, when, listPrice)}
-          {withReturn && leg(t("return"), dropoff, pickup, returnWhen, listReturnPrice)}
-          <div className="flex items-baseline justify-between border-t border-border pt-3">
-            <span className="text-base font-semibold text-foreground">{t("total")}</span>
-            <span className="text-xl font-semibold text-foreground tabular-nums">
-              {loading ? "…" : total !== null ? price(total.toFixed(2)) : t("onRequest")}
-            </span>
+      <Swap state={!ready ? "empty" : quoteError ? "error" : withReturn ? "return" : "one-way"}>
+        {!ready ? (
+          <p className="text-sm text-muted">{t("pickRoute")}</p>
+        ) : quoteError ? (
+          <Alert tone="danger" title={quoteError} />
+        ) : (
+          <div className="flex flex-col gap-3">
+            {leg(t("outbound"), pickup, dropoff, when, listPrice)}
+            {withReturn && leg(t("return"), dropoff, pickup, returnWhen, listReturnPrice)}
+            <div className="flex items-baseline justify-between border-t border-border pt-3">
+              <span className="text-base font-semibold text-foreground">{t("total")}</span>
+              <span className="text-xl font-semibold text-foreground tabular-nums">
+                <FadeText
+                  value={loading ? "…" : total !== null ? price(total.toFixed(2)) : t("onRequest")}
+                />
+              </span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </Swap>
       {children}
     </SectionCard>
   );
