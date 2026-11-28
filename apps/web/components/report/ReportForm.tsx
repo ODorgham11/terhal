@@ -16,7 +16,7 @@ import { ConfirmDialog } from "@/components/staff/ConfirmDialog";
 import { cairoInstant, cairoParts } from "@/components/staff/booking/cairo";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DatePicker, TimePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
@@ -199,7 +199,7 @@ export function ReportForm({ trip, token }: { trip: DriverTrip; token: string })
   const hasErrors = Object.keys(errors).length > 0;
 
   return (
-    <section className="flex flex-col gap-5 rounded-2xl border border-border bg-surface p-5 shadow-xs">
+    <section className="flex flex-col gap-5 rounded-2xl border border-border bg-white p-5 shadow-xs">
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-semibold text-foreground">{t("title")}</h2>
         <p className="text-sm text-muted">{t("description")}</p>
@@ -388,17 +388,16 @@ function WhenField({
   const timeId = useId();
   return (
     <Field label={label} error={error}>
-      <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_8.5rem] gap-2">
         <DatePicker
           value={value.date}
           onChange={(date) => onChange({ ...value, date })}
           aria-label={`${label}, ${t("date")}`}
         />
-        <Input
+        <TimePicker
           id={timeId}
-          type="time"
           value={value.time}
-          onChange={(event) => onChange({ ...value, time: event.target.value })}
+          onChange={(time) => onChange({ ...value, time })}
           aria-label={`${label}, ${t("time")}`}
           aria-invalid={error ? true : undefined}
         />
@@ -406,6 +405,32 @@ function WhenField({
     </Field>
   );
 }
+
+// In: the height opens, then the content fades up into it. Out: the content fades first, then the height closes.
+const curve = [0.32, 0.72, 0, 1] as const;
+const grow = {
+  initial: { height: 0, opacity: 0, y: -6 },
+  animate: {
+    height: "auto",
+    opacity: 1,
+    y: 0,
+    transition: {
+      height: { duration: 0.32, ease: curve },
+      opacity: { duration: 0.22, delay: 0.1, ease: "easeOut" },
+      y: { duration: 0.32, delay: 0.06, ease: curve },
+    },
+  },
+  exit: {
+    height: 0,
+    opacity: 0,
+    y: -6,
+    transition: {
+      opacity: { duration: 0.14, ease: "easeIn" },
+      y: { duration: 0.14, ease: "easeIn" },
+      height: { duration: 0.28, delay: 0.08, ease: curve },
+    },
+  },
+} as const;
 
 // A list the driver adds to and removes from, each item easing in and out.
 function Repeated<Item extends { key: string }>({
@@ -428,21 +453,20 @@ function Repeated<Item extends { key: string }>({
   render: (item: Item, index: number) => ReactNode;
 }) {
   const t = useTranslations("report.form");
+  // No flex gap between the items: each carries its own space below (pb-3) inside the height that animates, so the
+  // space grows and shrinks with it instead of jumping in first.
   return (
-    <div className="flex flex-col gap-3">
-      <span className="text-sm font-medium text-foreground">{title}</span>
-      {items.length === 0 && <p className="text-sm text-muted">{empty}</p>}
+    <div className="flex flex-col">
+      <span className="pb-3 text-sm font-medium text-foreground">{title}</span>
       <AnimatePresence initial={false}>
+        {items.length === 0 && (
+          <motion.p key="empty" {...grow} className="overflow-hidden text-sm text-muted">
+            <span className="block pb-3">{empty}</span>
+          </motion.p>
+        )}
         {items.map((item, index) => (
-          <motion.div
-            key={item.key}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={fade.transition}
-            className="overflow-hidden"
-          >
-            <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface-muted/40 p-4">
+          <motion.div key={item.key} {...grow} className="overflow-hidden">
+            <div className="mb-3 flex flex-col gap-4 rounded-xl border border-border bg-surface-muted/40 p-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-foreground">{label(index)}</span>
                 <Button
