@@ -299,9 +299,13 @@
         "required": "Fill this in.",
         "number": "Enter a whole number of kilometres.",
         "amount": "Enter an amount in pounds, with up to 2 decimals.",
-        "order": "This can't be before the step above it.",
         "mileage": "This can't be less than the odometer at pickup.",
-        "stopTimes": "A stop must fall between picking up and returning the car, and can't end before it starts.",
+        "afterCarTaken": "Can't be before you took the car.",
+        "afterPickup": "Has to be after the pickup and any stops.",
+        "afterDropoff": "Has to be after you dropped the passenger off.",
+        "stopWithinTrip": "A stop has to be between the pickup and the drop-off.",
+        "stopSequence": "Can't start before the stop above it ends.",
+        "stopEnd": "Can't end before the stop starts.",
         "invalid": "Check this answer."
       }
     },

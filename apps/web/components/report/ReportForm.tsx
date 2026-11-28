@@ -109,7 +109,26 @@ const payloadOf = (draft: Draft) => ({
   })),
 });
 
-type ErrorKey = "required" | "number" | "amount" | "order" | "mileage" | "stopTimes" | "invalid";
+type ErrorKey =
+  | "required"
+  | "number"
+  | "amount"
+  | "mileage"
+  | "afterCarTaken"
+  | "afterPickup"
+  | "afterDropoff"
+  | "stopWithinTrip"
+  | "stopSequence"
+  | "stopEnd"
+  | "invalid";
+
+// Which step each time has to come after, in the form's words.
+const ORDER: Record<string, ErrorKey> = {
+  pickupAt: "afterCarTaken",
+  dropoffAt: "afterPickup",
+  endedAt: "afterDropoff",
+};
+const STOP_RULES = new Set<string>(["stopWithinTrip", "stopSequence", "stopEnd"]);
 type Errors = Record<string, ErrorKey>;
 
 const MILEAGE = new Set(["startMileage", "endMileage"]);
@@ -129,14 +148,15 @@ const errorsOf = (draft: Draft): Errors => {
     );
     const empty = value === "" || (typeof value === "number" && Number.isNaN(value));
     const field = String(issue.path.at(-1));
+    const rule = issue.code === "custom" ? String(issue.params?.rule ?? "") : "";
     errors[path] = empty
       ? "required"
       : issue.code === "custom"
-        ? issue.path[0] === "stops"
-          ? "stopTimes"
+        ? STOP_RULES.has(rule)
+          ? (rule as ErrorKey)
           : field === "endMileage"
             ? "mileage"
-            : "order"
+            : (ORDER[field] ?? "invalid")
         : MILEAGE.has(field)
           ? "number"
           : field === "cashCollected" || field === "amount"
@@ -242,12 +262,7 @@ export function ReportForm({ trip, token }: { trip: DriverTrip; token: string })
           value={draft.pickupAt}
           onChange={(value) => set("pickupAt", value)}
           error={message("pickupAt")}
-        />
-        <WhenField
-          label={t("dropoffAt")}
-          value={draft.dropoffAt}
-          onChange={(value) => set("dropoffAt", value)}
-          error={message("dropoffAt")}
+          min={draft.startedAt.date}
         />
         <Repeated
           title={t("stops")}
@@ -259,8 +274,8 @@ export function ReportForm({ trip, token }: { trip: DriverTrip; token: string })
               {
                 key: crypto.randomUUID(),
                 address: "",
-                startedAt: { date: draft.pickupAt.date, time: "" },
-                endedAt: { date: draft.pickupAt.date, time: "" },
+                startedAt: { date: (draft.stops.at(-1)?.endedAt ?? draft.pickupAt).date, time: "" },
+                endedAt: { date: (draft.stops.at(-1)?.endedAt ?? draft.pickupAt).date, time: "" },
                 notes: "",
               },
             ])
@@ -291,17 +306,26 @@ export function ReportForm({ trip, token }: { trip: DriverTrip; token: string })
                   value={stop.startedAt}
                   onChange={(startedAt) => update({ startedAt })}
                   error={message(`stops.${index}.startedAt`)}
+                  min={(draft.stops[index - 1]?.endedAt ?? draft.pickupAt).date}
                 />
                 <WhenField
                   label={t("stopTo")}
                   value={stop.endedAt}
                   onChange={(endedAt) => update({ endedAt })}
                   error={message(`stops.${index}.endedAt`)}
+                  min={stop.startedAt.date}
                 />
                 <NoteField value={stop.notes} onChange={(notes) => update({ notes })} />
               </>
             );
           }}
+        />
+        <WhenField
+          label={t("dropoffAt")}
+          value={draft.dropoffAt}
+          onChange={(value) => set("dropoffAt", value)}
+          error={message("dropoffAt")}
+          min={(draft.stops.at(-1)?.endedAt ?? draft.pickupAt).date}
         />
       </Group>
 
@@ -311,6 +335,7 @@ export function ReportForm({ trip, token }: { trip: DriverTrip; token: string })
           value={draft.endedAt}
           onChange={(value) => set("endedAt", value)}
           error={message("endedAt")}
+          min={draft.dropoffAt.date}
         />
         <Field label={t("vehicleDropoff")} error={message("vehicleDropoff")}>
           <Input
@@ -375,11 +400,14 @@ function WhenField({
   value,
   onChange,
   error,
+  min,
 }: {
   label: string;
   value: When;
   onChange: (value: When) => void;
   error?: string;
+  // The day of the step before: nothing earlier is offered.
+  min?: string;
 }) {
   const t = useTranslations("report.form");
   const timeId = useId();
@@ -389,6 +417,7 @@ function WhenField({
         <DatePicker
           value={value.date}
           onChange={(date) => onChange({ ...value, date })}
+          min={min || undefined}
           aria-label={`${label}, ${t("date")}`}
         />
         <TimePicker
