@@ -14,7 +14,7 @@ export function TripPrice({ trip }: { trip: Trip }) {
   }
   return (
     <span className="flex flex-col">
-      <span className="text-sm font-medium text-foreground tabular-nums">
+      <span className="text-[0.8125rem] font-medium text-foreground tabular-nums">
         {price(trip.totalPrice)}
       </span>
       {trip.priceState === "PROPOSED" && (
