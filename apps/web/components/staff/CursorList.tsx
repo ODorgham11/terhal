@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "motion/react";
+import { fade } from "@/components/ui/Motion";
 import { Pagination, useCursorPages } from "@/components/ui/Pagination";
 
 type Page<Row> = { data: Row[]; nextCursor: string | null };
@@ -59,15 +61,21 @@ export function ListPagination({
 }) {
   const t = useTranslations("staff.list");
   const { pages, result, rows, first } = list;
-  if (!pages.hasPrevious && !result.data?.nextCursor) return null;
+  // Fades in and out as a second page appears or goes, rather than popping.
   return (
-    <Pagination
-      hasPrevious={pages.hasPrevious}
-      hasNext={Boolean(result.data?.nextCursor)}
-      onPrevious={pages.previous}
-      onNext={() => pages.next(result.data?.nextCursor)}
-      loading={result.isFetching}
-      summary={rows.length > 0 && t("showing", { first, last: first + rows.length - 1 })}
-    />
+    <AnimatePresence initial={false}>
+      {(pages.hasPrevious || result.data?.nextCursor) && (
+        <motion.div key="pages" {...fade}>
+          <Pagination
+            hasPrevious={pages.hasPrevious}
+            hasNext={Boolean(result.data?.nextCursor)}
+            onPrevious={pages.previous}
+            onNext={() => pages.next(result.data?.nextCursor)}
+            loading={result.isFetching}
+            summary={rows.length > 0 && t("showing", { first, last: first + rows.length - 1 })}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
