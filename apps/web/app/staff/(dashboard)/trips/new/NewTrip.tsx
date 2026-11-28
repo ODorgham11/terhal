@@ -29,7 +29,7 @@ import { useLocalName, useTripDates } from "@/components/staff/trips/format";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DatePicker, TimePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
@@ -362,7 +362,7 @@ function Booking({ customerId }: { customerId?: string }) {
                 <DatePicker value={date} onChange={setDate} />
               </Field>
               <Field label={t("when.time")} hint={t("when.cairo")}>
-                <Input type="time" value={time} onChange={(event) => setTime(event.target.value)} />
+                <TimePicker value={time} onChange={setTime} step={15} />
               </Field>
             </div>
             <AnimatePresence initial={false}>
@@ -470,11 +470,7 @@ function Booking({ customerId }: { customerId?: string }) {
                       <DatePicker value={returnDate} min={date} onChange={setReturnDate} />
                     </Field>
                     <Field label={t("extras.returnTime")}>
-                      <Input
-                        type="time"
-                        value={returnTime}
-                        onChange={(event) => setReturnTime(event.target.value)}
-                      />
+                      <TimePicker value={returnTime} onChange={setReturnTime} step={15} />
                     </Field>
                   </div>
                 </motion.div>
