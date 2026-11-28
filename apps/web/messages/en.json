@@ -1455,15 +1455,26 @@
       },
       "trend": {
         "title": {
-          "day": "Revenue and costs by day",
-          "week": "Revenue and costs by week",
-          "month": "Revenue and costs by month"
+          "day": "Day by day",
+          "week": "Week by week",
+          "month": "Month by month"
         },
         "revenue": "Revenue",
         "costs": "Costs",
         "period": "Period",
-        "caption": "Revenue and costs for each period",
-        "weeksNote": "Weeks start on Sunday. The first and last weeks may be partial."
+        "caption": "Revenue, costs and trips for each period",
+        "weeksNote": "Weeks start on Sunday. The first and last weeks may be partial.",
+        "metric": "Show",
+        "metrics": {
+          "money": "Revenue and costs",
+          "trips": "Trips"
+        },
+        "margin": "Margin",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "allTrips": "All trips",
+        "weekOf": "Week of {date}",
+        "empty": "Nothing in this range yet"
       },
       "byClass": "Trips by class",
       "byCar": "Trips by car",

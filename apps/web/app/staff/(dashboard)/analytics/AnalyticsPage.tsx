@@ -248,21 +248,7 @@ function Figures({
         />
       </div>
 
-      <SectionCard
-        title={t(`trend.title.${data.groupBy}`)}
-        aside={
-          <span className="flex items-center gap-4 text-xs text-muted">
-            <span className="flex items-center gap-1.5">
-              <span aria-hidden className="size-2.5 rounded-xs bg-primary" />
-              {t("trend.revenue")}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span aria-hidden className="size-2.5 rounded-xs bg-accent" />
-              {t("trend.costs")}
-            </span>
-          </span>
-        }
-      >
+      <SectionCard title={t(`trend.title.${data.groupBy}`)}>
         <TrendChart trend={data.trend} groupBy={data.groupBy} />
         {data.groupBy === "week" && <p className="text-xs text-muted">{t("trend.weeksNote")}</p>}
       </SectionCard>
@@ -453,7 +439,7 @@ function AnalyticsLoading() {
           </div>
         ))}
       </div>
-      {card(<Skeleton className="h-62 w-full rounded-lg" />)}
+      {card(<Skeleton className="h-78 w-full rounded-lg" />)}
       <div className="grid items-start gap-5 lg:grid-cols-3">
         {[0, 1, 2].map((index) =>
           card(
