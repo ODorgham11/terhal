@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "motion/react";
 import {
   IconArrowRight,
   IconDotsVertical,
@@ -34,14 +35,17 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { AutoHeight, FadeText, fade } from "@/components/ui/Motion";
+import { Skeleton, SkeletonLines } from "@/components/ui/Skeleton";
 import {
+  MotionTableRow,
   Table,
   TableBody,
   TableCell,
   TableEmpty,
   TableHead,
   TableHeader,
-  TableLoading,
   TableRow,
 } from "@/components/ui/Table";
 import { toast } from "@/components/ui/Toast";
@@ -76,6 +80,8 @@ function Prices() {
   );
   const { filters, setFilter, rows, result } = prices;
   const pageSelected = rows.length > 0 && rows.every((row) => selected.has(row.id));
+  // Rows from the last filter stay up, dimmed, until the new ones arrive, so the table never empties out.
+  const stale = result.isPlaceholderData;
 
   const toggle = (row: PricingRow) =>
     setSelected((current) => {
@@ -150,18 +156,25 @@ function Prices() {
             setFilter("toId", location?.id ?? "");
           }}
         />
-        <Select
-          aria-label={t("columns.class")}
-          value={filters.classId}
-          onChange={(event) => setFilter("classId", event.target.value)}
-        >
-          <option value="">{t("allClasses")}</option>
-          {classes.data?.data.map((tripClass) => (
-            <option key={tripClass.id} value={tripClass.id}>
-              {name(tripClass)}
-            </option>
-          ))}
-        </Select>
+        {/* Held by a skeleton while the classes load, so the row doesn't shift when they arrive. */}
+        {classes.data ? (
+          <motion.div {...fade}>
+            <Select
+              aria-label={t("columns.class")}
+              value={filters.classId}
+              onChange={(event) => setFilter("classId", event.target.value)}
+            >
+              <option value="">{t("allClasses")}</option>
+              {classes.data.data.map((tripClass) => (
+                <option key={tripClass.id} value={tripClass.id}>
+                  {name(tripClass)}
+                </option>
+              ))}
+            </Select>
+          </motion.div>
+        ) : (
+          <Skeleton className="h-10 w-full rounded-lg" />
+        )}
         <Select
           aria-label={t("columns.car")}
           value={filters.car}
@@ -176,67 +189,66 @@ function Prices() {
         </Select>
       </div>
 
-      {selected.size > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-primary-soft px-4 py-2.5">
-          <span className="text-sm font-medium text-primary">
-            {t("selected", { count: selected.size })}
-          </span>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setSelected(new Map())}>
-              {t("clearSelection")}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setDialog({ kind: "change", rows: [...selected.values()] })}
-            >
-              <IconPencil aria-hidden className="size-4" stroke={1.75} />
-              {t("changePrice")}
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => setDialog({ kind: "delete", rows: [...selected.values()] })}
-            >
-              {t("delete")}
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* Opens above the table while rows are picked, and closes again when none are. */}
+      <AnimatePresence initial={false}>
+        {selected.size > 0 && (
+          <motion.div
+            key="selection"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={fade.transition}
+            className="-mt-6 overflow-hidden"
+          >
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-primary-soft px-4 py-2.5">
+              <span className="text-sm font-medium text-primary tabular-nums">
+                <FadeText value={t("selected", { count: selected.size })} />
+              </span>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setSelected(new Map())}>
+                  {t("clearSelection")}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setDialog({ kind: "change", rows: [...selected.values()] })}
+                >
+                  <IconPencil aria-hidden className="size-4" stroke={1.75} />
+                  {t("changePrice")}
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => setDialog({ kind: "delete", rows: [...selected.values()] })}
+                >
+                  {t("delete")}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-10">
-              <input
-                type="checkbox"
-                aria-label={t("selectPage")}
-                checked={pageSelected}
-                onChange={togglePage}
-                className="size-4 accent-primary"
-              />
-            </TableHead>
-            <TableHead>{t("columns.from")}</TableHead>
-            <TableHead>{t("columns.to")}</TableHead>
-            <TableHead>{t("columns.class")}</TableHead>
-            <TableHead>{t("columns.car")}</TableHead>
-            <TableHead>{t("columns.price")}</TableHead>
-            <TableHead>{t("columns.updated")}</TableHead>
-            <TableHead>
-              <span className="sr-only">{list("actions")}</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+      {/* Phones: one card per price. */}
+      <AutoHeight className="md:hidden">
+        <ul
+          aria-busy={result.isFetching || undefined}
+          className={cn("flex flex-col gap-3 transition-opacity", stale && "opacity-60")}
+        >
           {result.isPending ? (
-            <TableLoading columns={COLUMNS} />
+            <PriceCardsLoading />
           ) : result.isError ? (
-            <TableEmpty columns={COLUMNS} title={errorMessage(result.error)} />
+            <motion.li {...fade} className="py-10 text-center text-sm text-danger">
+              {errorMessage(result.error)}
+            </motion.li>
           ) : rows.length === 0 ? (
-            <TableEmpty columns={COLUMNS} title={t("empty")} description={t("emptyHint")} />
+            <motion.li {...fade} className="flex flex-col items-center gap-1.5 py-10 text-center">
+              <span className="text-base font-semibold text-foreground">{t("empty")}</span>
+              <span className="text-[0.8125rem] text-muted">{t("emptyHint")}</span>
+            </motion.li>
           ) : (
             rows.map((row) => (
-              <PriceRow
+              <PriceCard
                 key={row.id}
                 row={row}
                 selected={selected.has(row.id)}
@@ -246,8 +258,57 @@ function Prices() {
               />
             ))
           )}
-        </TableBody>
-      </Table>
+        </ul>
+      </AutoHeight>
+
+      <AutoHeight className="hidden md:block">
+        <Table
+          aria-busy={result.isFetching || undefined}
+          className={cn("transition-opacity", stale && "opacity-60")}
+        >
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">
+                <Checkbox
+                  className="gap-0"
+                  label={<span className="sr-only">{t("selectPage")}</span>}
+                  checked={pageSelected}
+                  onChange={togglePage}
+                />
+              </TableHead>
+              <TableHead>{t("columns.from")}</TableHead>
+              <TableHead>{t("columns.to")}</TableHead>
+              <TableHead>{t("columns.class")}</TableHead>
+              <TableHead>{t("columns.car")}</TableHead>
+              <TableHead>{t("columns.price")}</TableHead>
+              <TableHead>{t("columns.updated")}</TableHead>
+              <TableHead>
+                <span className="sr-only">{list("actions")}</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {result.isPending ? (
+              <PriceRowsLoading />
+            ) : result.isError ? (
+              <TableEmpty columns={COLUMNS} title={errorMessage(result.error)} />
+            ) : rows.length === 0 ? (
+              <TableEmpty columns={COLUMNS} title={t("empty")} description={t("emptyHint")} />
+            ) : (
+              rows.map((row) => (
+                <PriceRow
+                  key={row.id}
+                  row={row}
+                  selected={selected.has(row.id)}
+                  onToggle={() => toggle(row)}
+                  onChange={() => setDialog({ kind: "change", rows: [row] })}
+                  onDelete={() => setDialog({ kind: "delete", rows: [row] })}
+                />
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </AutoHeight>
       <ListPagination list={prices} />
 
       <PriceDrawer
@@ -311,16 +372,24 @@ function PriceRow({
   const { day, price } = useTripDates();
 
   return (
-    <TableRow
-      className={cn(selected && "bg-primary-soft/50", !row.active && "text-muted opacity-70")}
+    <MotionTableRow
+      {...fade}
+      className={cn(
+        "transition-colors",
+        selected && "bg-primary-soft/50",
+        !row.active && "text-muted opacity-70",
+      )}
     >
       <TableCell>
-        <input
-          type="checkbox"
-          aria-label={t("selectRow", { from: name(row.from), to: name(row.to) })}
+        <Checkbox
+          className="gap-0"
+          label={
+            <span className="sr-only">
+              {t("selectRow", { from: name(row.from), to: name(row.to) })}
+            </span>
+          }
           checked={selected}
           onChange={onToggle}
-          className="size-4 accent-primary"
         />
       </TableCell>
       <TableCell>
@@ -332,12 +401,12 @@ function PriceRow({
           <Place place={row.to} />
         </div>
       </TableCell>
-      <TableCell className="text-sm">{name(row.class)}</TableCell>
-      <TableCell className="text-sm">{cars(row.car)}</TableCell>
-      <TableCell className="text-sm font-medium whitespace-nowrap tabular-nums">
+      <TableCell>{name(row.class)}</TableCell>
+      <TableCell>{cars(row.car)}</TableCell>
+      <TableCell className="font-medium whitespace-nowrap tabular-nums">
         {price(row.price)}
       </TableCell>
-      <TableCell className="text-sm text-muted">
+      <TableCell className="whitespace-nowrap text-muted">
         {row.active ? (
           day(row.updatedAt)
         ) : (
@@ -347,24 +416,164 @@ function PriceRow({
         )}
       </TableCell>
       <TableCell className="w-11 px-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label={t("rowMenu")}>
-              <IconDotsVertical aria-hidden className="size-4.5" stroke={1.75} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onSelect={onChange}>
-              <IconPencil aria-hidden className="size-4" stroke={1.75} />
-              {t("changePrice")}
-            </DropdownMenuItem>
-            <DropdownMenuItem destructive onSelect={onDelete}>
-              <IconTrash aria-hidden className="size-4" stroke={1.75} />
-              {t("delete")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <PriceMenu onChange={onChange} onDelete={onDelete} />
       </TableCell>
-    </TableRow>
+    </MotionTableRow>
+  );
+}
+
+function PriceMenu({ onChange, onDelete }: { onChange: () => void; onDelete: () => void }) {
+  const t = useTranslations("staff.pricing");
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label={t("rowMenu")}>
+          <IconDotsVertical aria-hidden className="size-4.5" stroke={1.75} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem onSelect={onChange}>
+          <IconPencil aria-hidden className="size-4" stroke={1.75} />
+          {t("changePrice")}
+        </DropdownMenuItem>
+        <DropdownMenuItem destructive onSelect={onDelete}>
+          <IconTrash aria-hidden className="size-4" stroke={1.75} />
+          {t("delete")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function PriceCard({
+  row,
+  selected,
+  onToggle,
+  onChange,
+  onDelete,
+}: {
+  row: PricingRow;
+  selected: boolean;
+  onToggle: () => void;
+  onChange: () => void;
+  onDelete: () => void;
+}) {
+  const t = useTranslations("staff.pricing");
+  const cars = useTranslations("staff.trips.car");
+  const name = useLocalName();
+  const { day, price } = useTripDates();
+  return (
+    <motion.li
+      {...fade}
+      className={cn(
+        "flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 transition-colors",
+        selected && "border-primary/40 bg-primary-soft/50",
+        !row.active && "opacity-70",
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-start gap-3">
+          <Checkbox
+            className="gap-0"
+            label={
+              <span className="sr-only">
+                {t("selectRow", { from: name(row.from), to: name(row.to) })}
+              </span>
+            }
+            checked={selected}
+            onChange={onToggle}
+          />
+          <div className="flex min-w-0 flex-col gap-1">
+            <Place place={row.from} />
+            <Place place={row.to} />
+          </div>
+        </div>
+        <PriceMenu onChange={onChange} onDelete={onDelete} />
+      </div>
+      <div className="flex items-end justify-between gap-3 border-t border-border pt-3 text-[0.8125rem]">
+        <div className="flex flex-col">
+          <span className="text-foreground">
+            {name(row.class)} · {cars(row.car)}
+          </span>
+          <span className="text-xs text-muted">
+            {row.active ? day(row.updatedAt) : t("inactive")}
+          </span>
+        </div>
+        <span className="font-medium text-foreground tabular-nums">{price(row.price)}</span>
+      </div>
+    </motion.li>
+  );
+}
+
+// The first page loading: rows shaped like the prices they stand in for, so nothing moves when they arrive.
+function PriceRowsLoading() {
+  const t = useTranslations("common.ui");
+  return (
+    <>
+      {Array.from({ length: 8 }, (_, row) => (
+        <motion.tr
+          key={row}
+          {...fade}
+          className="border-b border-border"
+          aria-hidden={row > 0 || undefined}
+        >
+          <TableCell>
+            {row === 0 && <span className="sr-only">{t("loading")}</span>}
+            <Skeleton className="size-4.5 rounded-[0.3125rem]" />
+          </TableCell>
+          <TableCell>
+            <SkeletonLines first={row % 2 ? "w-24" : "w-32"} second="w-16" />
+          </TableCell>
+          <TableCell>
+            <div className="flex items-center gap-3">
+              <Skeleton className="size-4 shrink-0" />
+              <SkeletonLines first={row % 2 ? "w-28" : "w-24"} second="w-16" />
+            </div>
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-3.5 w-16" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-3.5 w-14" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-3.5 w-20" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-3.5 w-20" />
+          </TableCell>
+          <TableCell className="w-11 px-2">
+            <Skeleton className="size-8 rounded-lg" />
+          </TableCell>
+        </motion.tr>
+      ))}
+    </>
+  );
+}
+
+function PriceCardsLoading() {
+  return (
+    <>
+      {[0, 1, 2].map((card) => (
+        <motion.li
+          key={card}
+          {...fade}
+          aria-hidden
+          className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4"
+        >
+          <div className="flex items-start gap-3">
+            <Skeleton className="size-4.5 rounded-[0.3125rem]" />
+            <div className="flex flex-col gap-2">
+              <SkeletonLines first="w-32" second="w-16" />
+              <SkeletonLines first="w-28" second="w-16" />
+            </div>
+          </div>
+          <div className="flex items-end justify-between border-t border-border pt-3">
+            <SkeletonLines first="w-28" second="w-20" />
+            <Skeleton className="h-3.5 w-20" />
+          </div>
+        </motion.li>
+      ))}
+    </>
   );
 }
