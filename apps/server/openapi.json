@@ -3670,7 +3670,7 @@
           },
           "sortOrder": {
             "type": "integer",
-            "minimum": -1000,
+            "minimum": 0,
             "maximum": 1000,
             "default": 0,
             "description": "Lower comes first on the site."
@@ -3710,7 +3710,7 @@
           },
           "sortOrder": {
             "type": "integer",
-            "minimum": -1000,
+            "minimum": 0,
             "maximum": 1000,
             "description": "Lower comes first on the site."
           }

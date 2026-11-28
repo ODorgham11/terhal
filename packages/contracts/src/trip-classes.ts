@@ -22,7 +22,7 @@ const Description = (label: string) =>
 const SortOrder = z
   .number({ error: "Sort order must be a number." })
   .int("Sort order must be a whole number.")
-  .min(-1000, "Sort order must be at least -1000.")
+  .min(0, "Sort order can't be negative.")
   .max(1000, "Sort order must be 1000 at most.")
   .meta({ description: "Lower comes first on the site." });
 

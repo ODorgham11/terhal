@@ -433,3 +433,41 @@ describe("prices", () => {
     ).resolves.toBeDefined();
   });
 });
+
+describe("whole numbers", () => {
+  it("are never negative", async () => {
+    await expect(
+      prisma.tripClass.create({ data: { nameEn: "Economy", nameAr: "اقتصادي", sortOrder: -1 } }),
+    ).rejects.toThrow(/TripClass_sortOrder_range/);
+    await expect(
+      prisma.tripClass.create({ data: { nameEn: "Economy", nameAr: "اقتصادي", sortOrder: 0 } }),
+    ).resolves.toBeDefined();
+
+    const vehicle = {
+      make: "Toyota",
+      model: "Corolla",
+      plateNumber: "ABC 123",
+      color: "White",
+      body: "SEDAN" as const,
+    };
+    await expect(prisma.vehicle.create({ data: { ...vehicle, year: -2020 } })).rejects.toThrow(
+      /Vehicle_year_range/,
+    );
+    await expect(
+      prisma.vehicle.create({ data: { ...vehicle, year: 2020 } }),
+    ).resolves.toBeDefined();
+
+    await expect(
+      prisma.customer.create({
+        data: {
+          firstName: "Mona",
+          lastName: "Adel",
+          phone: "+201000000001",
+          email: "mona@terhal.co",
+          passwordHash: "x",
+          verificationAttempts: -1,
+        },
+      }),
+    ).rejects.toThrow(/Customer_verificationAttempts_nonnegative/);
+  });
+});
