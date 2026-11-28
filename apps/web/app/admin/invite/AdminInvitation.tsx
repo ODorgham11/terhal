@@ -59,6 +59,7 @@ function Expired({ message }: { message?: string }) {
   const t = useTranslations("admin.auth.invite");
   return (
     <AuthCard
+      layout="centered"
       title={t("expiredTitle")}
       description={message ?? t("expiredDescription")}
       icon={
@@ -87,6 +88,7 @@ function Steps({ token, email }: { token: string; email: string }) {
   if (details) {
     return (
       <AuthCard
+        layout="centered"
         title={t("authenticatorTitle")}
         description={t("authenticatorDescription")}
         icon={
@@ -114,7 +116,7 @@ function Steps({ token, email }: { token: string; email: string }) {
   }
 
   return (
-    <AuthCard title={t("title")} description={t("description")}>
+    <AuthCard layout="centered" title={t("title")} description={t("description")}>
       <div className="flex items-center gap-2.5 rounded-lg bg-surface-muted px-3.5 py-2.5 text-sm text-foreground">
         <IconMail aria-hidden className="size-4.5 shrink-0 text-muted" stroke={1.75} />
         <span dir="ltr" className="truncate">

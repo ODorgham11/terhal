@@ -36,6 +36,7 @@ export function AdminSignInForm() {
   if (step === "code") {
     return (
       <AuthCard
+        layout="centered"
         title={t("codeTitle")}
         description={t("codeDescription")}
         icon={
@@ -60,7 +61,7 @@ export function AdminSignInForm() {
   }
 
   return (
-    <AuthCard title={t("title")} description={t("description")}>
+    <AuthCard layout="centered" title={t("title")} description={t("description")}>
       <Form
         form={form}
         onSubmit={async (json) => {
