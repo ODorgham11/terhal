@@ -105,6 +105,7 @@
               "LOCATION_NOT_AVAILABLE",
               "IMAGE_TYPE_NOT_ALLOWED",
               "IMAGE_LIMIT_REACHED",
+              "UPLOAD_INCOMPLETE",
               "LAST_TEAM_MANAGER",
               "ACCOUNT_DELETED",
               "LOCATION_NAME_TAKEN",
@@ -2574,6 +2575,76 @@
             "maxLength": 100
           }
         }
+      },
+      "VehicleImageUpload": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "PUT"
+            ]
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "uploadId",
+          "url",
+          "method",
+          "headers",
+          "expiresAt"
+        ]
+      },
+      "RequestVehicleImageUpload": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ]
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5242880
+          }
+        },
+        "required": [
+          "contentType",
+          "size"
+        ]
+      },
+      "ConfirmVehicleImageUpload": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "uploadId"
+        ]
       },
       "ReorderVehicleImages": {
         "type": "object",
@@ -15776,13 +15847,13 @@
         }
       }
     },
-    "/v1/staff/vehicles/{id}/images": {
+    "/v1/staff/vehicles/{id}/images/uploads": {
       "post": {
         "tags": [
           "Vehicles"
         ],
-        "summary": "Add an image",
-        "description": "A multipart upload with the image as `file`: JPEG, PNG or WebP (judged from the bytes), 5 MB at most, 5 images per vehicle. It goes after the others; the first image is the cover.",
+        "summary": "Ask to upload an image",
+        "description": "Step one of adding an image: a link signed for one JPEG, PNG or WebP of up to 5 MB. PUT the file to `url` with `headers` (the file never passes through the API), then confirm it with POST /staff/vehicles/{id}/images. Refused when the vehicle has 5 images already.",
         "security": [
           {
             "staffCookie": []
@@ -15802,30 +15873,20 @@
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "JPEG, PNG or WebP, 5 MB at most."
-                  }
-                },
-                "required": [
-                  "file"
-                ]
+                "$ref": "#/components/schemas/RequestVehicleImageUpload"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Added; the vehicle with its images",
+            "description": "Where to put the file",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Vehicle"
+                  "$ref": "#/components/schemas/VehicleImageUpload"
                 }
               }
             }
@@ -15880,6 +15941,113 @@
               }
             }
           },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/vehicles/{id}/images": {
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Add an uploaded image",
+        "description": "Step two: once the file is at its link, this checks it (5 MB at most, a JPEG, PNG or WebP judged from the bytes) and adds it after the others; the first image is the cover. A file that fails a check is deleted, and its upload with it.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmVehicleImageUpload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Added; the vehicle with its images",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such vehicle, or no such upload of yours for it.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IMAGE_LIMIT_REACHED: delete an image first. UPLOAD_INCOMPLETE: the file isn't at its link yet.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "413": {
             "description": "PAYLOAD_TOO_LARGE: 5 MB at most.",
             "content": {
@@ -15892,16 +16060,6 @@
           },
           "422": {
             "description": "IMAGE_TYPE_NOT_ALLOWED: only JPEG, PNG or WebP.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "RATE_LIMITED",
             "content": {
               "application/problem+json": {
                 "schema": {

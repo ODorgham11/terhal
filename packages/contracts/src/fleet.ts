@@ -370,6 +370,38 @@ export const ListVehicles = z.object({
 export type ListVehicles = z.output<typeof ListVehicles>;
 
 // Every image of the vehicle, each once, in the new order.
+// Asking to upload a photo: what's coming, so the link can be signed for it and a full vehicle refused before any upload.
+export const RequestVehicleImageUpload = z
+  .object({
+    contentType: z.enum(vehicleImageTypes, { error: "Upload a JPEG, PNG or WebP image." }),
+    size: z
+      .int({ error: "Size must be the file's size in bytes." })
+      .min(1, "The file is empty.")
+      .max(VEHICLE_IMAGE_MAX_BYTES, "An image can be 5 MB at most."),
+  })
+  .meta({ id: "RequestVehicleImageUpload" });
+
+export type RequestVehicleImageUpload = z.output<typeof RequestVehicleImageUpload>;
+
+// Where to put the file: a PUT to `url` with `headers` and the file as the body, before `expiresAt`. Then confirm it.
+export const VehicleImageUpload = z
+  .object({
+    uploadId: z.string(),
+    url: z.url(),
+    method: z.literal("PUT"),
+    headers: z.record(z.string(), z.string()),
+    expiresAt: z.iso.datetime(),
+  })
+  .meta({ id: "VehicleImageUpload" });
+
+export type VehicleImageUpload = z.infer<typeof VehicleImageUpload>;
+
+export const ConfirmVehicleImageUpload = z
+  .object({ uploadId: Id("Upload") })
+  .meta({ id: "ConfirmVehicleImageUpload" });
+
+export type ConfirmVehicleImageUpload = z.output<typeof ConfirmVehicleImageUpload>;
+
 export const ReorderVehicleImages = z
   .object({
     imageIds: z

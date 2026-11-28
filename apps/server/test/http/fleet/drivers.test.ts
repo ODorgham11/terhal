@@ -28,7 +28,7 @@ const driverInput = (overrides: Record<string, unknown> = {}) => {
     licenseExpiresAt: isoDate(365),
     ...overrides,
   };
-  return { licenseNumber: `LIC-${String(input.phone)}`, ...input };
+  return { licenseNumber: `LIC-${input.phone}`, ...input };
 };
 
 const addDriver = async (agent: Agent, overrides: Record<string, unknown> = {}) => {

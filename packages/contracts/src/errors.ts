@@ -69,6 +69,8 @@ export const errorCodes = [
   "IMAGE_TYPE_NOT_ALLOWED",
   // A vehicle already has the most images it can have.
   "IMAGE_LIMIT_REACHED",
+  // Confirming an upload whose file never reached storage (the PUT to its link didn't finish).
+  "UPLOAD_INCOMPLETE",
 
   // Managing staff and customers
   // The change would leave no active staff member with the team permission, so nobody in the dashboard could manage the
