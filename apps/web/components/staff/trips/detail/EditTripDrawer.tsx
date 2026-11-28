@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { Field } from "@/components/ui/Field";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Input } from "@/components/ui/Input";
 import { MoneyInput } from "@/components/ui/MoneyInput";
 import { PhoneInput } from "@/components/ui/PhoneInput";
@@ -174,7 +175,7 @@ function EditForm({ trip, onDone }: { trip: Trip; onDone: () => void }) {
               <PlaceField value={dropoff} onChange={setDropoff} />
             </Field>
             <Field label={t("date")}>
-              <Input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+              <DatePicker value={date} onChange={setDate} />
             </Field>
             <Field label={t("time")} hint={t("cairo")}>
               <Input type="time" value={time} onChange={(event) => setTime(event.target.value)} />

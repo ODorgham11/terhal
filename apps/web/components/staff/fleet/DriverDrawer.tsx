@@ -8,6 +8,7 @@ import { CreateDriver, type Driver } from "@terhal/contracts";
 import { Button } from "@/components/ui/Button";
 import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { Form, FormError, FormField } from "@/components/ui/Form";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Input } from "@/components/ui/Input";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { Radio, RadioGroup } from "@/components/ui/Radio";
@@ -159,7 +160,13 @@ function DriverFields({
           <Input autoComplete="off" dir="ltr" {...form.register("licenseNumber")} />
         </FormField>
         <FormField name="licenseExpiresAt" label={fields("licenseExpiresAt")}>
-          <Input type="date" {...form.register("licenseExpiresAt")} />
+          <Controller
+            control={form.control}
+            name="licenseExpiresAt"
+            render={({ field }) => (
+              <DatePicker value={field.value ?? ""} onChange={field.onChange} />
+            )}
+          />
         </FormField>
       </div>
       <FormField name="nationalId" label={fields("nationalId")} optional>
