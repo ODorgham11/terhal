@@ -14,7 +14,7 @@
   /* What a row, a menu item or a ghost button turns on hover: a plain, quiet gray, solid so it reads the same on white
      rows and on the page. It's neutral where the page, the muted surface and the table headers are warm, so it never
      passes for one of them, and nothing like the maroon. */
-  --hover: #f4f4f4;
+  --hover: #f7f7f7;
   --muted: #766d66;
   --border: #ede7e1;
   --input: #ddd5cd;
