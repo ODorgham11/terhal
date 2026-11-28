@@ -20,7 +20,7 @@ export function EmptyState({ icon: Icon, title, description, action, className }
       )}
     >
       {Icon && <Icon aria-hidden stroke={1.5} className="size-10 text-muted" />}
-      <div className="flex max-w-sm flex-col gap-1">
+      <div className="flex max-w-sm flex-col gap-0.5">
         <p className="text-base font-semibold text-foreground">{title}</p>
         {description && <p className="text-sm text-muted">{description}</p>}
       </div>

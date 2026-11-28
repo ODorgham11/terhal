@@ -1,12 +1,15 @@
 import {
   auditActions,
+  type DriverSummary,
   type DriverTransaction,
   type ListDriverTransactions,
   type RecordDriverTransaction,
 } from "@terhal/contracts";
 import type { Prisma } from "../../../../generated/prisma/client";
 import { prisma } from "../../../platform/db/prisma";
+import { cairoMonthOf, monthBounds } from "../../analytics/index";
 import { recordAudit } from "../../audit/index";
+import { driverCompletedTrips } from "../../trips/index";
 import { lockRow, notFound, pageArgs, toPage, type StaffActor } from "./shared";
 
 // The driver's ledger (docs/decisions.md, "The driver ledger"). Rows are append-only and Driver.amountOwed is their
@@ -57,6 +60,7 @@ export const recordDriverTransaction = async (
   prisma.$transaction(async (tx) => {
     if (!(await lockRow(tx, "Driver", driverId))) throw notFound("driver");
 
+    // A payout is stored negative; cash handed in and adjustments as given.
     const amount = input.type === "PAYOUT" ? `-${input.amount}` : input.amount;
     const transaction = await tx.driverTransaction.create({
       data: {
@@ -139,4 +143,39 @@ export const tripLedgerBalances = async (tx: Prisma.TransactionClient, tripId: s
     driverId: row.driverId,
     amount: row._sum.amount?.toFixed(2) ?? "0.00",
   }));
+};
+
+// The ledger's totals by kind, and the driver's month so far: completed trips, kilometres and the fees written.
+export const getDriverSummary = async (
+  driverId: string,
+  now = new Date(),
+): Promise<DriverSummary> => {
+  const driver = await prisma.driver.findUnique({ where: { id: driverId }, select: { id: true } });
+  if (!driver) throw notFound("driver");
+
+  const { start, end } = monthBounds(cairoMonthOf(now));
+  const [byType, fees, month] = await Promise.all([
+    prisma.driverTransaction.groupBy({ by: ["type"], where: { driverId }, _sum: { amount: true } }),
+    prisma.driverTransaction.aggregate({
+      where: { driverId, type: "TRIP_FEE", createdAt: { gte: start, lt: end } },
+      _sum: { amount: true },
+    }),
+    driverCompletedTrips(driverId, start, end),
+  ]);
+  const sum = (...types: DriverTransaction["type"][]) =>
+    byType
+      .filter((row) => types.includes(row.type))
+      .reduce((total, row) => total + Number(row._sum.amount ?? 0), 0);
+  const money = (value: number) => (Object.is(value, -0) ? 0 : value).toFixed(2);
+
+  return {
+    totals: {
+      cashCollected: money(-sum("CASH_COLLECTED")),
+      earned: money(sum("TRIP_FEE", "EXPENSE_REIMBURSEMENT")),
+      paidOut: money(-sum("PAYOUT")),
+      handedIn: money(sum("CASH_HANDED_IN")),
+      adjustments: money(sum("ADJUSTMENT")),
+    },
+    thisMonth: { ...month, fees: money(Number(fees._sum.amount ?? 0)) },
+  };
 };

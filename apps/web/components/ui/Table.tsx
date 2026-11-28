@@ -2,7 +2,9 @@
 
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "next-intl";
+import { motion } from "motion/react";
 import { cn } from "@/lib/cn";
+import { fade } from "./Motion";
 import { Skeleton } from "./Skeleton";
 
 // Plain table parts: the markup stays a real <table>, so screen readers can move by row and column. Cells align to the
@@ -45,6 +47,9 @@ export function TableRow({ className, ...props }: ComponentProps<"tr">) {
   );
 }
 
+// A row that fades in when it arrives: for lists whose rows change under the reader (filters, pages, a refetch).
+export const MotionTableRow = motion.create(TableRow);
+
 export function TableHead({ className, scope = "col", ...props }: ComponentProps<"th">) {
   return (
     <th
@@ -77,15 +82,15 @@ export function TableEmpty({ columns, title, description, action }: TableEmptyPr
   const t = useTranslations("common.ui");
 
   return (
-    <tr>
+    <motion.tr {...fade}>
       <td colSpan={columns} className="px-4 py-12 text-center">
-        <div className="flex flex-col items-center gap-2">
-          <p className="font-medium text-foreground">{title ?? t("noResults")}</p>
-          {description && <p className="text-sm text-muted">{description}</p>}
-          {action}
+        <div className="flex flex-col items-center gap-0.5">
+          <p className="text-base font-semibold text-foreground">{title ?? t("noResults")}</p>
+          {description && <p className="text-[0.8125rem] text-muted">{description}</p>}
+          {action && <div className="pt-4">{action}</div>}
         </div>
       </td>
-    </tr>
+    </motion.tr>
   );
 }
 

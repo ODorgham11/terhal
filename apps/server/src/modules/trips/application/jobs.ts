@@ -2,9 +2,10 @@ import { tripEventActions } from "@terhal/contracts";
 import type { Job } from "bullmq";
 import { prisma } from "../../../platform/db/prisma";
 import { AppError } from "../../../platform/errors/app-error";
+import { runGated } from "../../../platform/jobs/gate";
 import { logger } from "../../../platform/logger/logger";
-import { overdueBefore } from "../domain/rules";
-import { changeTrip, type SystemJob } from "./events";
+import { overdueAt, overdueBefore } from "../domain/rules";
+import { changeTrip, TRIPS_SIGNAL, type SystemJob } from "./events";
 
 // The trips' background jobs, run by the worker on a schedule. Each is idempotent: it moves only trips still in the
 // status it looks for, one conditional change per trip, so a retry or a second run in parallel changes nothing twice.
@@ -24,16 +25,17 @@ const BATCH = 200;
 
 // T5 a and Q3: a pending trip still unconfirmed (or still without an accepted price) at its pickup time is cancelled.
 // A trip booked after its pickup time (staff recording one that already happened, `backdated`) is left alone.
+const expirable = () => ({
+  status: "PENDING" as const,
+  createdAt: { lt: prisma.trip.fields.pickupDate },
+});
+
 export const expirePendingTrips = async (now = new Date()) => {
   const system: SystemJob = "expire-pending-trips";
   let moved = 0;
   for (;;) {
     const due = await prisma.trip.findMany({
-      where: {
-        status: "PENDING",
-        pickupDate: { lte: now },
-        createdAt: { lt: prisma.trip.fields.pickupDate },
-      },
+      where: { ...expirable(), pickupDate: { lte: now } },
       orderBy: { pickupDate: "asc" },
       take: BATCH,
       select: { id: true, priceState: true },
@@ -65,16 +67,17 @@ export const expirePendingTrips = async (now = new Date()) => {
 
 // T3 d: an assigned trip, confirmed or in progress, not ended 12 hours after its pickup moves to awaiting report, so
 // nothing gets stuck when nobody ends it.
+const advanceable = () => ({
+  status: { in: ["CONFIRMED" as const, "IN_PROGRESS" as const] },
+  OR: [{ officeId: { not: null } }, { driverId: { not: null }, vehicleId: { not: null } }],
+});
+
 export const advanceOverdueTrips = async (now = new Date()) => {
   const system: SystemJob = "advance-overdue-trips";
   let moved = 0;
   for (;;) {
     const due = await prisma.trip.findMany({
-      where: {
-        status: { in: ["CONFIRMED", "IN_PROGRESS"] },
-        pickupDate: { lte: overdueBefore(now) },
-        OR: [{ officeId: { not: null } }, { driverId: { not: null }, vehicleId: { not: null } }],
-      },
+      where: { ...advanceable(), pickupDate: { lte: overdueBefore(now) } },
       orderBy: { pickupDate: "asc" },
       take: BATCH,
       select: { id: true },
@@ -99,15 +102,43 @@ export const advanceOverdueTrips = async (now = new Date()) => {
   return moved;
 };
 
-// What the worker schedules: each job by name, how often it runs, and what it does. The scheduler ids are the job names,
-// so redeploying replaces the schedule instead of adding another.
+// When each job next has work without any trip changing: the earliest pickup still pending, the earliest assigned trip
+// becoming overdue. One left behind (a conflict skipped it) is already due, so the job runs again next time.
+const nextExpiry = async () =>
+  (
+    await prisma.trip.findFirst({
+      where: expirable(),
+      orderBy: { pickupDate: "asc" },
+      select: { pickupDate: true },
+    })
+  )?.pickupDate ?? null;
+
+const nextOverdue = async () => {
+  const trip = await prisma.trip.findFirst({
+    where: advanceable(),
+    orderBy: { pickupDate: "asc" },
+    select: { pickupDate: true },
+  });
+  return trip ? overdueAt(trip.pickupDate) : null;
+};
+
+// What the worker schedules: each job by name, how often it runs, what it does, and when it next has work. The
+// scheduler ids are the job names, so redeploying replaces the schedule instead of adding another. Each run goes through
+// the job gate: it only queries Postgres if a trip changed or a trip is due (platform/jobs/gate.ts).
 export const tripJobs = {
-  "expire-pending-trips": { every: 60_000, run: expirePendingTrips },
-  "advance-overdue-trips": { every: 5 * 60_000, run: advanceOverdueTrips },
-} satisfies Record<SystemJob, { every: number; run: () => Promise<number> }>;
+  "expire-pending-trips": { every: 60_000, run: expirePendingTrips, next: nextExpiry },
+  "advance-overdue-trips": { every: 5 * 60_000, run: advanceOverdueTrips, next: nextOverdue },
+} satisfies Record<
+  SystemJob,
+  { every: number; run: () => Promise<number>; next: () => Promise<Date | null> }
+>;
 
 export const processTripJob = async (job: Job) => {
-  const entry = tripJobs[job.name as SystemJob] as (typeof tripJobs)[SystemJob] | undefined;
+  const name = job.name as SystemJob;
+  const entry = tripJobs[name] as (typeof tripJobs)[SystemJob] | undefined;
   if (!entry) throw new Error(`Unknown trips job: ${job.name}`);
-  await entry.run();
+  await runGated({ job: name, signal: TRIPS_SIGNAL }, async () => {
+    await entry.run();
+    return entry.next();
+  });
 };

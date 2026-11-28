@@ -86,13 +86,20 @@ export const Driver = z
 
 export type Driver = z.infer<typeof Driver>;
 
+// An Egyptian national ID: 14 digits, no spaces or dashes.
+const NationalId = z
+  .string({ error: "National ID must be 14 digits." })
+  .trim()
+  .regex(/^\d{14}$/, "National ID must be exactly 14 digits.");
+
 const DriverFields = {
   firstName: Name("First name"),
   lastName: Name("Last name"),
   phone: Phone,
   licenseNumber: Text("Licence number", 50),
   licenseExpiresAt: z.iso.date({ error: "Licence expiry must be a date (YYYY-MM-DD)." }),
-  nationalId: Text("National ID", 30).nullable(),
+  // Unique across drivers, like the licence number and the phone (Driver_nationalId_key, Driver_licenseNumber_key).
+  nationalId: NationalId.nullable(),
   isExternal: z.boolean({ error: "External must be true or false." }),
   // Only an external driver can come through an office.
   officeId: Id("Office").nullable(),
@@ -172,6 +179,7 @@ export const driverTransactionTypes = [
   "EXPENSE_REIMBURSEMENT",
   "CASH_COLLECTED",
   "PAYOUT",
+  "CASH_HANDED_IN",
   "ADJUSTMENT",
 ] as const;
 
@@ -209,13 +217,21 @@ export const RecordDriverTransaction = z
         note: Notes.optional(),
       }),
       z.object({
+        type: z.literal("CASH_HANDED_IN"),
+        amount: Amount.refine(
+          (value) => Number(value) > 0,
+          "Cash handed in must be more than zero.",
+        ),
+        note: Notes.optional(),
+      }),
+      z.object({
         type: z.literal("ADJUSTMENT"),
         // Signed: positive when the company owes the driver more.
         amount: Amount.refine(nonZero, "An adjustment can't be zero."),
         note: Text("Note", 500).meta({ description: "Why the balance is being corrected." }),
       }),
     ],
-    { error: "Type must be PAYOUT or ADJUSTMENT." },
+    { error: "Type must be PAYOUT, CASH_HANDED_IN or ADJUSTMENT." },
   )
   .meta({ id: "RecordDriverTransaction" });
 
@@ -229,6 +245,42 @@ export const DriverTransactionRecorded = z
   .meta({ id: "DriverTransactionRecorded" });
 
 export type DriverTransactionRecorded = z.infer<typeof DriverTransactionRecorded>;
+
+// What the ledger adds up to, and the driver's month so far (Cairo time).
+export const DriverSummary = z
+  .object({
+    totals: z.object({
+      cashCollected: z
+        .string()
+        .meta({ description: "Cash collected from customers, all time.", example: "14200.00" }),
+      earned: z
+        .string()
+        .meta({ description: "Trip fees and reimbursed expenses, all time.", example: "6870.00" }),
+      paidOut: z
+        .string()
+        .meta({ description: "Paid to the driver, all time.", example: "3000.00" }),
+      handedIn: z
+        .string()
+        .meta({ description: "Company cash the driver handed in, all time.", example: "3200.00" }),
+      adjustments: z
+        .string()
+        .meta({ description: "The sum of the adjustments, signed.", example: "-100.00" }),
+    }),
+    thisMonth: z.object({
+      tripsCompleted: z
+        .int()
+        .meta({ description: "Completed trips whose report ended this month." }),
+      kilometres: z
+        .int()
+        .meta({ description: "Driven on those trips, from their reports' odometers." }),
+      fees: z
+        .string()
+        .meta({ description: "Trip fees written to the ledger this month.", example: "8400.00" }),
+    }),
+  })
+  .meta({ id: "DriverSummary" });
+
+export type DriverSummary = z.infer<typeof DriverSummary>;
 
 export const ListDriverTransactions = z.object(PageQuery);
 
@@ -318,6 +370,38 @@ export const ListVehicles = z.object({
 export type ListVehicles = z.output<typeof ListVehicles>;
 
 // Every image of the vehicle, each once, in the new order.
+// Asking to upload a photo: what's coming, so the link can be signed for it and a full vehicle refused before any upload.
+export const RequestVehicleImageUpload = z
+  .object({
+    contentType: z.enum(vehicleImageTypes, { error: "Upload a JPEG, PNG or WebP image." }),
+    size: z
+      .int({ error: "Size must be the file's size in bytes." })
+      .min(1, "The file is empty.")
+      .max(VEHICLE_IMAGE_MAX_BYTES, "An image can be 5 MB at most."),
+  })
+  .meta({ id: "RequestVehicleImageUpload" });
+
+export type RequestVehicleImageUpload = z.output<typeof RequestVehicleImageUpload>;
+
+// Where to put the file: a PUT to `url` with `headers` and the file as the body, before `expiresAt`. Then confirm it.
+export const VehicleImageUpload = z
+  .object({
+    uploadId: z.string(),
+    url: z.url(),
+    method: z.literal("PUT"),
+    headers: z.record(z.string(), z.string()),
+    expiresAt: z.iso.datetime(),
+  })
+  .meta({ id: "VehicleImageUpload" });
+
+export type VehicleImageUpload = z.infer<typeof VehicleImageUpload>;
+
+export const ConfirmVehicleImageUpload = z
+  .object({ uploadId: Id("Upload") })
+  .meta({ id: "ConfirmVehicleImageUpload" });
+
+export type ConfirmVehicleImageUpload = z.output<typeof ConfirmVehicleImageUpload>;
+
 export const ReorderVehicleImages = z
   .object({
     imageIds: z

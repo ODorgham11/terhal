@@ -187,12 +187,16 @@ describe("customers in the dashboard", () => {
     expect((await agent.request("/v1/staff/customers?status=GUEST")).status).toBe(400);
   });
 
-  it("show their trip count and what their completed trips came to", async () => {
+  it("show their trip counts, what their completed trips came to and the latest one", async () => {
     const agent = await staffAgent(["customers"]);
     const customer = await createCustomer();
     const trip = await tripFactory();
     await trip(customer.id, { status: "COMPLETED", totalPrice: "100.00", daysAhead: -3 });
-    await trip(customer.id, { status: "COMPLETED", totalPrice: "250.50", daysAhead: -2 });
+    const latest = await trip(customer.id, {
+      status: "COMPLETED",
+      totalPrice: "250.50",
+      daysAhead: -2,
+    });
     await trip(customer.id, { status: "CANCELLED", totalPrice: "999.00" });
     await trip(customer.id, { status: "PENDING", totalPrice: "80.00" });
     const someoneElse = await createCustomer();
@@ -200,16 +204,26 @@ describe("customers in the dashboard", () => {
 
     const response = await agent.request(`/v1/staff/customers/${customer.id}`);
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({
+    const expected = {
       id: customer.id,
       tripCount: 4,
+      completedCount: 2,
+      cancelledCount: 1,
       totalSpent: "350.50",
-    });
+      lastTripAt: latest.pickupDate.toISOString(),
+    };
+    expect(await response.json()).toMatchObject(expected);
+    const listed = (await (await agent.request("/v1/staff/customers")).json()) as {
+      data: { id: string }[];
+    };
+    expect(listed.data.find((row) => row.id === customer.id)).toMatchObject(expected);
 
     const nobody = await createCustomer();
     expect(await (await agent.request(`/v1/staff/customers/${nobody.id}`)).json()).toMatchObject({
       tripCount: 0,
+      completedCount: 0,
       totalSpent: "0.00",
+      lastTripAt: null,
     });
 
     expect((await agent.request("/v1/staff/customers/nope")).status).toBe(404);

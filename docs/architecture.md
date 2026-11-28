@@ -16,11 +16,11 @@ migration.
 
 ## Non-goals
 
-| Not doing          | Why                                                                                              |
-| ------------------ | ------------------------------------------------------------------------------------------------ |
-| Microservices      | One team, one database. They'd turn function calls into network failures and take away transactions. |
-| Multi-tenancy      | Terhal serves one company. Rehletak was the multi-tenant version. |
-| Kubernetes         | One VPS running Docker Compose is enough until it isn't ([why one VPS](infrastructure.md#why-one-vps-decided-2026-11-02)). |
+| Not doing          | Why                                                                                                                                          |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Microservices      | One team, one database. They'd turn function calls into network failures and take away transactions.                                         |
+| Multi-tenancy      | Terhal serves one company. Rehletak was the multi-tenant version.                                                                            |
+| Kubernetes         | One VPS running Docker Compose is enough until it isn't ([why one VPS](infrastructure.md#why-one-vps-decided-2026-11-02)).                   |
 | A generated client | The web app is the only client and ships with the API, so Hono RPC types it ([why](#why-rpc-and-not-a-generated-client-decided-2026-11-02)). |
 
 ## Layout
@@ -147,18 +147,33 @@ What we gave up:
 
 ## Failure handling
 
-| Concern  | Rule |
-| -------- | ---- |
-| Config   | `platform/config/env.ts` validates every variable at startup with zod. A missing secret or URL stops the process instead of running insecurely. |
-| Timeouts | Requests get a 503 after 15 seconds. Every outbound call must have a timeout. |
-| Health   | `/health/live` checks only that the process is up. `/health/ready` drives the deploy's healthcheck: it fails while shutting down or when Postgres is unreachable; Redis is reported as `degraded`. |
-| Shutdown | On `SIGTERM` the API fails readiness, stops accepting connections, finishes in-flight requests, then closes Prisma and Redis, inside the container's `stop_grace_period`. The worker stops taking jobs and finishes its current ones. |
-| Jobs     | Processors must be idempotent (BullMQ runs jobs at least once): give jobs deterministic ids, retry with backoff. Each module with jobs has its own queue (`trips`, `analytics`, `notifications`); schedules are BullMQ job schedulers named after their job, upserted on every worker start, and a cron in business time takes `tz: "Africa/Cairo"`. Never queue a job from inside a transaction: write an outbox row in it, and let a scheduled sweep queue it once committed (notifications' `sweep-notifications`, every 5 seconds). Delayed jobs (reminders) only wake the worker; the row they belong to says whether they're still due. |
-| Redis down | Rate limits on sign in fail closed: an unreachable Redis must not mean unlimited password guesses. |
-| Client IPs | Rate limits trust only the header named by `CLIENT_IP_HEADER`, which the edge Caddy overwrites. Never publish the server's port. |
-| Neon     | `DATABASE_URL` is the pooled URL (PgBouncer, transaction mode), so no session state: no session advisory locks. Migrations use the direct URL. The API and the database must be in the same region. |
-| Migrations | Expand and contract once the client's data is in production (see [Migrations](#migrations)): a deploy never breaks the code that's still running. They run in their own container before the new version starts (`deploy/deploy.sh`), never at boot. |
-| Rollback | Because migrations stay backward compatible, a rollback is a redeploy of the previous images (README, "Deploys"). |
+| Concern    | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Config     | `platform/config/env.ts` validates every variable at startup with zod. A missing secret or URL stops the process instead of running insecurely.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Timeouts   | Requests get a 503 after 15 seconds. Every outbound call must have a timeout.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Health     | `/health/live` checks only that the process is up. `/health/live` is the container's healthcheck (deploy/compose.yml); it never touches Postgres, so Neon can scale to zero. `/health/ready` is checked once per deploy, from outside: it fails while shutting down or when Postgres is unreachable; Redis is reported as `degraded`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Shutdown   | On `SIGTERM` the API fails readiness, stops accepting connections, finishes in-flight requests, then closes Prisma and Redis, inside the container's `stop_grace_period`. The worker stops taking jobs and finishes its current ones.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Jobs       | Processors must be idempotent (BullMQ runs jobs at least once): give jobs deterministic ids, retry with backoff. Each module with jobs has its own queue (`trips`, `analytics`, `notifications`); schedules are BullMQ job schedulers named after their job, upserted on every worker start, and a cron in business time takes `tz: "Africa/Cairo"`. Never queue a job from inside a transaction: write an outbox row in it, and let a scheduled sweep queue it once committed (notifications' `sweep-notifications`, every 5 seconds). Scheduled jobs that poll Postgres go through the job gate (`platform/jobs/gate.ts`): the change marks a Redis signal inside its transaction, and the job queries only after a change, when it said it's due, or on the hour, so Neon can scale to zero while nothing happens. Delayed jobs (reminders) only wake the worker; the row they belong to says whether they're still due. |
+| Redis down | Rate limits on sign in fail closed: an unreachable Redis must not mean unlimited password guesses.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Client IPs | Rate limits trust only the header named by `CLIENT_IP_HEADER`, which the edge Caddy overwrites. Never publish the server's port.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Neon       | `DATABASE_URL` is the pooled URL (PgBouncer, transaction mode), so no session state: no session advisory locks. Migrations use the direct URL. The API and the database must be in the same region.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Migrations | Expand and contract once the client's data is in production (see [Migrations](#migrations)): a deploy never breaks the code that's still running. They run in their own container before the new version starts (`deploy/deploy.sh`), never at boot.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Rollback   | Because migrations stay backward compatible, a rollback is a redeploy of the previous images (README, "Deploys").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+
+## Files
+
+Uploads never pass through the API. For a vehicle photo the dashboard asks for
+an upload (`POST /staff/vehicles/{id}/images/uploads`, with the type and size),
+gets a link signed for one new key and that content type, `PUT`s the file to it,
+then confirms (`POST /staff/vehicles/{id}/images`). Only the confirm makes it an
+image, after reading what arrived: its size, and its type from the bytes.
+Anything that fails is deleted, and uploads never confirmed are swept with their
+files an hour after their link expires (the fleet queue's `sweep-uploads`).
+
+The link is the storage's own: a presigned R2 `PUT` in staging and production
+(the bucket needs `deploy/r2-cors.json`), and in local development a signed
+`PUT /v1/files` on the API that writes to `.storage`, like the signed `GET`
+that serves it.
 
 ## Migrations
 
@@ -225,7 +240,7 @@ Tabler (`@tabler/icons-react`), imported one by one. An icon that points along t
 chevron on a link) goes through `DirectionalIcon`, which mirrors it in Arabic. Pick it as it reads in English:
 
 ```tsx
-<DirectionalIcon icon={IconChevronRight} className="size-4" />   // "next": points left in Arabic
+<DirectionalIcon icon={IconChevronRight} className="size-4" /> // "next": points left in Arabic
 ```
 
 Icons with a real direction (north, sort order, undo) and every other icon are used as they are. Decorative icons get
@@ -239,18 +254,19 @@ DropdownMenu, Tabs, Toast) and on native elements everywhere else (Select, Check
 `bg-primary`...) defined as CSS variables in `app/globals.css`, with a dark theme that follows the system. Never use raw
 palette colors (`bg-neutral-100`) in pages.
 
-| Component | Use |
-| --- | --- |
-| `Button` | `variant` primary, secondary, ghost, danger, link; `size` sm, md, lg, icon; `loading`; `asChild` to style a `<Link>` |
-| `Field` | label, `hint`, `error`; any control inside gets the id and aria attributes |
-| `Input`, `Textarea`, `Select`, `PhoneInput` | text-like controls; `Input` takes `startAdornment`/`endAdornment` |
-| `Checkbox`, `RadioGroup` + `Radio`, `Switch` | carry their own label |
-| `CodeInput` | the 6-digit code, controlled (`value`, `onChange`, `onComplete`); digits stay left to right |
-| `Form`, `FormField`, `FormError` | react-hook-form wiring (see Forms) |
-| `Card` (+ `CardHeader`, `CardContent`, `CardFooter`), `PageHeader`, `EmptyState` | page structure |
-| `Dialog`, `Drawer`, `DropdownMenu`, `Tabs` | Radix underneath; the Drawer slides in from the inline end |
-| `Table` (+ `TableEmpty`, `TableLoading`), `Pagination` + `useCursorPages` | lists, paged by the API's `nextCursor` |
-| `Badge`, `Alert`, `toast` + `Toaster`, `Spinner`, `Skeleton`, `QrCode` | status and feedback |
+| Component                                                                        | Use                                                                                                                   |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `Button`                                                                         | `variant` primary, secondary, ghost, danger, link; `size` sm, md, lg, icon; `loading`; `asChild` to style a `<Link>`  |
+| `Field`                                                                          | label, `hint`, `error`, `labelAction` (a link at the label's end); any control inside gets the id and aria attributes |
+| `Input`, `Textarea`, `Select`, `PhoneInput`                                      | text-like controls; `Input` takes `startAdornment`/`endAdornment`                                                     |
+| `PasswordInput`                                                                  | a password with a show/hide toggle                                                                                    |
+| `Checkbox`, `RadioGroup` + `Radio`, `Switch`                                     | carry their own label                                                                                                 |
+| `CodeInput`                                                                      | the 6-digit code, controlled (`value`, `onChange`, `onComplete`); digits stay left to right                           |
+| `Form`, `FormField`, `FormError`                                                 | react-hook-form wiring (see Forms)                                                                                    |
+| `Card` (+ `CardHeader`, `CardContent`, `CardFooter`), `PageHeader`, `EmptyState` | page structure                                                                                                        |
+| `Dialog`, `Drawer`, `DropdownMenu`, `Tabs`                                       | Radix underneath; the Drawer slides in from the inline end                                                            |
+| `Table` (+ `TableEmpty`, `TableLoading`), `Pagination` + `useCursorPages`        | lists, paged by the API's `nextCursor`                                                                                |
+| `Badge`, `Alert`, `toast` + `Toaster`, `Spinner`, `Skeleton`, `QrCode`           | status and feedback                                                                                                   |
 
 Each file starts with an example. Components take translated text from the page; the few words of their own (Close,
 Next, Loading) are under `common.ui`.
@@ -262,10 +278,13 @@ Next, Loading) are under `common.ui`.
 `code`, `status`, the validation `errors` and the `requestId`:
 
 ```tsx
-const sessions = useQuery({ queryKey: ["sessions"], queryFn: () => call(adminApi.auth.sessions.$get()) });
+const sessions = useQuery({
+  queryKey: ["sessions"],
+  queryFn: () => call(adminApi.auth.sessions.$get()),
+});
 const errorMessage = useErrorMessage();
 // ...
-toast.error(errorMessage(error));   // every ErrorCode has a message in both languages (errors.codes)
+toast.error(errorMessage(error)); // every ErrorCode has a message in both languages (errors.codes)
 ```
 
 - **Refresh and retry.** On a 401 `ACCESS_TOKEN_EXPIRED`, the client calls that audience's `…/auth/refresh` once and
@@ -285,13 +304,20 @@ schema's output (trimmed, normalized), exactly what the API takes. `<Form>` turn
 const fields = useTranslations("common.fields");
 const form = useZodForm(StaffSignIn, { defaultValues: { email: "", password: "" } });
 
-<Form form={form} onSubmit={(json) => call(staffApi.auth["sign-in"].$post({ json })).then(() => router.replace("/"))}>
+<Form
+  form={form}
+  onSubmit={(json) =>
+    call(staffApi.auth["sign-in"].$post({ json })).then(() => router.replace("/"))
+  }
+>
   <FormError />
   <FormField name="email" label={fields("email")}>
     <Input type="email" autoComplete="email" {...form.register("email")} />
   </FormField>
-  <Button type="submit" loading={form.formState.isSubmitting}>{t("signIn")}</Button>
-</Form>
+  <Button type="submit" loading={form.formState.isSubmitting}>
+    {t("signIn")}
+  </Button>
+</Form>;
 ```
 
 **Validation messages are rebuilt, not translated.** The contracts' zod messages are English, and a message set on a
@@ -316,6 +342,7 @@ browser, through each audience's session route, cached by TanStack Query.
   ```
 
   They decide what the page shows, not who may do what: the API checks every request.
+
 - `useSignOut("admin")` ends the session on the API, drops every cached query and goes to sign in.
 
 ### Adding a page

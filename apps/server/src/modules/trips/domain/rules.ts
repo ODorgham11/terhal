@@ -66,6 +66,9 @@ export const conflictWindow = (pickup: Date) => ({
 
 // The latest pickup of a trip the overdue job advances (T3 d: 12 hours after its pickup).
 export const overdueBefore = (now: Date) => new Date(now.getTime() - OVERDUE_AFTER_HOURS * HOUR);
+// When a trip picked up at `pickupDate` becomes overdue: the other side of overdueBefore.
+export const overdueAt = (pickupDate: Date) =>
+  new Date(pickupDate.getTime() + OVERDUE_AFTER_HOURS * HOUR);
 
 // A driver and a vehicle, or an office (T2 a, A4 a).
 export const isAssigned = (trip: {

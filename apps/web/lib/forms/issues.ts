@@ -91,6 +91,8 @@ export function useIssueMessage() {
         case "invalid_union":
           return t("option");
         default:
+          // A confirmation that doesn't match its password (lib/forms/confirm-password).
+          if (name === "confirmPassword") return t("passwordsMatch");
           // custom and anything else: the field is all we know.
           if (name === "email") return t("email");
           if (name === "phone") return t("phone");

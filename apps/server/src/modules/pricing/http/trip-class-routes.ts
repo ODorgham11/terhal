@@ -3,6 +3,7 @@ import {
   CreateTripClass,
   ListTripClasses,
   SiteTripClass,
+  StaffTripClass,
   TripClass,
   UpdateTripClass,
   page,
@@ -38,12 +39,12 @@ const list = createRoute({
   tags,
   summary: "List trip classes",
   description:
-    "Active classes in the site's order, or only archived ones with `archived=true`. Needs `pricing` or `trips`.",
+    "Active classes in the site's order, or only archived ones with `archived=true`, each with its price rows and this month's trips. Needs `pricing` or `trips`.",
   middleware: read,
   security,
   request: { query: ListTripClasses },
   responses: {
-    200: { description: "The classes", ...json(page(TripClass)) },
+    200: { description: "The classes", ...json(page(StaffTripClass)) },
     400: problemResponse("VALIDATION_FAILED"),
     ...signedIn,
   },

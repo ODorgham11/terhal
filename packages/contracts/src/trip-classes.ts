@@ -22,7 +22,7 @@ const Description = (label: string) =>
 const SortOrder = z
   .number({ error: "Sort order must be a number." })
   .int("Sort order must be a whole number.")
-  .min(-1000, "Sort order must be at least -1000.")
+  .min(0, "Sort order can't be negative.")
   .max(1000, "Sort order must be 1000 at most.")
   .meta({ description: "Lower comes first on the site." });
 
@@ -40,6 +40,15 @@ export const TripClass = z
 export type TripClass = z.infer<typeof TripClass>;
 
 // What the customer site shows of an active class.
+// A row of the staff list: the class plus how much it's used, for deciding what archiving it touches.
+export const StaffTripClass = TripClass.extend({
+  prices: z.int().meta({ description: "Price rows for this class." }),
+  tripsThisMonth: z.int().meta({
+    description: "Trips picked up this Cairo month in this class, cancelled ones left out.",
+  }),
+}).meta({ id: "StaffTripClass" });
+export type StaffTripClass = z.infer<typeof StaffTripClass>;
+
 export const SiteTripClass = TripClass.omit({ archivedAt: true }).meta({ id: "SiteTripClass" });
 export type SiteTripClass = z.infer<typeof SiteTripClass>;
 

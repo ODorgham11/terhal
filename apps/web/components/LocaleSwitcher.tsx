@@ -34,7 +34,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
       disabled={pending}
       aria-label={t("switchTo", { language: names[next] })}
       className={cn(
-        "inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-60",
+        "inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium text-foreground transition-colors hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-60",
         className,
       )}
     >

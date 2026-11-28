@@ -15,3 +15,7 @@ export const cache = new Redis(cacheUrl, baseOptions);
 // Each Queue/Worker gets its own connection from here, since workers hold a blocking connection open.
 export const createQueueConnection = () =>
   new Redis(queueUrl, { ...baseOptions, maxRetriesPerRequest: null });
+
+// The job gate's timestamps (platform/jobs/gate.ts), on the queue instance so they're never evicted. One retry, not
+// BullMQ's wait-forever: they're written inside trip transactions, which must not hang on a down Redis.
+export const signals = new Redis(queueUrl, { ...baseOptions, maxRetriesPerRequest: 1 });

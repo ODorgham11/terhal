@@ -10,8 +10,8 @@ export type ButtonSize = "sm" | "md" | "lg" | "icon";
 
 export const buttonVariants: Record<ButtonVariant, string> = {
   primary: "bg-primary text-primary-foreground hover:bg-primary-hover",
-  secondary: "border border-input bg-surface text-foreground hover:bg-surface-muted",
-  ghost: "text-foreground hover:bg-surface-muted",
+  secondary: "border border-input bg-surface text-foreground hover:bg-hover",
+  ghost: "text-foreground hover:bg-hover",
   danger: "bg-danger text-primary-foreground hover:opacity-90",
   link: "text-primary underline-offset-4 hover:underline",
 };

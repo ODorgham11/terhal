@@ -2,6 +2,7 @@ import {
   auditActions,
   type CreateTripClass,
   type SiteTripClass,
+  type StaffTripClass,
   type TripClass,
   type UpdateTripClass,
 } from "@terhal/contracts";
@@ -9,6 +10,7 @@ import type { Prisma } from "../../../../generated/prisma/client";
 import { violatedUniqueIndex } from "../../../platform/db/errors";
 import { prisma } from "../../../platform/db/prisma";
 import { AppError } from "../../../platform/errors/app-error";
+import { cairoMonthOf, monthBounds } from "../../analytics/index";
 import { recordAudit, type AuditActor } from "../../audit/index";
 
 const select = {
@@ -68,14 +70,29 @@ const audit = (
   client: Prisma.TransactionClient,
 ) => recordAudit({ ...actor, action, entityType: "TripClass", entityId, ...change }, client);
 
-// Every active class, or every archived one, in the site's order. There are only ever a few, so one page.
-export const listTripClasses = async ({ archived }: { archived: boolean }) => {
+// Every active class, or every archived one, in the site's order, with how many prices and this month's trips use
+// it. There are only ever a few, so one page.
+export const listTripClasses = async ({ archived }: { archived: boolean }, now = new Date()) => {
+  const { start, end } = monthBounds(cairoMonthOf(now));
   const rows = await prisma.tripClass.findMany({
     where: { archivedAt: archived ? { not: null } : null },
     orderBy: [...order],
-    select,
+    select: {
+      ...select,
+      _count: {
+        select: {
+          pricing: true,
+          trips: { where: { pickupDate: { gte: start, lt: end }, status: { not: "CANCELLED" } } },
+        },
+      },
+    },
   });
-  return { data: rows.map(toTripClass), nextCursor: null };
+  const data: StaffTripClass[] = rows.map(({ _count, ...row }) => ({
+    ...toTripClass(row),
+    prices: _count.pricing,
+    tripsThisMonth: _count.trips,
+  }));
+  return { data, nextCursor: null };
 };
 
 export const listSiteTripClasses = async (): Promise<{ data: SiteTripClass[] }> => {

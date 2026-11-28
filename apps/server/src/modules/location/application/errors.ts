@@ -21,6 +21,11 @@ export const governorateReadOnly = () =>
 export const parentInvalid = (detail: string) =>
   new AppError({ code: "LOCATION_PARENT_INVALID", status: 409, detail });
 
+// Turning `flexible` on for something that can't be booked as a whole: a district, an area, or a governorate without its
+// outline.
+export const notFlexible = (detail: string) =>
+  new AppError({ code: "LOCATION_NOT_FLEXIBLE", status: 409, detail });
+
 export const nameTaken = () =>
   new AppError({
     code: "LOCATION_NAME_TAKEN",

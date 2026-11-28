@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { CarBody } from "./cars";
-import { Pin, ResolvedLocation } from "./locations";
+import { ResolvedLocation, TripPin } from "./locations";
 
 // A quote: what every active class and car body costs between two pins (docs/domains.md, section Q). Stateless:
 // booking recomputes the price and compares it with the one the customer saw (Q4).
@@ -14,13 +14,13 @@ const Count = (label: string, min: number) =>
 
 export const QuoteRequest = z
   .object({
-    pickup: Pin,
-    dropoff: Pin,
+    pickup: TripPin,
+    dropoff: TripPin,
     passengers: Count("Passengers", 1),
     largeLuggage: Count("Large luggage", 0).default(0),
     mediumLuggage: Count("Medium luggage", 0).default(0),
     smallLuggage: Count("Small luggage", 0).default(0),
-    return: z.object({ pickup: Pin.optional(), dropoff: Pin.optional() }).optional().meta({
+    return: z.object({ pickup: TripPin.optional(), dropoff: TripPin.optional() }).optional().meta({
       description:
         "Also price a return leg. Its pins default to the outbound's, reversed; give them when the return starts or ends elsewhere.",
     }),

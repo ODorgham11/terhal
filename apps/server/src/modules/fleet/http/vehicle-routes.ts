@@ -1,11 +1,14 @@
 import { createRoute } from "@hono/zod-openapi";
 import {
+  ConfirmVehicleImageUpload,
   CreateVehicle,
   IdParam,
   ListVehicles,
   ReorderVehicleImages,
+  RequestVehicleImageUpload,
   UpdateVehicle,
   Vehicle,
+  VehicleImageUpload,
   page,
 } from "@terhal/contracts";
 import { z } from "zod";
@@ -13,9 +16,10 @@ import { body, createRouter, json, problemResponse } from "../../../platform/htt
 import { createRateLimitKey, rateLimit } from "../../../platform/rate-limit/rate-limit";
 import { currentStaff } from "../../../platform/http/authenticate";
 import {
-  addVehicleImage,
+  confirmVehicleImageUpload,
   deleteVehicleImage,
   reorderVehicleImages,
+  requestVehicleImageUpload,
 } from "../application/vehicle-images";
 import {
   archiveVehicle,
@@ -40,12 +44,6 @@ const ImageParams = z.object({
 });
 
 // A browser's File (FormData) or Node's, both Blobs.
-const ImageUpload = z.object({
-  file: z
-    .custom<File>((value) => value instanceof Blob, { error: "Attach the image as `file`." })
-    .meta({ type: "string", format: "binary", description: "JPEG, PNG or WebP, 5 MB at most." }),
-});
-
 const list = createRoute({
   method: "get",
   path: "/staff/vehicles",
@@ -147,13 +145,13 @@ const restore = createRoute({
   },
 });
 
-const addImage = createRoute({
+const requestUpload = createRoute({
   method: "post",
-  path: "/staff/vehicles/{id}/images",
+  path: "/staff/vehicles/{id}/images/uploads",
   tags,
-  summary: "Add an image",
+  summary: "Ask to upload an image",
   description:
-    "A multipart upload with the image as `file`: JPEG, PNG or WebP (judged from the bytes), 5 MB at most, 5 images per vehicle. It goes after the others; the first image is the cover.",
+    "Step one of adding an image: a link signed for one JPEG, PNG or WebP of up to 5 MB. PUT the file to `url` with `headers` (the file never passes through the API), then confirm it with POST /staff/vehicles/{id}/images. Refused when the vehicle has 5 images already.",
   middleware: [
     ...canWrite,
     rateLimit({
@@ -163,19 +161,37 @@ const addImage = createRoute({
     }),
   ],
   security,
-  request: {
-    params: IdParam,
-    body: { required: true, content: { "multipart/form-data": { schema: ImageUpload } } },
-  },
+  request: { params: IdParam, ...body(RequestVehicleImageUpload) },
   responses: {
-    201: { description: "Added; the vehicle with its images", ...json(Vehicle) },
+    201: { description: "Where to put the file", ...json(VehicleImageUpload) },
     400: invalid,
     ...staffProblems,
     404: notFound,
     409: problemResponse("IMAGE_LIMIT_REACHED: delete an image first."),
+    429: problemResponse("RATE_LIMITED"),
+  },
+});
+
+const addImage = createRoute({
+  method: "post",
+  path: "/staff/vehicles/{id}/images",
+  tags,
+  summary: "Add an uploaded image",
+  description:
+    "Step two: once the file is at its link, this checks it (5 MB at most, a JPEG, PNG or WebP judged from the bytes) and adds it after the others; the first image is the cover. A file that fails a check is deleted, and its upload with it.",
+  middleware: canWrite,
+  security,
+  request: { params: IdParam, ...body(ConfirmVehicleImageUpload) },
+  responses: {
+    201: { description: "Added; the vehicle with its images", ...json(Vehicle) },
+    400: invalid,
+    ...staffProblems,
+    404: problemResponse("NOT_FOUND: there's no such vehicle, or no such upload of yours for it."),
+    409: problemResponse(
+      "IMAGE_LIMIT_REACHED: delete an image first. UPLOAD_INCOMPLETE: the file isn't at its link yet.",
+    ),
     413: problemResponse("PAYLOAD_TOO_LARGE: 5 MB at most."),
     422: problemResponse("IMAGE_TYPE_NOT_ALLOWED: only JPEG, PNG or WebP."),
-    429: problemResponse("RATE_LIMITED"),
   },
 });
 
@@ -225,11 +241,18 @@ export const vehicleRoutes = createRouter()
   .openapi(restore, async (c) =>
     c.json(await restoreVehicle(c.req.valid("param").id, actorOf(c)), 200),
   )
-  .openapi(addImage, async (c) => {
-    const { file } = c.req.valid("form");
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    return c.json(await addVehicleImage(c.req.valid("param").id, bytes, actorOf(c)), 201);
-  })
+  .openapi(requestUpload, async (c) =>
+    c.json(
+      await requestVehicleImageUpload(c.req.valid("param").id, c.req.valid("json"), actorOf(c)),
+      201,
+    ),
+  )
+  .openapi(addImage, async (c) =>
+    c.json(
+      await confirmVehicleImageUpload(c.req.valid("param").id, c.req.valid("json"), actorOf(c)),
+      201,
+    ),
+  )
   .openapi(deleteImage, async (c) => {
     const { id, imageId } = c.req.valid("param");
     return c.json(await deleteVehicleImage(id, imageId, actorOf(c)), 200);

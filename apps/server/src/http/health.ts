@@ -25,7 +25,7 @@ const reachable = async (probe: () => Promise<unknown>): Promise<boolean> => {
 export const health = new Hono()
   // Is the process up? Checks nothing else: a database blip must not cause a restart loop.
   .get("/live", (c) => c.json({ status: "ok" }))
-  // Can this instance serve requests? Drives the deploy's healthcheck (deploy/compose.yml). Postgres is required; Redis
+  // Can this instance serve requests? Checked once per deploy (.github/workflows/deploy.yml). Postgres is required; Redis
   // is reported. Without it sign in fails closed (the rate limiter can't count), so it's "degraded", not down.
   .get("/ready", async (c) => {
     if (isShuttingDown()) return c.json({ status: "shutting_down" }, 503);
