@@ -13,13 +13,14 @@ type StatCardProps = {
   // A line under the number; `noteTone` colors it when it's a warning. `noteLoading` holds its place while it loads,
   // so the card doesn't grow when it arrives.
   note?: ReactNode;
-  noteTone?: "muted" | "warning" | "accent" | "danger";
+  noteTone?: "muted" | "success" | "warning" | "accent" | "danger";
   noteLoading?: boolean;
   className?: string;
 };
 
 const noteTones = {
   muted: "text-muted",
+  success: "text-success",
   warning: "text-warning",
   accent: "text-accent",
   danger: "text-danger",

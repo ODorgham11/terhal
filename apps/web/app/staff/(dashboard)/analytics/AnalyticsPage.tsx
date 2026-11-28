@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { motion } from "motion/react";
 import {
   IconBan,
   IconCalendar,
@@ -13,12 +14,12 @@ import {
   IconReceipt,
   IconRoute,
   IconTag,
-  type Icon,
 } from "@tabler/icons-react";
 import type { Analytics } from "@terhal/contracts";
 import { RequireStaff } from "@/components/session/RequireSession";
 import { Segmented } from "@/components/staff/Segmented";
 import { SectionCard } from "@/components/staff/SectionCard";
+import { StatCard } from "@/components/staff/StatCard";
 import { SystemState } from "@/components/staff/SystemState";
 import { TrendChart } from "@/components/staff/analytics/TrendChart";
 import {
@@ -33,6 +34,7 @@ import { useLocalName, useTripDates } from "@/components/staff/trips/format";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
+import { FadeText, ease, fade } from "@/components/ui/Motion";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { call, staffApi } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -83,7 +85,7 @@ function Dashboard() {
               aria-label={t("range")}
               value={key}
               onChange={(event) => setKey(event.target.value as RangeKey)}
-              className="w-40"
+              className="sm:w-40"
             >
               {rangeKeys.map((option) => (
                 <option key={option} value={option}>
@@ -110,19 +112,31 @@ function Dashboard() {
         }
       />
       {current.isPending ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 8 }, (_, index) => (
-            <Skeleton key={index} className="h-32" />
-          ))}
-        </div>
+        <AnalyticsLoading />
       ) : current.isError ? (
         <SystemState kind="error" onRetry={() => void current.refetch()} />
       ) : (
-        <Figures data={current.data} before={before.data} versus={versus} />
+        // The last range's figures stay up, dimmed, until the new ones arrive; then each number fades to its new value.
+        <motion.div
+          {...fade}
+          aria-busy={current.isFetching || undefined}
+          className={cn(
+            "flex flex-col gap-6 transition-opacity",
+            current.isPlaceholderData && "opacity-60",
+          )}
+        >
+          <Figures data={current.data} before={before.data} versus={versus} />
+        </motion.div>
       )}
     </>
   );
 }
+
+// A change against the earlier range as a stat card's note: green when it's going the right way, red when not.
+const shift = (change: { text: string; good: boolean } | undefined) =>
+  change
+    ? { note: change.text, noteTone: change.good ? ("success" as const) : ("danger" as const) }
+    : {};
 
 function Figures({
   data,
@@ -174,14 +188,14 @@ function Figures({
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <StatCard
           icon={IconCash}
           label={t("kpis.revenue")}
           value={price(totals.revenue)}
-          change={change(revenue, before && Number(before.totals.revenue))}
+          {...shift(change(revenue, before && Number(before.totals.revenue)))}
         />
-        <Kpi
+        <StatCard
           icon={IconChartBar}
           label={t("kpis.margin")}
           value={price(totals.margin)}
@@ -193,44 +207,44 @@ function Figures({
               : undefined
           }
         />
-        <Kpi
+        <StatCard
           icon={IconRoute}
           label={t("kpis.trips")}
           value={format.number(totals.trips)}
-          change={change(totals.trips, before?.totals.trips)}
+          {...shift(change(totals.trips, before?.totals.trips))}
         />
-        <Kpi
+        <StatCard
           icon={IconBan}
           label={t("kpis.cancellationRate")}
           value={format.number(totals.cancellationRate, {
             style: "percent",
             maximumFractionDigits: 1,
           })}
-          change={rateChange}
+          {...shift(rateChange)}
         />
-        <Kpi
+        <StatCard
           icon={IconCalendar}
           label={t("kpis.bookedValue")}
           value={price(totals.bookedValue)}
           note={t("includesUpcoming")}
         />
-        <Kpi
+        <StatCard
           icon={IconTag}
           label={t("kpis.averageFare")}
           value={totals.averageFare ? price(totals.averageFare) : "—"}
         />
-        <Kpi
+        <StatCard
           icon={IconReceipt}
           label={t("kpis.costs")}
           value={price(totals.expenses)}
           note={t("costsNote")}
         />
-        <Kpi
+        <StatCard
           icon={IconCash}
           label={t("kpis.unpaid")}
           value={price(totals.unpaid.amount)}
           note={t("unpaidTrips", { count: totals.unpaid.trips })}
-          warn={totals.unpaid.trips > 0}
+          noteTone={totals.unpaid.trips > 0 ? "warning" : "muted"}
         />
       </div>
 
@@ -329,39 +343,6 @@ function Figures({
   );
 }
 
-function Kpi({
-  icon: KpiIcon,
-  label,
-  value,
-  change,
-  note,
-  warn,
-}: {
-  icon: Icon;
-  label: string;
-  value: ReactNode;
-  change?: { text: string; good: boolean };
-  note?: string;
-  warn?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-5">
-      <div className="flex items-center gap-2.5 text-sm text-muted">
-        <span className="grid size-7 place-items-center rounded-lg bg-primary-soft text-primary">
-          <KpiIcon aria-hidden className="size-4" stroke={1.75} />
-        </span>
-        {label}
-      </div>
-      <p className="text-2xl font-semibold text-foreground tabular-nums">{value}</p>
-      {change ? (
-        <p className={cn("text-xs", change.good ? "text-success" : "text-danger")}>{change.text}</p>
-      ) : (
-        note && <p className={cn("text-xs", warn ? "text-warning" : "text-muted")}>{note}</p>
-      )}
-    </div>
-  );
-}
-
 function Breakdown({
   title,
   rows,
@@ -378,18 +359,22 @@ function Breakdown({
       ) : (
         <ul className="flex flex-col gap-3">
           {rows.map((row) => (
-            <li key={row.key} className="flex flex-col gap-1.5">
+            <motion.li key={row.key} layout {...fade} className="flex flex-col gap-1.5">
               <span className="flex justify-between gap-3 text-sm">
                 <span>{row.label}</span>
-                <span className="tabular-nums">{row.value}</span>
+                <span className="tabular-nums">
+                  <FadeText value={row.value} />
+                </span>
               </span>
               <span aria-hidden className="h-1.5 overflow-hidden rounded-full bg-surface-muted">
-                <span
+                <motion.span
                   className="block h-full rounded-full bg-primary"
-                  style={{ width: `${String((row.value / max) * 100)}%` }}
+                  initial={false}
+                  animate={{ width: `${String((row.value / max) * 100)}%` }}
+                  transition={ease}
                 />
               </span>
-            </li>
+            </motion.li>
           ))}
         </ul>
       )}
@@ -432,5 +417,61 @@ function BalanceTotals({ balances }: { balances: Analytics["driverBalances"] }) 
         </Link>
       </li>
     </ul>
+  );
+}
+
+// The page's own shape in gray: the eight figures, the trend and the breakdowns.
+function AnalyticsLoading() {
+  const t = useTranslations("common.ui");
+  const card = (children: ReactNode, key?: number) => (
+    <div
+      key={key}
+      className="flex flex-col gap-2.5 rounded-xl border border-border bg-surface p-5 shadow-xs"
+    >
+      <div className="flex h-8 items-center">
+        <Skeleton className="h-4.5 w-36" />
+      </div>
+      {children}
+    </div>
+  );
+  return (
+    <motion.div {...fade} role="status" className="flex flex-col gap-6">
+      <span className="sr-only">{t("loading")}</span>
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        {Array.from({ length: 8 }, (_, index) => (
+          <div
+            key={index}
+            aria-hidden
+            className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-5"
+          >
+            <div className="flex items-center gap-2">
+              <Skeleton className="size-7.5 rounded-lg" />
+              <Skeleton className="h-3.5 w-24" />
+            </div>
+            <Skeleton className="my-1 h-6.5 w-28" />
+            <Skeleton className="h-3 w-32 max-w-full" />
+          </div>
+        ))}
+      </div>
+      {card(<Skeleton className="h-62 w-full rounded-lg" />)}
+      <div className="grid items-start gap-5 lg:grid-cols-3">
+        {[0, 1, 2].map((index) =>
+          card(
+            <div className="flex flex-col gap-3">
+              {[0, 1, 2].map((row) => (
+                <div key={row} className="flex flex-col gap-1.5">
+                  <div className="flex justify-between">
+                    <Skeleton className={row % 2 ? "h-3.5 w-20" : "h-3.5 w-28"} />
+                    <Skeleton className="h-3.5 w-6" />
+                  </div>
+                  <Skeleton className="h-1.5 w-full rounded-full" />
+                </div>
+              ))}
+            </div>,
+            index,
+          ),
+        )}
+      </div>
+    </motion.div>
   );
 }

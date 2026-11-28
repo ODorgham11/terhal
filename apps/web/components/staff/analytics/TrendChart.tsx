@@ -63,11 +63,11 @@ export function TrendChart({ trend, groupBy }: Props) {
                 title={`${label(point.period)}: ${t("revenue")} ${money(point.revenue)} · ${t("costs")} ${money(point.expenses)}`}
               >
                 <span
-                  className="w-full max-w-7 rounded-t-sm bg-primary"
+                  className="w-full max-w-7 rounded-t-sm bg-primary transition-[height] duration-300 ease-out"
                   style={{ height: `${String((Number(point.revenue) / max) * 100)}%` }}
                 />
                 <span
-                  className="w-full max-w-7 rounded-t-sm bg-accent"
+                  className="w-full max-w-7 rounded-t-sm bg-accent transition-[height] duration-300 ease-out"
                   style={{ height: `${String((Number(point.expenses) / max) * 100)}%` }}
                 />
               </div>
