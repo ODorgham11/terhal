@@ -7,6 +7,7 @@ import { IconExternalLink, IconTrash } from "@tabler/icons-react";
 import type { LocationDetail } from "@terhal/contracts";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Swap } from "@/components/ui/Motion";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Switch } from "@/components/ui/Switch";
 import { toast } from "@/components/ui/Toast";
@@ -26,9 +27,47 @@ export function LocationEditor({ id, onDeleted }: Props) {
     queryKey: [...locationsKey, "detail", id],
     queryFn: () => call(staffApi.locations[":id"].$get({ param: { id } })),
   });
-  if (detail.isPending) return <Skeleton className="h-96 w-full" />;
-  if (detail.isError) return <Alert tone="danger" title={t("loadFailed")} />;
-  return <Editor key={detail.dataUpdatedAt} location={detail.data} onDeleted={onDeleted} />;
+  return (
+    <Swap state={detail.isPending ? "loading" : detail.isError ? "error" : "ready"}>
+      {detail.isPending ? (
+        <EditorLoading />
+      ) : detail.isError ? (
+        <Alert tone="danger" title={t("loadFailed")} />
+      ) : (
+        <Editor key={detail.dataUpdatedAt} location={detail.data} onDeleted={onDeleted} />
+      )}
+    </Swap>
+  );
+}
+
+// The editor's own shape in gray: its header, then its fields.
+function EditorLoading() {
+  const t = useTranslations("common.ui");
+  return (
+    <div role="status" className="flex flex-col gap-5">
+      <span className="sr-only">{t("loading")}</span>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-5.5 w-40" />
+          <Skeleton className="h-3 w-56" />
+        </div>
+        <Skeleton className="h-8 w-20 rounded-lg" />
+      </div>
+      <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
+        {[0, 1, 2, 3].map((field) => (
+          <div key={field} className="flex flex-col gap-2">
+            <Skeleton className="h-3.5 w-24" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="h-3 w-64 max-w-full" />
+      <div className="flex justify-end gap-2 border-t border-border pt-4">
+        <Skeleton className="h-10 w-20 rounded-lg" />
+        <Skeleton className="h-10 w-20 rounded-lg" />
+      </div>
+    </div>
+  );
 }
 
 const draftOf = (location: LocationDetail): LocationDraft => {

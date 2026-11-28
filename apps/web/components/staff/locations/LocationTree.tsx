@@ -39,14 +39,21 @@ function Branch({
         }),
       ),
   });
+  // The governorates come in as a list of rows in gray; a place opening shows one under it.
   if (children.isPending) {
     return (
-      <li
-        className="px-2 py-1.5"
-        style={{ paddingInlineStart: `${String(depth * 1.25 + 0.5)}rem` }}
-      >
-        <Skeleton className="h-4 w-32" />
-      </li>
+      <>
+        {Array.from({ length: depth === 0 ? 8 : 1 }, (_, row) => (
+          <li
+            key={row}
+            aria-hidden
+            className="flex h-9 items-center px-2"
+            style={{ paddingInlineStart: `${String(depth * 1.25 + 0.5)}rem` }}
+          >
+            <Skeleton className={row % 3 ? "h-3.5 w-28" : "h-3.5 w-36"} />
+          </li>
+        ))}
+      </>
     );
   }
   if (children.isError)
