@@ -59,12 +59,13 @@ function TripList({ trips }: { trips: FleetTrip[] }) {
   const route = useRoute();
   const { dateTime } = useTripDates();
   return (
-    <ul className="-mx-2 flex flex-col">
+    // Inside the card's edges (the crossfade around it clips anything past them), each row its own rounded hover.
+    <ul className="flex flex-col gap-1">
       {trips.map((trip) => (
-        <motion.li key={trip.id} {...fade} className="border-b border-border last:border-0">
+        <motion.li key={trip.id} {...fade}>
           <Link
             href={`/trips/${trip.id}`}
-            className="my-1 flex items-center gap-4 rounded-lg px-2 py-2 transition-colors duration-200 hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="flex items-center gap-4 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-surface-muted focus-visible:bg-surface-muted focus-visible:outline-none"
           >
             <span className="w-28 shrink-0 text-sm font-medium text-primary" dir="ltr">
               {trip.code}
@@ -84,14 +85,10 @@ function TripList({ trips }: { trips: FleetTrip[] }) {
 // Rows shaped like the trips they stand in for.
 function TripsLoading({ label }: { label: string }) {
   return (
-    <ul role="status" className="-mx-2 flex flex-col">
+    <ul role="status" className="flex flex-col gap-1">
       <span className="sr-only">{label}</span>
       {[0, 1, 2].map((row) => (
-        <li
-          key={row}
-          aria-hidden
-          className="my-1 flex items-center gap-4 border-b border-border px-2 py-2 last:border-0"
-        >
+        <li key={row} aria-hidden className="flex items-center gap-4 px-3 py-2.5">
           <Skeleton className="h-3.5 w-24 shrink-0" />
           <div className="flex flex-1 flex-col gap-1.5">
             <Skeleton className={row % 2 ? "h-3.5 w-40" : "h-3.5 w-52"} />
