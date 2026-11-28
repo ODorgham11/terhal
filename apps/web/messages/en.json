@@ -322,6 +322,8 @@
         "office": "Partner office",
         "allOffices": "All offices",
         "unassignedOnly": "Unassigned only",
+        "dates": "Pickup dates",
+        "anyDate": "Any pickup date",
         "loading": "Loading trips…",
         "empty": "No trips match.",
         "emptyHint": "Try another status or clear the filters.",

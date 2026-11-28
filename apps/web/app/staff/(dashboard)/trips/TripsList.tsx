@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "motion/react";
 import {
   IconArrowRight,
   IconCopy,
@@ -23,6 +24,7 @@ import { TripStatusBadge } from "@/components/staff/trips/TripStatusBadge";
 import { useLocalName, useTripDates } from "@/components/staff/trips/format";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { DateRangePicker } from "@/components/ui/DatePicker";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Input } from "@/components/ui/Input";
+import { AutoHeight, fade } from "@/components/ui/Motion";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Pagination, useCursorPages } from "@/components/ui/Pagination";
 import { Select } from "@/components/ui/Select";
@@ -40,13 +43,15 @@ import {
   TableEmpty,
   TableHead,
   TableHeader,
-  TableLoading,
   TableRow,
+  MotionTableRow,
 } from "@/components/ui/Table";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { toast } from "@/components/ui/Toast";
 import { call, endpoint, staffApi, useErrorMessage } from "@/lib/api";
 import { startOfCairoDay } from "@/lib/cairo";
+import { cn } from "@/lib/cn";
 
 const PAGE_SIZE = 20;
 const COLUMNS = 8;
@@ -59,6 +64,10 @@ type Filters = {
   officeId: string;
   unassigned: boolean;
 };
+
+// Only trips not yet under way can be waiting for a driver or an office; the filter shows on these tabs alone.
+const canBeUnassigned = (status: TripStatus | undefined) =>
+  status === undefined || status === "PENDING" || status === "CONFIRMED";
 
 const isStatus = (value: string | null): value is TripStatus =>
   (tripStatuses as readonly string[]).includes(value ?? "");
@@ -89,14 +98,18 @@ function TripsPage({ staff }: { staff: Staff }) {
     officeId: params.get("office") ?? "",
     unassigned: params.get("unassigned") === "true",
   };
+  const unassignable = canBeUnassigned(filters.status);
 
-  function setParam(key: string, value: string) {
+  function setParams(values: Record<string, string>) {
     const next = new URLSearchParams(params.toString());
-    if (value) next.set(key, value);
-    else next.delete(key);
+    for (const [key, value] of Object.entries(values)) {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    }
     pages.reset();
     router.replace(next.size ? `${pathname}?${next.toString()}` : pathname, { scroll: false });
   }
+  const setParam = (key: string, value: string) => setParams({ [key]: value });
 
   const query = {
     ...(filters.status && { status: filters.status }),
@@ -104,7 +117,7 @@ function TripsPage({ staff }: { staff: Staff }) {
     ...(filters.from && { from: cairoDay(filters.from) }),
     ...(filters.to && { to: cairoDay(filters.to, 1) }),
     ...(filters.officeId && { officeId: filters.officeId }),
-    ...(filters.unassigned && { unassigned: "true" as const }),
+    ...(filters.unassigned && unassignable && { unassigned: "true" as const }),
     ...(pages.cursor && { cursor: pages.cursor }),
     limit: String(PAGE_SIZE),
   };
@@ -129,6 +142,9 @@ function TripsPage({ staff }: { staff: Staff }) {
     ...(filters.officeId && { officeId: filters.officeId }),
   });
   const rows = trips.data?.data ?? [];
+  // Rows from the last filter stay up, dimmed, until the new ones arrive, so the table never empties out.
+  const stale = trips.isPlaceholderData;
+  const showOffices = staff.permissions.includes("fleet") && offices.data?.data.length !== 0;
   const first = (pages.page - 1) * PAGE_SIZE + 1;
 
   return (
@@ -156,7 +172,14 @@ function TripsPage({ staff }: { staff: Staff }) {
 
       <Tabs
         value={filters.status ?? "all"}
-        onValueChange={(value) => setParam("status", value === "all" ? "" : value)}
+        onValueChange={(value) => {
+          const status = value === "all" ? "" : value;
+          // Leaving the tabs where trips can be unassigned drops that filter, rather than keeping it on unseen.
+          setParams({
+            status,
+            ...(!canBeUnassigned(isStatus(status) ? status : undefined) && { unassigned: "" }),
+          });
+        }}
       >
         <TabsList aria-label={t("statusFilter")} className="gap-6">
           <TabsTrigger value="all" className="px-1">
@@ -182,65 +205,77 @@ function TripsPage({ staff }: { staff: Staff }) {
       <div className="flex flex-wrap items-center gap-3">
         {/* Keyed by the URL's search, so the top bar's search replaces what's typed here. */}
         <SearchBox key={filters.q} initial={filters.q} onSearch={(q) => setParam("q", q)} />
-        <div className="flex items-center gap-2">
-          <Input
-            type="date"
-            value={filters.from}
-            max={filters.to || undefined}
-            onChange={(event) => setParam("from", event.target.value)}
-            aria-label={t("from")}
-            className="w-40"
-          />
-          <span aria-hidden className="text-muted">
-            –
-          </span>
-          <Input
-            type="date"
-            value={filters.to}
-            min={filters.from || undefined}
-            onChange={(event) => setParam("to", event.target.value)}
-            aria-label={t("to")}
-            className="w-40"
-          />
-        </div>
-        {offices.data && offices.data.data.length > 0 && (
-          <Select
-            value={filters.officeId}
-            onChange={(event) => setParam("office", event.target.value)}
-            aria-label={t("office")}
-            className="w-44"
-          >
-            <option value="">{t("allOffices")}</option>
-            {offices.data.data.map((office) => (
-              <option key={office.id} value={office.id}>
-                {office.name}
-              </option>
-            ))}
-          </Select>
-        )}
-        <div className="flex-1" />
-        <Checkbox
-          label={t("unassignedOnly")}
-          checked={filters.unassigned}
-          onChange={(event) => setParam("unassigned", event.target.checked ? "true" : "")}
+        <DateRangePicker
+          from={filters.from}
+          to={filters.to}
+          onChange={({ from, to }) => setParams({ from, to })}
+          placeholder={t("anyDate")}
+          aria-label={t("dates")}
+          className="w-full sm:w-64"
         />
+        {/* Held open while the offices load, so the row doesn't shift when they arrive. */}
+        {showOffices &&
+          (offices.data ? (
+            <motion.div {...fade}>
+              <Select
+                value={filters.officeId}
+                onChange={(event) => setParam("office", event.target.value)}
+                aria-label={t("office")}
+                className="w-44"
+              >
+                <option value="">{t("allOffices")}</option>
+                {offices.data.data.map((office) => (
+                  <option key={office.id} value={office.id}>
+                    {office.name}
+                  </option>
+                ))}
+              </Select>
+            </motion.div>
+          ) : (
+            <Skeleton className="h-10 w-44 rounded-lg" />
+          ))}
+        <div className="flex-1" />
+        <AnimatePresence initial={false}>
+          {unassignable && (
+            <motion.div key="unassigned" {...fade}>
+              <Checkbox
+                label={t("unassignedOnly")}
+                checked={filters.unassigned}
+                onChange={(event) => setParam("unassigned", event.target.checked ? "true" : "")}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Phones: one card per trip. */}
-      <ul className="flex flex-col gap-3 md:hidden">
-        {trips.isPending ? (
-          <li className="py-10 text-center text-sm text-muted">{t("loading")}</li>
-        ) : trips.isError ? (
-          <li className="py-10 text-center text-sm text-danger">{errorMessage(trips.error)}</li>
-        ) : rows.length === 0 ? (
-          <li className="py-10 text-center text-sm text-muted">{t("empty")}</li>
-        ) : (
-          rows.map((trip) => <TripCard key={trip.id} trip={trip} />)
-        )}
-      </ul>
+      <AutoHeight className="md:hidden">
+        <ul
+          aria-busy={trips.isFetching || undefined}
+          className={cn("flex flex-col gap-3 transition-opacity", stale && "opacity-60")}
+        >
+          {trips.isPending ? (
+            <TripCardsLoading />
+          ) : trips.isError ? (
+            <motion.li {...fade} className="py-10 text-center text-sm text-danger">
+              {errorMessage(trips.error)}
+            </motion.li>
+          ) : rows.length === 0 ? (
+            <motion.li {...fade} className="flex flex-col items-center gap-1.5 py-10 text-center">
+              <span className="text-base font-semibold text-foreground">{t("empty")}</span>
+              <span className="text-[0.8125rem] text-muted">{t("emptyHint")}</span>
+            </motion.li>
+          ) : (
+            rows.map((trip) => <TripCard key={trip.id} trip={trip} />)
+          )}
+        </ul>
+      </AutoHeight>
 
-      <div className="hidden md:block">
-        <Table>
+      <AutoHeight className="hidden md:block">
+        <Table
+          aria-busy={trips.isFetching || undefined}
+          className={cn("transition-opacity", stale && "opacity-60")}
+        >
           <TableHeader>
             <TableRow>
               <TableHead>{t("columns.code")}</TableHead>
@@ -257,7 +292,7 @@ function TripsPage({ staff }: { staff: Staff }) {
           </TableHeader>
           <TableBody>
             {trips.isPending ? (
-              <TableLoading columns={COLUMNS} />
+              <TripRowsLoading />
             ) : trips.isError ? (
               <TableEmpty columns={COLUMNS} title={errorMessage(trips.error)} />
             ) : rows.length === 0 ? (
@@ -267,18 +302,22 @@ function TripsPage({ staff }: { staff: Staff }) {
             )}
           </TableBody>
         </Table>
-      </div>
+      </AutoHeight>
 
-      {(pages.hasPrevious || trips.data?.nextCursor) && (
-        <Pagination
-          hasPrevious={pages.hasPrevious}
-          hasNext={Boolean(trips.data?.nextCursor)}
-          onPrevious={pages.previous}
-          onNext={() => pages.next(trips.data?.nextCursor)}
-          loading={trips.isFetching}
-          summary={rows.length > 0 && t("showing", { first, last: first + rows.length - 1 })}
-        />
-      )}
+      <AnimatePresence initial={false}>
+        {(pages.hasPrevious || trips.data?.nextCursor) && (
+          <motion.div key="pages" {...fade}>
+            <Pagination
+              hasPrevious={pages.hasPrevious}
+              hasNext={Boolean(trips.data?.nextCursor)}
+              onPrevious={pages.previous}
+              onNext={() => pages.next(trips.data?.nextCursor)}
+              loading={trips.isFetching}
+              summary={rows.length > 0 && t("showing", { first, last: first + rows.length - 1 })}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
@@ -287,7 +326,8 @@ function TripRow({ trip }: { trip: Trip }) {
   const router = useRouter();
 
   return (
-    <TableRow
+    <MotionTableRow
+      {...fade}
       className="cursor-pointer hover:bg-surface-muted/50"
       onClick={() => router.push(`/trips/${trip.id}`)}
     >
@@ -322,7 +362,7 @@ function TripRow({ trip }: { trip: Trip }) {
       <TableCell className="w-11 px-2" onClick={(event) => event.stopPropagation()}>
         <RowMenu trip={trip} />
       </TableCell>
-    </TableRow>
+    </MotionTableRow>
   );
 }
 
@@ -430,7 +470,7 @@ function BookerCell({ trip }: { trip: Trip }) {
 
 function TripCard({ trip }: { trip: Trip }) {
   return (
-    <li>
+    <motion.li {...fade}>
       <Link
         href={`/trips/${trip.id}`}
         className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:bg-surface-muted/50"
@@ -450,6 +490,87 @@ function TripCard({ trip }: { trip: Trip }) {
           <TripAssignment trip={trip} />
         </div>
       </Link>
-    </li>
+    </motion.li>
+  );
+}
+
+// Two lines, like the cells they stand in for.
+function Lines({ first, second }: { first: string; second?: string }) {
+  return (
+    <div className="flex flex-col gap-1.5 py-0.5">
+      <Skeleton className={cn("h-3.5", first)} />
+      {second && <Skeleton className={cn("h-3", second)} />}
+    </div>
+  );
+}
+
+// The first page loading: rows shaped like the trips they stand in for, so nothing moves when they arrive.
+function TripRowsLoading() {
+  const t = useTranslations("common.ui");
+  return (
+    <>
+      {Array.from({ length: 6 }, (_, row) => (
+        <motion.tr
+          key={row}
+          {...fade}
+          className="border-b border-border"
+          aria-hidden={row > 0 || undefined}
+        >
+          <TableCell>
+            {row === 0 && <span className="sr-only">{t("loading")}</span>}
+            <Skeleton className="h-3.5 w-22" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-5.5 w-24 rounded-full" />
+          </TableCell>
+          <TableCell className="min-w-56">
+            <Lines first={row % 2 ? "w-48" : "w-40"} second="w-36" />
+          </TableCell>
+          <TableCell>
+            <Lines first="w-20" second="w-12" />
+          </TableCell>
+          <TableCell>
+            <Lines first="w-24" second="w-14" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-3.5 w-18" />
+          </TableCell>
+          <TableCell>
+            <Lines first="w-28" second="w-20" />
+          </TableCell>
+          <TableCell className="w-11 px-2">
+            <Skeleton className="size-8 rounded-lg" />
+          </TableCell>
+        </motion.tr>
+      ))}
+    </>
+  );
+}
+
+function TripCardsLoading() {
+  return (
+    <>
+      {[0, 1, 2].map((card) => (
+        <motion.li
+          key={card}
+          {...fade}
+          aria-hidden
+          className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4"
+        >
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-3.5 w-22" />
+            <Skeleton className="h-5.5 w-24 rounded-full" />
+          </div>
+          <Lines first="w-48" second="w-36" />
+          <div className="flex items-end justify-between">
+            <Lines first="w-20" second="w-12" />
+            <Skeleton className="h-3.5 w-18" />
+          </div>
+          <div className="border-t border-border pt-3">
+            <Lines first="w-28" second="w-20" />
+          </div>
+        </motion.li>
+      ))}
+    </>
   );
 }
