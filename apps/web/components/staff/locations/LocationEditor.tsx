@@ -8,6 +8,7 @@ import type { LocationDetail } from "@terhal/contracts";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Switch } from "@/components/ui/Switch";
 import { toast } from "@/components/ui/Toast";
 import { call, staffApi, useErrorMessage } from "@/lib/api";
 import { ConfirmDialog } from "../ConfirmDialog";
@@ -41,6 +42,50 @@ const draftOf = (location: LocationDetail): LocationDraft => {
     radiusKm: location.center ? toKm(location.center.radius) : "",
   };
 };
+
+// Whether trips can go to the governorate as a whole. Applies at once, like the other switches.
+function FlexibleSwitch({ location }: { location: LocationDetail }) {
+  const t = useTranslations("staff.locations");
+  const name = useLocalName();
+  const errorMessage = useErrorMessage();
+  const client = useQueryClient();
+  const [checked, setChecked] = useState(location.flexible);
+  const [busy, setBusy] = useState(false);
+
+  const toggle = async (flexible: boolean) => {
+    setChecked(flexible);
+    setBusy(true);
+    try {
+      await call(
+        staffApi.locations[":id"].$patch({ param: { id: location.id }, json: { flexible } }),
+      );
+      await client.invalidateQueries({ queryKey: locationsKey });
+      await client.invalidateQueries({ queryKey: ["staff", "locations", "pick"] });
+      toast.success(t(flexible ? "flexibleOn" : "flexibleOff", { name: name(location) }));
+    } catch (failure) {
+      setChecked(!flexible);
+      toast.error(errorMessage(failure));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="border-t border-border pt-4">
+      <Switch
+        label={t("flexible")}
+        description={
+          location.hasBoundary
+            ? t("flexibleHint", { name: name(location) })
+            : t("flexibleNoOutline")
+        }
+        checked={checked}
+        disabled={busy || !location.hasBoundary}
+        onChange={(event) => void toggle(event.target.checked)}
+      />
+    </div>
+  );
+}
 
 function Editor({ location, onDeleted }: { location: LocationDetail; onDeleted: () => void }) {
   const t = useTranslations("staff.locations");
@@ -129,6 +174,7 @@ function Editor({ location, onDeleted }: { location: LocationDetail; onDeleted: 
               {t("places", { count: location.subtreeSize - 1 })}
             </InfoRow>
           </InfoList>
+          <FlexibleSwitch location={location} />
         </>
       ) : (
         <>
