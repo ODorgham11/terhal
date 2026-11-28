@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "motion/react";
 import {
   IconArchive,
   IconChevronRight,
@@ -15,6 +16,8 @@ import type { OfficeDetail } from "@terhal/contracts";
 import { DirectionalIcon } from "@/components/DirectionalIcon";
 import { RequireStaff } from "@/components/session/RequireSession";
 import { Avatar } from "@/components/staff/Avatar";
+import { DetailLoading } from "@/components/staff/DetailLoading";
+import { LinkList, LinkListItem } from "@/components/staff/LinkList";
 import { InfoList, InfoRow, SectionCard } from "@/components/staff/SectionCard";
 import { SystemState } from "@/components/staff/SystemState";
 import { DriverDrawer } from "@/components/staff/fleet/DriverDrawer";
@@ -27,7 +30,7 @@ import { useLocalName, useTripDates } from "@/components/staff/trips/format";
 import { TripStatusBadge } from "@/components/staff/trips/TripStatusBadge";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { fade } from "@/components/ui/Motion";
 import { call, isApiError, staffApi } from "@/lib/api";
 
 export function OfficeDetailPage({ id }: { id: string }) {
@@ -40,7 +43,7 @@ function Detail({ id }: { id: string }) {
     queryFn: () => call(staffApi.offices[":id"].$get({ param: { id } })),
     retry: (count, error) => !(isApiError(error) && error.status === 404) && count < 1,
   });
-  if (office.isPending) return <Skeleton className="h-64 w-full" />;
+  if (office.isPending) return <DetailLoading main={[3, 3, 3]} side={[5]} />;
   if (office.isError) {
     return isApiError(office.error) && office.error.status === 404 ? (
       <SystemState kind="notFound" />
@@ -67,7 +70,7 @@ function Loaded({ office }: { office: OfficeDetail }) {
     setDialog(open ? which : null);
 
   return (
-    <>
+    <motion.div {...fade} className="flex flex-col gap-6">
       <nav aria-label={t("breadcrumb")} className="flex items-center gap-2 text-xs">
         <Link href="/offices" className="text-primary hover:underline">
           {nav("offices")}
@@ -82,7 +85,7 @@ function Loaded({ office }: { office: OfficeDetail }) {
             <h1 className="text-2xl font-semibold text-foreground">{office.name}</h1>
             {archived && <Badge tone="neutral">{t("archived")}</Badge>}
           </div>
-          <p className="text-base text-muted">
+          <p className="text-sm text-muted">
             {[
               office.location && name(office.location),
               t("since", {
@@ -118,32 +121,27 @@ function Loaded({ office }: { office: OfficeDetail }) {
             {office.trips.length === 0 ? (
               <p className="text-sm text-muted">{t("noTrips")}</p>
             ) : (
-              <ul className="flex flex-col divide-y divide-border">
+              <LinkList>
                 {office.trips.map((trip) => (
-                  <li key={trip.id}>
-                    <Link
-                      href={`/trips/${trip.id}`}
-                      className="flex items-center gap-4 py-3 hover:bg-surface-muted/50"
-                    >
-                      <span className="w-28 shrink-0 text-sm font-medium text-primary" dir="ltr">
-                        {trip.code}
+                  <LinkListItem key={trip.id} href={`/trips/${trip.id}`}>
+                    <span className="w-24 shrink-0 text-sm font-medium text-primary" dir="ltr">
+                      {trip.code}
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm text-foreground">
+                        {trip.pickup} → {trip.dropoff}
                       </span>
-                      <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-sm text-foreground">
-                          {trip.pickup} → {trip.dropoff}
-                        </span>
-                        <span className="text-xs text-muted">
-                          {dateTime(trip.pickupDate)} ·{" "}
-                          {trip.driver
-                            ? `${trip.driver.firstName} ${trip.driver.lastName}`
-                            : t("noDriver")}
-                        </span>
+                      <span className="text-xs text-muted">
+                        {dateTime(trip.pickupDate)} ·{" "}
+                        {trip.driver
+                          ? `${trip.driver.firstName} ${trip.driver.lastName}`
+                          : t("noDriver")}
                       </span>
-                      <TripStatusBadge status={trip.status} />
-                    </Link>
-                  </li>
+                    </span>
+                    <TripStatusBadge status={trip.status} />
+                  </LinkListItem>
                 ))}
-              </ul>
+              </LinkList>
             )}
           </SectionCard>
 
@@ -159,27 +157,22 @@ function Loaded({ office }: { office: OfficeDetail }) {
             {office.drivers.length === 0 ? (
               <p className="text-sm text-muted">{t("noDrivers")}</p>
             ) : (
-              <ul className="flex flex-col divide-y divide-border">
+              <LinkList>
                 {office.drivers.map((driver) => (
-                  <li key={driver.id}>
-                    <Link
-                      href={`/drivers/${driver.id}`}
-                      className="flex items-center gap-3 py-3 hover:bg-surface-muted/50"
-                    >
-                      <Avatar firstName={driver.firstName} lastName={driver.lastName} />
-                      <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-sm font-medium text-foreground">
-                          {driver.firstName} {driver.lastName}
-                        </span>
-                        <span className="text-xs text-muted" dir="ltr">
-                          {displayPhone(driver.phone)}
-                        </span>
+                  <LinkListItem key={driver.id} href={`/drivers/${driver.id}`}>
+                    <Avatar firstName={driver.firstName} lastName={driver.lastName} />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm font-medium text-foreground">
+                        {driver.firstName} {driver.lastName}
                       </span>
-                      <Balance amountOwed={driver.amountOwed} />
-                    </Link>
-                  </li>
+                      <span className="text-xs text-muted" dir="ltr">
+                        {displayPhone(driver.phone)}
+                      </span>
+                    </span>
+                    <Balance amountOwed={driver.amountOwed} className="text-[0.8125rem]" />
+                  </LinkListItem>
                 ))}
-              </ul>
+              </LinkList>
             )}
           </SectionCard>
 
@@ -195,27 +188,22 @@ function Loaded({ office }: { office: OfficeDetail }) {
             {office.vehicles.length === 0 ? (
               <p className="text-sm text-muted">{t("noVehicles")}</p>
             ) : (
-              <ul className="flex flex-col divide-y divide-border">
+              <LinkList>
                 {office.vehicles.map((vehicle) => (
-                  <li key={vehicle.id}>
-                    <Link
-                      href={`/vehicles/${vehicle.id}`}
-                      className="flex items-center gap-3 py-3 hover:bg-surface-muted/50"
-                    >
-                      <VehicleThumb vehicle={vehicle} className="size-8" />
-                      <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-sm font-medium text-foreground">
-                          {vehicle.make} {vehicle.model} {vehicle.year}
-                        </span>
-                        <span className="text-xs text-muted">
-                          <span dir="ltr">{vehicle.plateNumber}</span> · {vehicle.color}
-                        </span>
+                  <LinkListItem key={vehicle.id} href={`/vehicles/${vehicle.id}`}>
+                    <VehicleThumb vehicle={vehicle} className="size-8" />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm font-medium text-foreground">
+                        {vehicle.make} {vehicle.model} {vehicle.year}
                       </span>
-                      <Badge tone="neutral">{cars(vehicle.body)}</Badge>
-                    </Link>
-                  </li>
+                      <span className="text-xs text-muted">
+                        <span dir="ltr">{vehicle.plateNumber}</span> · {vehicle.color}
+                      </span>
+                    </span>
+                    <Badge tone="neutral">{cars(vehicle.body)}</Badge>
+                  </LinkListItem>
                 ))}
-              </ul>
+              </LinkList>
             )}
           </SectionCard>
         </div>
@@ -261,6 +249,6 @@ function Loaded({ office }: { office: OfficeDetail }) {
         open={dialog === "vehicle"}
         onOpenChange={opener("vehicle")}
       />
-    </>
+    </motion.div>
   );
 }
