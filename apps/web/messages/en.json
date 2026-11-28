@@ -1366,7 +1366,7 @@
       "default": "Default",
       "archived": "Archived",
       "noArchived": "No archived brands.",
-      "appSender": "Terhal <the app's sender address>",
+      "appSender": "Terhal (the app's sender address)",
       "sameAsSender": "Same as the sender",
       "notShown": "Not shown",
       "rows": {
