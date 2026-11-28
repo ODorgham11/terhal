@@ -11,18 +11,25 @@ import { Dialog, DialogClose, DialogContent, DialogFooter } from "@/components/u
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { toast } from "@/components/ui/Toast";
-import { call, staffApi, useErrorMessage } from "@/lib/api";
+import { useErrorMessage } from "@/lib/api";
 import { PermissionSwitches } from "./PermissionSwitches";
+import type { TeamApi } from "./teamApi";
 
-type Props = { open: boolean; onOpenChange: (open: boolean) => void; onSent?: () => void };
+type Props = {
+  api: TeamApi;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSent?: () => void;
+};
 
-export function InviteDialog({ open, onOpenChange, onSent }: Props) {
+export function InviteDialog({ api, open, onOpenChange, onSent }: Props) {
   const t = useTranslations("staff.team.invite");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent title={t("title")} description={t("description")} className="max-w-lg">
         {open && (
           <InviteForm
+            api={api}
             onSent={() => {
               onOpenChange(false);
               onSent?.();
@@ -34,13 +41,13 @@ export function InviteDialog({ open, onOpenChange, onSent }: Props) {
   );
 }
 
-function InviteForm({ onSent }: { onSent: () => void }) {
+function InviteForm({ api, onSent }: { api: TeamApi; onSent: () => void }) {
   const t = useTranslations("staff.team.invite");
   const fields = useTranslations("common.fields");
   const errorMessage = useErrorMessage();
   const client = useQueryClient();
   const [email, setEmail] = useState("");
-  const [permissions, setPermissions] = useState<StaffPermission[]>(["trips"]);
+  const [permissions, setPermissions] = useState<StaffPermission[]>(api.defaultPermissions);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const valid = /^\S+@\S+\.\S+$/.test(email.trim()) && permissions.length > 0;
@@ -49,10 +56,8 @@ function InviteForm({ onSent }: { onSent: () => void }) {
     setBusy(true);
     setError(null);
     try {
-      const sent = await call(
-        staffApi.invitations.$post({ json: { email: email.trim(), permissions } }),
-      );
-      await client.invalidateQueries({ queryKey: ["staff", "invitations"] });
+      const sent = await api.invite(email.trim(), permissions);
+      await client.invalidateQueries({ queryKey: api.invitationsKey });
       toast.success(t("sent", { email: sent.email }));
       onSent();
     } catch (failure) {
