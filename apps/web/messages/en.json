@@ -1043,7 +1043,10 @@
             "payout": "Paid to driver",
             "handedIn": "Cash handed in",
             "adjustment": "Adjustment"
-          }
+          },
+          "viewAll": "View all",
+          "pageTitle": "{name}'s ledger",
+          "all": "All entries"
         },
         "profile": {
           "title": "Profile",

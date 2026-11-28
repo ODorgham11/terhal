@@ -12,11 +12,10 @@ import {
   IconPencil,
   IconRestore,
 } from "@tabler/icons-react";
-import type { Driver, DriverTransaction } from "@terhal/contracts";
+import type { Driver } from "@terhal/contracts";
 import { DirectionalIcon } from "@/components/DirectionalIcon";
 import { DetailLoading } from "@/components/staff/DetailLoading";
 import { RequireStaff } from "@/components/session/RequireSession";
-import { ListPagination, useCursorList } from "@/components/staff/CursorList";
 import { InfoList, InfoRow, SectionCard } from "@/components/staff/SectionCard";
 import { SystemState } from "@/components/staff/SystemState";
 import { DriverDrawer } from "@/components/staff/fleet/DriverDrawer";
@@ -24,22 +23,13 @@ import { useArchive } from "@/components/staff/fleet/useArchive";
 import { RecordPaymentDialog } from "@/components/staff/fleet/RecordPaymentDialog";
 import { KindBadge, Phone, useBalance, useCalendarDate } from "@/components/staff/fleet/format";
 import { FleetTrips } from "@/components/staff/fleet/FleetTrips";
+import { LedgerTable } from "@/components/staff/fleet/Ledger";
 import { useTripDates } from "@/components/staff/trips/format";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { AutoHeight, FadeText, fade } from "@/components/ui/Motion";
+import { FadeText, fade } from "@/components/ui/Motion";
 import { Skeleton } from "@/components/ui/Skeleton";
-import {
-  MotionTableRow,
-  Table,
-  TableBody,
-  TableCell,
-  TableEmpty,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/Table";
-import { call, isApiError, staffApi, useErrorMessage } from "@/lib/api";
+import { call, isApiError, staffApi } from "@/lib/api";
 import { cn } from "@/lib/cn";
 
 export function DriverDetailPage({ id }: { id: string }) {
@@ -213,135 +203,29 @@ function BalanceCard({ driver }: { driver: Driver }) {
   );
 }
 
-const entryKeys = {
-  TRIP_FEE: "tripFee",
-  EXPENSE_REIMBURSEMENT: "expenses",
-  CASH_COLLECTED: "cashCollected",
-  PAYOUT: "payout",
-  CASH_HANDED_IN: "handedIn",
-  ADJUSTMENT: "adjustment",
-} as const;
-
 function LedgerCard({ driver }: { driver: Driver }) {
   const t = useTranslations("staff.fleet.driver.ledger");
-  const errorMessage = useErrorMessage();
-  const ledger = useCursorList(["staff", "driver", driver.id, "ledger"], {}, (query) =>
-    call(staffApi.drivers[":id"].transactions.$get({ param: { id: driver.id }, query })),
-  );
-
-  const stale = ledger.result.isPlaceholderData;
-
   return (
-    <SectionCard title={t("title")}>
-      <AutoHeight>
-        <Table
-          aria-busy={ledger.result.isFetching || undefined}
-          className={cn("transition-opacity", stale && "opacity-60")}
+    <SectionCard
+      title={t("title")}
+      aside={
+        <Link
+          href={`/drivers/${driver.id}/ledger`}
+          className="inline-flex items-center gap-1 rounded-md text-sm font-medium text-primary transition-colors duration-200 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("date")}</TableHead>
-              <TableHead>{t("entry")}</TableHead>
-              <TableHead>{t("trip")}</TableHead>
-              <TableHead>{t("by")}</TableHead>
-              <TableHead className="text-end">{t("amount")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ledger.result.isPending ? (
-              <LedgerRowsLoading />
-            ) : ledger.result.isError ? (
-              <TableEmpty columns={5} title={errorMessage(ledger.result.error)} />
-            ) : ledger.rows.length === 0 ? (
-              <TableEmpty columns={5} title={t("empty")} />
-            ) : (
-              ledger.rows.map((entry) => <LedgerRow key={entry.id} entry={entry} />)
-            )}
-          </TableBody>
-        </Table>
-      </AutoHeight>
-      <ListPagination list={ledger} />
+          {t("viewAll")}
+          <DirectionalIcon icon={IconChevronRight} className="size-4" stroke={1.75} />
+        </Link>
+      }
+    >
+      {/* The latest entries only; the rest are on the driver's ledger page. */}
+      <LedgerTable driverId={driver.id} pageSize={LATEST} />
       <p className="text-xs text-muted">{t("hint", { name: driver.firstName })}</p>
     </SectionCard>
   );
 }
 
-function LedgerRow({ entry }: { entry: DriverTransaction }) {
-  const t = useTranslations("staff.fleet.driver.ledger");
-  const { day, price } = useTripDates();
-  const amount = Number(entry.amount);
-  return (
-    <MotionTableRow {...fade}>
-      <TableCell className="whitespace-nowrap">{day(entry.createdAt)}</TableCell>
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="text-sm text-foreground">{t(`entries.${entryKeys[entry.type]}`)}</span>
-          {entry.note && <span className="text-xs text-muted">{entry.note}</span>}
-        </div>
-      </TableCell>
-      <TableCell>
-        {entry.trip ? (
-          <Link
-            href={`/trips/${entry.trip.id}`}
-            dir="ltr"
-            className="text-sm font-medium text-primary hover:underline"
-          >
-            {entry.trip.code}
-          </Link>
-        ) : (
-          "—"
-        )}
-      </TableCell>
-      <TableCell className="text-muted">
-        {entry.staff ? `${entry.staff.firstName} ${entry.staff.lastName}` : t("system")}
-      </TableCell>
-      <TableCell
-        className={cn(
-          "text-end font-medium whitespace-nowrap tabular-nums",
-          amount > 0 ? "text-success" : "text-danger",
-        )}
-      >
-        <span dir="ltr">
-          {amount > 0 ? "+ " : "− "}
-          {price(Math.abs(amount).toFixed(2))}
-        </span>
-      </TableCell>
-    </MotionTableRow>
-  );
-}
-
-function LedgerRowsLoading() {
-  const t = useTranslations("common.ui");
-  return (
-    <>
-      {[0, 1, 2].map((row) => (
-        <motion.tr
-          key={row}
-          {...fade}
-          className="border-b border-border"
-          aria-hidden={row > 0 || undefined}
-        >
-          <TableCell>
-            {row === 0 && <span className="sr-only">{t("loading")}</span>}
-            <Skeleton className="h-3.5 w-20" />
-          </TableCell>
-          <TableCell>
-            <Skeleton className={cn("h-3.5", row % 2 ? "w-24" : "w-32")} />
-          </TableCell>
-          <TableCell>
-            <Skeleton className="h-3.5 w-22" />
-          </TableCell>
-          <TableCell>
-            <Skeleton className="h-3.5 w-24" />
-          </TableCell>
-          <TableCell>
-            <Skeleton className="ms-auto h-3.5 w-20" />
-          </TableCell>
-        </motion.tr>
-      ))}
-    </>
-  );
-}
+const LATEST = 10;
 
 function ProfileCard({ driver }: { driver: Driver }) {
   const t = useTranslations("staff.fleet.driver.profile");

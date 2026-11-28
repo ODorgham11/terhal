@@ -1043,7 +1043,10 @@
             "payout": "دُفع للسائق",
             "handedIn": "نقدية سُلّمت",
             "adjustment": "تسوية"
-          }
+          },
+          "viewAll": "عرض الكل",
+          "pageTitle": "سجل {name}",
+          "all": "كل القيود"
         },
         "profile": {
           "title": "الملف",
