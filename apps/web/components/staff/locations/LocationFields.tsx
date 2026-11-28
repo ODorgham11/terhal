@@ -50,7 +50,7 @@ export function LocationFields({ draft, onChange, errors }: Props) {
     onChange({ ...draft, [key]: value });
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
       <Field label={fields("nameEn")} error={errors.nameEn}>
         <Input
           dir="ltr"
