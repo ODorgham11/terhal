@@ -66,6 +66,28 @@ describe("the local driver", () => {
     now += 61_000;
     expect(local.verify(query)).toBe(false);
   });
+
+  it("signs upload links for one key and content type, which read links can't stand in for", async () => {
+    const link = await local.signedUpload("vehicles/v1/d", "image/png", 60);
+    expect(link.headers).toEqual({ "Content-Type": "image/png" });
+    const query = Object.fromEntries(new URL(link.url).searchParams);
+    expect(local.verifyUpload(query, "image/png")).toBe(true);
+    expect(local.verifyUpload(query, "image/jpeg")).toBe(false);
+    expect(local.verifyUpload({ ...query, key: "vehicles/v1/e" }, "image/png")).toBe(false);
+    // An upload link doesn't read, and a read link doesn't upload.
+    expect(local.verify(query)).toBe(false);
+    const read = Object.fromEntries(
+      new URL(await local.signedUrl("vehicles/v1/d", 60)).searchParams,
+    );
+    expect(local.verifyUpload(read, "image/png")).toBe(false);
+
+    await local.put("vehicles/v1/d", bytes("12345"), "image/png");
+    expect(await local.stat("vehicles/v1/d")).toEqual({ size: 5, contentType: "image/png" });
+    expect(await local.stat("vehicles/v1/none")).toBeNull();
+
+    now += 61_000;
+    expect(local.verifyUpload(query, "image/png")).toBe(false);
+  });
 });
 
 describe("GET /v1/files", () => {
@@ -134,6 +156,16 @@ describe("the s3 driver", () => {
     expect(url.searchParams.get("X-Amz-Expires")).toBe("120");
     expect(url.searchParams.get("X-Amz-Credential")).toMatch(/^test-key\/\d{8}\/auto\/s3\//);
     expect(url.searchParams.get("X-Amz-Signature")).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("presigns uploads with the content type signed in", async () => {
+    const s3 = new S3Storage(options);
+    const link = await s3.signedUpload("vehicles/v1/a", "image/webp", 300);
+    const url = new URL(link.url);
+    expect(url.pathname).toBe("/terhal-test/vehicles/v1/a");
+    expect(url.searchParams.get("X-Amz-Expires")).toBe("300");
+    expect(url.searchParams.get("X-Amz-SignedHeaders")?.split(";")).toContain("content-type");
+    expect(link.headers).toEqual({ "Content-Type": "image/webp" });
   });
 });
 

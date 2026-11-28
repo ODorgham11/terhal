@@ -29,14 +29,26 @@ const createStorage = (): Storage => {
 
 export const storage = createStorage();
 
+// Takes the local driver's signed uploads (PUT /v1/files?key&expires&signature), as the bucket takes presigned ones:
+// the signature covers the key, the expiry and the Content-Type sent.
+export const receiveLocalUpload = async (c: Context) => {
+  if (!(storage instanceof LocalStorage)) throw forbiddenLink();
+  const contentType = c.req.header("content-type") ?? "";
+  const query = c.req.query();
+  if (!storage.verifyUpload(query, contentType)) throw forbiddenLink();
+
+  // verifyUpload() checked the key is there.
+  await storage.put(query.key ?? "", new Uint8Array(await c.req.arrayBuffer()), contentType);
+  return c.body(null, 200);
+};
+
+const forbiddenLink = () =>
+  new AppError({ code: "FORBIDDEN", status: 403, detail: "This link is invalid or has expired." });
+
 // Serves the local driver's signed links (GET /v1/files?key&expires&signature), like the bucket serves presigned ones.
 // Mounted only with the local driver.
 export const serveLocalFile = async (c: Context) => {
-  const forbidden = new AppError({
-    code: "FORBIDDEN",
-    status: 403,
-    detail: "This link is invalid or has expired.",
-  });
+  const forbidden = forbiddenLink();
   if (!(storage instanceof LocalStorage)) throw forbidden;
 
   const query = c.req.query();
