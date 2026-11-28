@@ -52,7 +52,9 @@ import { toast } from "@/components/ui/Toast";
 import { call, endpoint, staffApi, useErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/cn";
 
-const COLUMNS = 9;
+const COLUMNS = 7;
+// From and to in two equal halves with the arrow between, so it sits in the middle of the two on every row.
+const ROUTE = "grid grid-cols-[minmax(0,1fr)_1rem_minmax(0,1fr)] items-center gap-6";
 
 export function PricesList() {
   return <RequireStaff permission="pricing">{() => <Prices />}</RequireStaff>;
@@ -276,10 +278,13 @@ function Prices() {
                   onChange={togglePage}
                 />
               </TableHead>
-              <TableHead>{t("columns.from")}</TableHead>
-              {/* The arrow's own narrow column, so it sits centred between the two places. */}
-              <TableHead className="w-10 px-0" aria-hidden />
-              <TableHead>{t("columns.to")}</TableHead>
+              <TableHead className="min-w-80">
+                <div className={ROUTE}>
+                  <span>{t("columns.from")}</span>
+                  <span aria-hidden />
+                  <span>{t("columns.to")}</span>
+                </div>
+              </TableHead>
               <TableHead>{t("columns.class")}</TableHead>
               <TableHead>{t("columns.car")}</TableHead>
               <TableHead>{t("columns.price")}</TableHead>
@@ -394,14 +399,12 @@ function PriceRow({
           onChange={onToggle}
         />
       </TableCell>
-      <TableCell>
-        <Place place={row.from} />
-      </TableCell>
-      <TableCell className="w-10 px-0">
-        <DirectionalIcon icon={IconArrowRight} className="mx-auto block size-4 text-muted" />
-      </TableCell>
-      <TableCell>
-        <Place place={row.to} />
+      <TableCell className="min-w-80">
+        <div className={ROUTE}>
+          <Place place={row.from} />
+          <DirectionalIcon icon={IconArrowRight} className="size-4 text-muted" />
+          <Place place={row.to} />
+        </div>
       </TableCell>
       <TableCell>{name(row.class)}</TableCell>
       <TableCell>{cars(row.car)}</TableCell>
@@ -523,14 +526,12 @@ function PriceRowsLoading() {
             {row === 0 && <span className="sr-only">{t("loading")}</span>}
             <Skeleton className="size-4.5 rounded-[0.3125rem]" />
           </TableCell>
-          <TableCell>
-            <SkeletonLines first={row % 2 ? "w-24" : "w-32"} second="w-16" />
-          </TableCell>
-          <TableCell className="w-10 px-0">
-            <Skeleton className="mx-auto size-4" />
-          </TableCell>
-          <TableCell>
-            <SkeletonLines first={row % 2 ? "w-28" : "w-24"} second="w-16" />
+          <TableCell className="min-w-80">
+            <div className={ROUTE}>
+              <SkeletonLines first={row % 2 ? "w-24" : "w-32"} second="w-16" />
+              <Skeleton className="size-4" />
+              <SkeletonLines first={row % 2 ? "w-28" : "w-24"} second="w-16" />
+            </div>
           </TableCell>
           <TableCell>
             <Skeleton className="h-3.5 w-16" />
