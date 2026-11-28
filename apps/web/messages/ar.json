@@ -116,6 +116,7 @@
       "LOCATION_NOT_FLEXIBLE": "لا يمكن حجز هذا المكان كاملًا. اختر حيًا أو منطقة فيه.",
       "IMAGE_TYPE_NOT_ALLOWED": "ارفع صورة بصيغة JPEG أو PNG أو WebP.",
       "IMAGE_LIMIT_REACHED": "لهذه المركبة 5 صور بالفعل. احذف واحدة أولًا.",
+      "UPLOAD_INCOMPLETE": "لم يكتمل رفع الصورة. حاول مرة أخرى.",
       "LAST_TEAM_MANAGER": "يجب أن يحتفظ عضو مفعّل واحد على الأقل بصلاحية إدارة الفريق.",
       "ACCOUNT_DELETED": "تم حذف هذا الحساب.",
       "LOCATION_NAME_TAKEN": "يوجد مكان آخر بنفس الاسم داخل المكان نفسه.",
@@ -1119,7 +1120,9 @@
           "add": "إضافة صور",
           "hint": "الصورة الأولى هي الغلاف. JPEG أو PNG أو WebP، حتى 5 ميجابايت لكل صورة، و{limit} صور كحد أقصى.",
           "wrongType": "{name} ليست صورة JPEG أو PNG أو WebP.",
-          "tooBig": "{name} أكبر من 5 ميجابايت."
+          "tooBig": "{name} أكبر من 5 ميجابايت.",
+          "added": "{count, plural, one {أُضيفت الصورة} two {أُضيفت صورتان} few {أُضيفت # صور} many {أُضيفت # صورة} other {أُضيفت # صورة}}",
+          "progress": "جارٍ رفع {name}، {percent}٪"
         }
       },
       "offices": {

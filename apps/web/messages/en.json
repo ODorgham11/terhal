@@ -116,6 +116,7 @@
       "LOCATION_NOT_FLEXIBLE": "That place can't be booked as a whole. Pick a district or an area in it.",
       "IMAGE_TYPE_NOT_ALLOWED": "Upload a JPEG, PNG or WebP image.",
       "IMAGE_LIMIT_REACHED": "This vehicle already has 5 images. Delete one first.",
+      "UPLOAD_INCOMPLETE": "The photo didn't finish uploading. Try again.",
       "LAST_TEAM_MANAGER": "Someone active has to keep the team permission.",
       "ACCOUNT_DELETED": "This account was deleted.",
       "LOCATION_NAME_TAKEN": "Another place in the same parent already has this name.",
@@ -1119,7 +1120,9 @@
           "add": "Add photos",
           "hint": "The first photo is the cover. JPEG, PNG or WebP, up to 5 MB each, {limit} photos at most.",
           "wrongType": "{name} isn't a JPEG, PNG or WebP image.",
-          "tooBig": "{name} is larger than 5 MB."
+          "tooBig": "{name} is larger than 5 MB.",
+          "added": "{count, plural, one {Photo added} other {# photos added}}",
+          "progress": "Uploading {name}, {percent}%"
         }
       },
       "offices": {

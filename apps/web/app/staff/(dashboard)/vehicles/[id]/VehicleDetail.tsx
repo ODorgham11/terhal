@@ -38,6 +38,7 @@ import { Button } from "@/components/ui/Button";
 import { FadeText, ease, fade } from "@/components/ui/Motion";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { toast } from "@/components/ui/Toast";
+import { uploadVehiclePhoto } from "@/components/staff/fleet/uploadPhoto";
 import { call, isApiError, staffApi, useErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/cn";
 
@@ -234,9 +235,13 @@ function Photos({ vehicle }: { vehicle: Vehicle }) {
   const input = useRef<HTMLInputElement>(null);
   const [selected, setSelected] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<
+    { id: string; name: string; preview: string; progress: number; file: File }[]
+  >([]);
+  const uploading = pending.length > 0;
   const images = vehicle.images;
   const current = images[Math.min(selected, images.length - 1)];
-  const full = images.length >= VEHICLE_IMAGE_LIMIT;
+  const full = images.length + pending.length >= VEHICLE_IMAGE_LIMIT;
 
   const run = async (request: () => Promise<Vehicle>, done?: string) => {
     setBusy(true);
@@ -251,21 +256,53 @@ function Photos({ vehicle }: { vehicle: Vehicle }) {
     }
   };
 
+  // Each file goes straight to storage (lib: uploadVehiclePhoto), shown as a tile with its progress until it's added.
+  // One at a time, so they're added in the order picked.
   const upload = async (files: FileList | null) => {
-    for (const file of Array.from(files ?? []).slice(0, VEHICLE_IMAGE_LIMIT - images.length)) {
+    const picked = Array.from(files ?? []).slice(0, VEHICLE_IMAGE_LIMIT - images.length);
+    if (input.current) input.current.value = "";
+    const accepted = picked.filter((file) => {
       if (!(vehicleImageTypes as readonly string[]).includes(file.type)) {
         toast.error(t("wrongType", { name: file.name }));
-        continue;
+        return false;
       }
       if (file.size > VEHICLE_IMAGE_MAX_BYTES) {
         toast.error(t("tooBig", { name: file.name }));
-        continue;
+        return false;
       }
-      await run(() =>
-        call(staffApi.vehicles[":id"].images.$post({ param: { id: vehicle.id }, form: { file } })),
-      );
+      return true;
+    });
+    const queued = accepted.map((file) => ({
+      id: crypto.randomUUID(),
+      name: file.name,
+      preview: URL.createObjectURL(file),
+      progress: 0,
+      file,
+    }));
+    setPending((current) => [...current, ...queued]);
+
+    let added = 0;
+    for (const item of queued) {
+      try {
+        const saved = await uploadVehiclePhoto(vehicle.id, item.file, (progress) =>
+          setPending((current) =>
+            current.map((entry) => (entry.id === item.id ? { ...entry, progress } : entry)),
+          ),
+        );
+        client.setQueryData(vehicleKey(vehicle.id), saved);
+        setSelected(saved.images.length - 1);
+        added += 1;
+      } catch (failure) {
+        toast.error(errorMessage(failure));
+      } finally {
+        setPending((current) => current.filter((entry) => entry.id !== item.id));
+        URL.revokeObjectURL(item.preview);
+      }
     }
-    if (input.current) input.current.value = "";
+    if (added > 0) {
+      await client.invalidateQueries({ queryKey: ["staff", "vehicles"] });
+      toast.success(t("added", { count: added }));
+    }
   };
 
   const move = (from: number, to: number) => {
@@ -421,6 +458,35 @@ function Photos({ vehicle }: { vehicle: Vehicle }) {
             </motion.div>
           ))}
         </AnimatePresence>
+        <AnimatePresence initial={false}>
+          {pending.map((item) => (
+            <motion.div
+              key={item.id}
+              layout
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={ease}
+              role="status"
+              aria-label={t("progress", {
+                name: item.name,
+                percent: Math.round(item.progress * 100),
+              })}
+              className="relative h-14 w-20 self-start overflow-hidden rounded-md border-2 border-transparent"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- a local preview of the picked file */}
+              <img src={item.preview} alt="" className="size-full object-cover opacity-50" />
+              <span className="absolute inset-x-1.5 bottom-1.5 h-1 overflow-hidden rounded-full bg-surface/80">
+                <motion.span
+                  className="block h-full origin-left rounded-full bg-primary rtl:origin-right"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: item.progress }}
+                  transition={ease}
+                />
+              </span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
         {!full && (
           <>
             <input
@@ -432,10 +498,10 @@ function Photos({ vehicle }: { vehicle: Vehicle }) {
               id="vehicle-photos"
               onChange={(event) => void upload(event.target.files)}
             />
-            <Button asChild variant="secondary" size="sm" disabled={busy}>
+            <Button asChild variant="secondary" size="sm" disabled={busy || uploading}>
               <label htmlFor="vehicle-photos" className="cursor-pointer">
                 <IconUpload aria-hidden className="size-4" stroke={1.75} />
-                <FadeText value={busy ? t("uploading") : t("add")} />
+                <FadeText value={uploading ? t("uploading") : t("add")} />
               </label>
             </Button>
           </>
