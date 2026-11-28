@@ -136,7 +136,14 @@ function Content({ children }: { children: ReactNode }) {
 
 const useDay = () => {
   const format = useFormatter();
-  return (date: Date) => format.dateTime(date, { day: "numeric", month: "short", year: "numeric" });
+  return (date: Date) =>
+    format.dateTime(date, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      // The day is local noon in this browser, so it's named in this browser's zone, not Cairo's.
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
 };
 
 type DatePickerProps = {
