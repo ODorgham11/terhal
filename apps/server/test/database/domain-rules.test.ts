@@ -386,10 +386,19 @@ describe("a driver's report", () => {
     await expect(prisma.tripReport.create({ data: { ...base, pickupAt: at(70) } })).rejects.toThrow(
       /TripReport_chronology/,
     );
+    // Taking the car at the pickup minute is fine; dropping off at the pickup, or returning the car at the drop-off, isn't.
+    await expect(
+      prisma.tripReport.create({ data: { ...base, dropoffAt: base.pickupAt } }),
+    ).rejects.toThrow(/TripReport_chronology/);
+    await expect(
+      prisma.tripReport.create({ data: { ...base, endedAt: base.dropoffAt } }),
+    ).rejects.toThrow(/TripReport_chronology/);
     await expect(prisma.tripReport.create({ data: { ...base, endMileage: 900 } })).rejects.toThrow(
       /TripReport_mileage/,
     );
-    await expect(prisma.tripReport.create({ data: base })).resolves.toBeDefined();
+    await expect(
+      prisma.tripReport.create({ data: { ...base, startedAt: base.pickupAt } }),
+    ).resolves.toBeDefined();
   });
 
   it("has stops that are an address or a pin, never both", async () => {
