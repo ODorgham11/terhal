@@ -1,5 +1,6 @@
 import { Worker, type Processor } from "bullmq";
 import { processAnalyticsJob, scheduleAnalyticsJobs } from "./modules/analytics/index";
+import { fleetJobs, processFleetJob } from "./modules/fleet/index";
 import { notificationJobs, processNotificationJob } from "./modules/notifications/index";
 import { processTripJob, tripJobs } from "./modules/trips/index";
 import { processors } from "./platform/jobs/processors";
@@ -13,6 +14,7 @@ import { createQueueConnection } from "./platform/redis/connections";
 const all: { [K in QueueName]: Processor<JobData[K]> } = {
   ...processors,
   trips: processTripJob,
+  fleet: processFleetJob,
   analytics: processAnalyticsJob,
   notifications: processNotificationJob,
 };
@@ -32,6 +34,9 @@ const workers = (Object.entries(all) as [QueueName, Processor][]).map(([name, pr
 await Promise.all([
   ...Object.entries(tripJobs).map(([name, { every }]) =>
     queues.trips.upsertJobScheduler(name, { every }, { name, data: {} }),
+  ),
+  ...Object.entries(fleetJobs).map(([name, { every }]) =>
+    queues.fleet.upsertJobScheduler(name, { every }, { name, data: {} }),
   ),
   ...Object.entries(notificationJobs).map(([name, { every }]) =>
     queues.notifications.upsertJobScheduler(name, { every }, { name, data: {} }),
