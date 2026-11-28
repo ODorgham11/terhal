@@ -454,7 +454,7 @@ export function ReturnTripCard({
         <>
           <Link
             href={`/trips/${other.id}`}
-            className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 hover:bg-surface-muted"
+            className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 transition-colors duration-200 hover:bg-surface-muted"
           >
             <span className="flex flex-col">
               <span className="text-sm font-medium text-primary" dir="ltr">
