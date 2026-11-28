@@ -11,9 +11,10 @@
   --foreground: #231e1b;
   --surface: #ffffff;
   --surface-muted: #f5f1ed;
-  /* What a row, a menu item or a ghost button turns on hover: a see-through beige, warmer than the page and the
-     muted surface so it reads on both, and nothing like the maroon. */
-  --hover: rgb(201 168 124 / 0.16);
+  /* What a row, a menu item or a ghost button turns on hover: a soft cream, solid so it reads the same on white rows
+     and on the page, and yellower than the page, the muted surface and table headers so it never passes for one of
+     them, and nothing like the maroon. */
+  --hover: #f8f0df;
   --muted: #766d66;
   --border: #ede7e1;
   --input: #ddd5cd;
@@ -57,7 +58,7 @@
     --foreground: #f3eee9;
     --surface: #221d1b;
     --surface-muted: #2b2522;
-    --hover: rgb(214 186 148 / 0.09);
+    --hover: #30291f;
     --muted: #a89e96;
     --border: #36302c;
     --input: #463e39;
