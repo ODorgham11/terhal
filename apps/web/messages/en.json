@@ -1511,13 +1511,15 @@
         "title": "Profile",
         "emailHint": "Your email can't be changed here: it's how you sign in.",
         "save": "Save profile",
-        "saved": "Profile saved"
+        "saved": "Profile saved",
+        "description": "How your colleagues see you across the dashboard."
       },
       "password": {
         "title": "Password",
         "hint": "8 to 72 characters, with an uppercase letter, a lowercase letter and a number.",
         "submit": "Change password",
-        "changed": "Password changed. Your other devices were signed out."
+        "changed": "Password changed. Your other devices were signed out.",
+        "description": "Changing it signs your other devices out."
       },
       "devices": {
         "title": "Signed-in devices",
@@ -1528,7 +1530,10 @@
         "unknown": "Unknown device",
         "signedIn": "Signed in {when}",
         "ended": "Signed out that device",
-        "othersEnded": "Signed out your other devices"
+        "othersEnded": "Signed out your other devices",
+        "description": "Sign out of any device you don't recognise.",
+        "signOutOthersTitle": "Sign out of other devices?",
+        "signOutOthersBody": "You'll stay signed in here. The other {count, plural, one {device} other {# devices}} will need your password to get back in."
       },
       "access": {
         "title": "Your access",
@@ -1537,6 +1542,17 @@
       "language": {
         "title": "Language",
         "hint": "The dashboard's language on this browser, and the one your emails come in."
+      },
+      "subtitle": "Your profile, how you sign in, and where you are signed in.",
+      "tabs": {
+        "profile": "Profile",
+        "security": "Security",
+        "devices": "Devices"
+      },
+      "session": {
+        "title": "This session",
+        "since": "You've been signed in since {when}.",
+        "othersStay": "Your other devices stay signed in."
       }
     },
     "brands": {
