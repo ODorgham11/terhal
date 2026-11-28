@@ -254,7 +254,7 @@
       "dropoff": "التوصيل",
       "when": "موعد الاستلام",
       "passenger": "الراكب",
-      "call": "اتصل بـ{name}",
+      "message": "راسل {name} على واتساب",
       "car": "السيارة",
       "load": "{passengers, plural, one {راكب واحد} two {راكبان} few {# ركاب} many {# راكبًا} other {# راكب}} · {luggage, plural, =0 {بدون حقائب} one {حقيبة واحدة} two {حقيبتان} few {# حقائب} many {# حقيبة} other {# حقيبة}}",
       "vehicle": "المركبة",

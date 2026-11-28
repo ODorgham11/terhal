@@ -254,7 +254,7 @@
       "dropoff": "Drop-off",
       "when": "Pickup time",
       "passenger": "Passenger",
-      "call": "Call {name}",
+      "message": "Message {name} on WhatsApp",
       "car": "Car",
       "load": "{passengers, plural, one {# passenger} other {# passengers}} · {luggage, plural, =0 {no luggage} one {# bag} other {# bags}}",
       "vehicle": "Vehicle",

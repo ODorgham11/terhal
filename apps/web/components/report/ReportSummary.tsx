@@ -15,7 +15,7 @@ export function ReportSummary({ report }: { report: TripReport }) {
   const km = report.endMileage - report.startMileage;
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-xs">
+    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 shadow-xs">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-lg font-semibold text-foreground">{t("title")}</h2>
         <span className="text-xs text-muted">

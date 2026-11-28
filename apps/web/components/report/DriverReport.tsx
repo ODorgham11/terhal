@@ -11,7 +11,7 @@ import {
   IconCircleCheck,
   IconClockHour4,
   IconLinkOff,
-  IconPhone,
+  IconBrandWhatsapp,
   IconPlayerPlay,
   IconPlayerStop,
   IconRoute,
@@ -30,6 +30,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { toast } from "@/components/ui/Toast";
 import { call, isApiError, siteApi } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import { whatsappLink } from "@/lib/whatsapp";
 import { reportKey } from "./keys";
 import { ReportForm } from "./ReportForm";
 import { ReportSummary } from "./ReportSummary";
@@ -51,8 +52,9 @@ const useToken = () =>
 
 export function DriverReport() {
   return (
-    <div className="flex min-h-dvh flex-col bg-surface">
-      <header className="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur">
+    // White, and light whatever the phone's setting (data-theme="light" opts out of the dark theme in globals.css).
+    <div data-theme="light" className="flex min-h-dvh flex-col bg-white">
+      <header className="sticky top-0 z-30 border-b border-border bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-xl items-center justify-between gap-4 px-4">
           <Image src={logo} alt="" className="h-7 w-auto" priority />
           <LocaleSwitcher />
@@ -152,7 +154,7 @@ function StateCard({
   action?: ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-xs">
+    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 shadow-xs">
       <div className="flex items-start gap-3">
         <span
           className={cn(
@@ -202,6 +204,7 @@ function TripPage({ trip, token }: { trip: DriverTrip; token: string }) {
               ? "awaiting"
               : "completed";
   const fillsReport = !report && (status === "IN_PROGRESS" || status === "AWAITING_REPORT");
+  const beforeEnd = !report && (status === "CONFIRMED" || status === "IN_PROGRESS");
 
   const stateCard = {
     completed: <StateCard icon={IconCircleCheck} tone="success" {...copy(t, "completed")} />,
@@ -240,9 +243,20 @@ function TripPage({ trip, token }: { trip: DriverTrip; token: string }) {
   return (
     <motion.div {...fade} className="flex flex-col gap-4">
       <Swap state={stage}>{stateCard}</Swap>
-      <TripCard trip={trip} />
-      {fillsReport && <ReportForm trip={trip} token={token} />}
-      {report && <ReportSummary report={report} />}
+      {/* Before the trip ends, the trip comes first, with a way to reach the passenger. After it, the report does: the
+          driver is reporting, not contacting anyone, so the trip is only there for reference. */}
+      {beforeEnd ? (
+        <>
+          <TripCard trip={trip} contact />
+          {fillsReport && <ReportForm trip={trip} token={token} />}
+        </>
+      ) : (
+        <>
+          {fillsReport && <ReportForm trip={trip} token={token} />}
+          {report && <ReportSummary report={report} />}
+          <TripCard trip={trip} />
+        </>
+      )}
       <p className="text-center text-xs text-muted">
         {t("linkExpires", {
           date: format.dateTime(new Date(trip.linkExpiresAt), {
@@ -277,7 +291,7 @@ function TripPage({ trip, token }: { trip: DriverTrip; token: string }) {
 }
 
 // What the driver needs on the road: where, when, who, in what.
-function TripCard({ trip }: { trip: DriverTrip }) {
+function TripCard({ trip, contact = false }: { trip: DriverTrip; contact?: boolean }) {
   const t = useTranslations("report.trip");
   const cars = useTranslations("staff.trips.car");
   const name = useLocalName();
@@ -286,7 +300,7 @@ function TripCard({ trip }: { trip: DriverTrip }) {
   const luggage = trip.largeLuggage + trip.mediumLuggage + trip.smallLuggage;
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-xs">
+    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 shadow-xs">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="text-sm font-medium text-primary" dir="ltr">
@@ -304,7 +318,7 @@ function TripCard({ trip }: { trip: DriverTrip }) {
             <span
               aria-hidden
               className={cn(
-                "absolute -start-6 top-0.5 size-3 rounded-full border-[3px] bg-surface",
+                "absolute -start-6 top-0.5 size-3 rounded-full border-[3px] bg-white",
                 end === "pickup" ? "border-primary" : "border-accent",
               )}
             />
@@ -335,15 +349,14 @@ function TripCard({ trip }: { trip: DriverTrip }) {
         )}
       </dl>
 
-      <Button asChild variant="secondary" size="lg">
-        <a href={`tel:${trip.clientPhone}`}>
-          <IconPhone aria-hidden className="size-5" stroke={1.75} />
-          {t("call", { name: trip.clientName.split(" ")[0] ?? trip.clientName })}
-          <span className="text-muted" dir="ltr">
-            {trip.clientPhone}
-          </span>
-        </a>
-      </Button>
+      {contact && (
+        <Button asChild variant="secondary" size="lg">
+          <a href={whatsappLink(trip.clientPhone)} target="_blank" rel="noreferrer">
+            <IconBrandWhatsapp aria-hidden className="size-5 text-success" stroke={1.75} />
+            {t("message", { name: trip.clientName.split(" ")[0] ?? trip.clientName })}
+          </a>
+        </Button>
+      )}
 
       {trip.notes && (
         <div className="flex flex-col gap-1 rounded-lg bg-surface-muted p-3">
