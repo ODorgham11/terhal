@@ -397,6 +397,10 @@
         "description": "Invitation and reset links only work once and for a limited time. Ask a colleague for a new invitation, or request a new reset link.",
         "newResetLink": "Request a new reset link",
         "backToSignIn": "Back to sign in"
+      },
+      "panel": {
+        "title": "Every trip, from booking to the last kilometre.",
+        "body": "Bookings, drivers, prices and payments for Terhal, in one place."
       }
     },
     "overview": {
