@@ -1137,7 +1137,9 @@
           "address": "Address"
         },
         "empty": "No offices here",
-        "emptyHint": "Add a partner office to hand trips to."
+        "emptyHint": "Add a partner office to hand trips to.",
+        "menu": "Actions for {name}",
+        "open": "Open office"
       },
       "officeForm": {
         "addTitle": "Add office",
