@@ -7,18 +7,26 @@ type SectionCardProps = {
   // At the inline end of the title: a button or a count.
   aside?: ReactNode;
   className?: string;
+  // The space between the card's own blocks; the header always sits a little closer to the first one.
+  contentClassName?: string;
   children: ReactNode;
 };
 
 // A titled card on a detail page: the trip's route, a driver's ledger, a customer's contact details.
-export function SectionCard({ title, aside, className, children }: SectionCardProps) {
+export function SectionCard({
+  title,
+  aside,
+  className,
+  contentClassName,
+  children,
+}: SectionCardProps) {
   return (
-    <Card className={cn("flex flex-col gap-4 p-5", className)}>
+    <Card className={cn("flex flex-col gap-2.5 p-5", className)}>
       <div className="flex min-h-8 items-center justify-between gap-3">
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
         {aside}
       </div>
-      {children}
+      <div className={cn("flex flex-col gap-4", contentClassName)}>{children}</div>
     </Card>
   );
 }
