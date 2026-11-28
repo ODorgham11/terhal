@@ -96,6 +96,8 @@
               "ADMIN_NOT_ACTIVE",
               "HAS_UPCOMING_TRIPS",
               "DRIVER_PHONE_TAKEN",
+              "DRIVER_NATIONAL_ID_TAKEN",
+              "DRIVER_LICENSE_TAKEN",
               "PLATE_NUMBER_TAKEN",
               "OFFICE_NAME_TAKEN",
               "OFFICE_REQUIRES_EXTERNAL",
@@ -1952,8 +1954,7 @@
               "string",
               "null"
             ],
-            "minLength": 1,
-            "maxLength": 30
+            "pattern": "^\\d{14}$"
           },
           "isExternal": {
             "type": "boolean",
@@ -2014,8 +2015,7 @@
               "string",
               "null"
             ],
-            "minLength": 1,
-            "maxLength": 30
+            "pattern": "^\\d{14}$"
           },
           "isExternal": {
             "type": "boolean"
@@ -14494,7 +14494,7 @@
             }
           },
           "409": {
-            "description": "DRIVER_PHONE_TAKEN",
+            "description": "DRIVER_PHONE_TAKEN, DRIVER_NATIONAL_ID_TAKEN or DRIVER_LICENSE_TAKEN: another driver has it.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14665,7 +14665,7 @@
             }
           },
           "409": {
-            "description": "DRIVER_PHONE_TAKEN",
+            "description": "DRIVER_PHONE_TAKEN, DRIVER_NATIONAL_ID_TAKEN or DRIVER_LICENSE_TAKEN: another driver has it.",
             "content": {
               "application/problem+json": {
                 "schema": {

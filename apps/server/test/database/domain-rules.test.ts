@@ -159,6 +159,40 @@ const driver = (data: { isExternal?: boolean; officeId?: string } = {}) =>
     },
   });
 
+describe("a driver's identity", () => {
+  it("has a 14-digit national ID, and no national ID or licence twice", async () => {
+    await expect(
+      prisma.driver.create({
+        data: { firstName: "D", lastName: "R", phone: "+201011111111", nationalId: "123" },
+      }),
+    ).rejects.toThrow(/Driver_national_id_format/);
+    await prisma.driver.create({
+      data: {
+        firstName: "D",
+        lastName: "R",
+        phone: "+201011111112",
+        nationalId: "29801011234567",
+        licenseNumber: "Ab-1",
+      },
+    });
+    await expect(
+      prisma.driver.create({
+        data: {
+          firstName: "D",
+          lastName: "R",
+          phone: "+201011111113",
+          nationalId: "29801011234567",
+        },
+      }),
+    ).rejects.toThrow(/nationalId/);
+    await expect(
+      prisma.driver.create({
+        data: { firstName: "D", lastName: "R", phone: "+201011111114", licenseNumber: "AB-1" },
+      }),
+    ).rejects.toThrow(/Driver_licenseNumber_key|Unique constraint/);
+  });
+});
+
 describe("the driver ledger", () => {
   it("is the only thing that moves a driver's balance", async () => {
     const { id } = await driver();

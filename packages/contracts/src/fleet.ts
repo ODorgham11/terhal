@@ -86,13 +86,20 @@ export const Driver = z
 
 export type Driver = z.infer<typeof Driver>;
 
+// An Egyptian national ID: 14 digits, no spaces or dashes.
+const NationalId = z
+  .string({ error: "National ID must be 14 digits." })
+  .trim()
+  .regex(/^\d{14}$/, "National ID must be exactly 14 digits.");
+
 const DriverFields = {
   firstName: Name("First name"),
   lastName: Name("Last name"),
   phone: Phone,
   licenseNumber: Text("Licence number", 50),
   licenseExpiresAt: z.iso.date({ error: "Licence expiry must be a date (YYYY-MM-DD)." }),
-  nationalId: Text("National ID", 30).nullable(),
+  // Unique across drivers, like the licence number and the phone (Driver_nationalId_key, Driver_licenseNumber_key).
+  nationalId: NationalId.nullable(),
   isExternal: z.boolean({ error: "External must be true or false." }),
   // Only an external driver can come through an office.
   officeId: Id("Office").nullable(),

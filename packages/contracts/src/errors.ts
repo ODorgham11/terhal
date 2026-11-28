@@ -53,8 +53,10 @@ export const errorCodes = [
   // Fleet and offices
   // Archiving a driver, a vehicle or an office while it's on a live trip (pending, confirmed or in progress).
   "HAS_UPCOMING_TRIPS",
-  // Another driver has this phone, another vehicle this plate, another office this name.
+  // Another driver has this phone, national ID or licence number, another vehicle this plate, another office this name.
   "DRIVER_PHONE_TAKEN",
+  "DRIVER_NATIONAL_ID_TAKEN",
+  "DRIVER_LICENSE_TAKEN",
   "PLATE_NUMBER_TAKEN",
   "OFFICE_NAME_TAKEN",
   // Only an external driver or vehicle can come through an office.

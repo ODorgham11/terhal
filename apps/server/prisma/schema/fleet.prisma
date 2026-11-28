@@ -64,9 +64,11 @@ model Driver {
   // ledger, kept by a trigger and never written directly (Driver_amount_owed_from_ledger).
   amountOwed Decimal @default(0) @db.Decimal(12, 2)
 
+  // Unique whatever its case (Driver_licenseNumber_key, an index on lower(licenseNumber) in the migration).
   licenseNumber    String?
   licenseExpiresAt DateTime? @db.Date
-  nationalId       String?
+  // 14 digits (Driver_national_id_format), one driver each.
+  nationalId       String?   @unique
   // An external driver may work through an office. Only external drivers can (the Driver_office_is_external check).
   isExternal       Boolean   @default(false)
   office           Office?   @relation(fields: [officeId], references: [id], onDelete: Restrict)

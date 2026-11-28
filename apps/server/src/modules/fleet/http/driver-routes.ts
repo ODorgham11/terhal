@@ -67,7 +67,9 @@ const create = createRoute({
     201: { description: "Added", ...json(Driver) },
     400: invalid,
     ...staffProblems,
-    409: problemResponse("DRIVER_PHONE_TAKEN"),
+    409: problemResponse(
+      "DRIVER_PHONE_TAKEN, DRIVER_NATIONAL_ID_TAKEN or DRIVER_LICENSE_TAKEN: another driver has it.",
+    ),
     422: officeProblems,
   },
 });
@@ -101,7 +103,9 @@ const update = createRoute({
     400: invalid,
     ...staffProblems,
     404: notFound,
-    409: problemResponse("DRIVER_PHONE_TAKEN"),
+    409: problemResponse(
+      "DRIVER_PHONE_TAKEN, DRIVER_NATIONAL_ID_TAKEN or DRIVER_LICENSE_TAKEN: another driver has it.",
+    ),
     422: officeProblems,
   },
 });

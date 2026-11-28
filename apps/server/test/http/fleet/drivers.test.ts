@@ -19,14 +19,17 @@ const DAY = 24 * 60 * 60 * 1000;
 const isoDate = (offsetDays: number) =>
   new Date(Date.now() + offsetDays * DAY).toISOString().slice(0, 10);
 
-const driverInput = (overrides: Record<string, unknown> = {}) => ({
-  firstName: "Mahmoud",
-  lastName: "Hassan",
-  phone: "01001234567",
-  licenseNumber: "LIC-1",
-  licenseExpiresAt: isoDate(365),
-  ...overrides,
-});
+// Each driver's licence follows their phone, so drivers added with different phones never share one.
+const driverInput = (overrides: Record<string, unknown> = {}) => {
+  const input = {
+    firstName: "Mahmoud",
+    lastName: "Hassan",
+    phone: "01001234567",
+    licenseExpiresAt: isoDate(365),
+    ...overrides,
+  };
+  return { licenseNumber: `LIC-${String(input.phone)}`, ...input };
+};
 
 const addDriver = async (agent: Agent, overrides: Record<string, unknown> = {}) => {
   const response = await agent.request("/v1/staff/drivers", {
@@ -50,7 +53,7 @@ describe("creating and changing drivers", () => {
     expect(driver).toMatchObject({
       firstName: "Mahmoud",
       phone: "+201001234567",
-      licenseNumber: "LIC-1",
+      licenseNumber: "LIC-01001234567",
       licenseExpiresSoon: false,
       nationalId: "29801011234567",
       isExternal: false,
@@ -88,6 +91,38 @@ describe("creating and changing drivers", () => {
     });
     expect(response.status).toBe(409);
     expect((await bodyOf(response)).code).toBe("DRIVER_PHONE_TAKEN");
+  });
+
+  it("takes a national ID of exactly 14 digits", async () => {
+    const { agent } = await signedInStaff();
+    for (const nationalId of ["2980101123456", "298010112345678", "2980101123456X"]) {
+      const response = await agent.request("/v1/staff/drivers", {
+        method: "POST",
+        json: driverInput({ nationalId }),
+      });
+      expect(response.status, nationalId).toBe(400);
+    }
+  });
+
+  it("refuses a national ID or a licence another driver has, archived or not", async () => {
+    const { agent } = await signedInStaff();
+    const first = await addDriver(agent, { nationalId: "29801011234567", licenseNumber: "ab-12" });
+    await agent.request(`/v1/staff/drivers/${first.id}/archive`, { method: "POST" });
+
+    const sameId = await agent.request("/v1/staff/drivers", {
+      method: "POST",
+      json: driverInput({ phone: "01002222222", nationalId: "29801011234567" }),
+    });
+    expect(sameId.status).toBe(409);
+    expect((await bodyOf(sameId)).code).toBe("DRIVER_NATIONAL_ID_TAKEN");
+
+    // Whatever its case.
+    const sameLicence = await agent.request("/v1/staff/drivers", {
+      method: "POST",
+      json: driverInput({ phone: "01003333333", licenseNumber: "AB-12" }),
+    });
+    expect(sameLicence.status).toBe(409);
+    expect((await bodyOf(sameLicence)).code).toBe("DRIVER_LICENSE_TAKEN");
   });
 
   it("links only external drivers to an office (the database check)", async () => {
