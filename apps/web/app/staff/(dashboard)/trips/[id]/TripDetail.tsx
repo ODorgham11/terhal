@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "motion/react";
 import {
   IconChevronRight,
   IconCircleCheck,
@@ -51,6 +52,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { fade } from "@/components/ui/Motion";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { toast } from "@/components/ui/Toast";
 import { call, isApiError, staffApi, useErrorMessage } from "@/lib/api";
@@ -85,14 +87,7 @@ function Detail({ id, staff }: { id: string; staff: Staff }) {
     retry: (count, error) => !(isApiError(error) && error.status === 404) && count < 1,
   });
 
-  if (trip.isPending) {
-    return (
-      <div className="flex flex-col gap-5">
-        <Skeleton className="h-16 w-full max-w-xl" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
+  if (trip.isPending) return <DetailLoading />;
   if (trip.isError) {
     return (
       <EmptyState
@@ -110,6 +105,50 @@ function Detail({ id, staff }: { id: string; staff: Staff }) {
     );
   }
   return <Loaded trip={trip.data} staff={staff} />;
+}
+
+// The page's own shape in gray: breadcrumb, header and both columns of cards.
+function DetailLoading() {
+  const t = useTranslations("common.ui");
+  const card = (lines: number, key: number) => (
+    <div
+      key={key}
+      className="flex flex-col gap-2.5 rounded-xl border border-border bg-surface p-5 shadow-xs"
+    >
+      <div className="flex h-8 items-center">
+        <Skeleton className="h-4.5 w-32" />
+      </div>
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: lines }, (_, line) => (
+          <Skeleton key={line} className={line % 2 ? "h-4 w-2/3" : "h-4 w-full"} />
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <motion.div {...fade} role="status" className="flex flex-col gap-6">
+      <span className="sr-only">{t("loading")}</span>
+      <Skeleton className="h-3.5 w-36" />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-5.5 w-24 rounded-full" />
+            <Skeleton className="h-5.5 w-16 rounded-full" />
+          </div>
+          <Skeleton className="h-5 w-80 max-w-full" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="size-10 rounded-lg" />
+          <Skeleton className="h-10 w-36 rounded-lg" />
+        </div>
+      </div>
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_22.5rem]">
+        <div className="flex min-w-0 flex-col gap-5">{[6, 5].map(card)}</div>
+        <div className="flex flex-col gap-5">{[3, 2, 3, 2].map(card)}</div>
+      </div>
+    </motion.div>
+  );
 }
 
 function Loaded({ trip, staff }: { trip: TripDetail; staff: Staff }) {
@@ -285,7 +324,14 @@ function Loaded({ trip, staff }: { trip: TripDetail; staff: Staff }) {
         </div>
       </header>
 
-      {banner && <Alert tone={banner.tone} title={banner.text} />}
+      {/* The banner changes with each step (priced, confirmed, ended): it fades across instead of flicking. */}
+      <AnimatePresence initial={false} mode="popLayout">
+        {banner && (
+          <motion.div key={banner.text} {...fade}>
+            <Alert tone={banner.tone} title={banner.text} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_22.5rem]">
         <div className="flex min-w-0 flex-col gap-5">
