@@ -2,10 +2,13 @@
 
 import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
+import { motion } from "motion/react";
 import { Dialog } from "radix-ui";
 import type { Staff } from "@terhal/contracts";
 import { RequireStaff } from "@/components/session/RequireSession";
+import { ease } from "@/components/ui/Motion";
 import { Sidebar } from "./Sidebar";
+import { StaffShellSkeleton } from "./StaffShellSkeleton";
 import { TopBar } from "./TopBar";
 
 // The dashboard's frame: the sidebar on the inline start (full on desktops, an icon rail on tablets, a slide-in menu on
@@ -43,15 +46,25 @@ export function StaffShell({ staff, children }: { staff: Staff; children: ReactN
 
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar staff={staff} onOpenMenu={() => setMenuOpen(true)} />
-        <main className="flex flex-1 flex-col gap-6 p-4 md:p-6 xl:p-8">{children}</main>
+        {/* Fades in over the skeleton's spot once, when the shell first mounts; page changes don't replay it. */}
+        <motion.main
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={ease}
+          className="flex flex-1 flex-col gap-6 p-4 md:p-6 xl:p-8"
+        >
+          {children}
+        </motion.main>
       </div>
     </div>
   );
 }
 
-// Every signed-in page: the guard, then the frame. Pages that need a permission add their own <RequireStaff permission>.
+// Every signed-in page: the guard (a gray frame while it checks the session), then the frame. Pages that need a permission add their own <RequireStaff permission>.
 export function StaffFrame({ children }: { children: ReactNode }) {
   return (
-    <RequireStaff>{(staff) => <StaffShell staff={staff}>{children}</StaffShell>}</RequireStaff>
+    <RequireStaff loading={<StaffShellSkeleton />}>
+      {(staff) => <StaffShell staff={staff}>{children}</StaffShell>}
+    </RequireStaff>
   );
 }
