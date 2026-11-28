@@ -106,6 +106,8 @@
       "ADMIN_NOT_ACTIVE": "This admin isn't active.",
       "HAS_UPCOMING_TRIPS": "It's on trips that are still live. Reassign or finish them first.",
       "DRIVER_PHONE_TAKEN": "Another driver has this phone number.",
+      "DRIVER_NATIONAL_ID_TAKEN": "Another driver has this national ID.",
+      "DRIVER_LICENSE_TAKEN": "Another driver has this licence number.",
       "PLATE_NUMBER_TAKEN": "Another vehicle has this plate number.",
       "OFFICE_NAME_TAKEN": "Another office has this name.",
       "OFFICE_REQUIRES_EXTERNAL": "Only an external driver or vehicle can come through an office.",
@@ -966,6 +968,7 @@
         "open": "Open driver"
       },
       "driverForm": {
+        "licenceExpired": "This licence has expired. You can still save the driver.",
         "addTitle": "Add driver",
         "editTitle": "Edit driver",
         "description": "Drivers get trips assigned and fill in their reports from a link.",

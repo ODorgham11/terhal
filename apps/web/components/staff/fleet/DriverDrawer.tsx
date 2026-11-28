@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { z } from "zod";
 import { CreateDriver, type Driver } from "@terhal/contracts";
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { Form, FormError, FormField } from "@/components/ui/Form";
@@ -22,7 +23,7 @@ import { WholeNumberInput } from "@/components/ui/WholeNumberInput";
 import { call, staffApi } from "@/lib/api";
 import { useZodForm } from "@/lib/forms/useZodForm";
 import { officesQuery } from "../queries";
-import { kindOf } from "./format";
+import { daysUntil, kindOf } from "./format";
 
 const optional = (max: number) => z.string().trim().max(max).optional();
 
@@ -34,7 +35,7 @@ const DriverForm = z
     phone: CreateDriver.shape.phone,
     licenseNumber: CreateDriver.shape.licenseNumber,
     licenseExpiresAt: CreateDriver.shape.licenseExpiresAt,
-    nationalId: optional(30),
+    nationalId: CreateDriver.shape.nationalId,
     kind: z.enum(["internal", "external", "office"]),
     officeId: z.string(),
     notes: optional(500),
@@ -118,11 +119,15 @@ function DriverFields({
     },
   });
   const kind = form.watch("kind");
+  const expiry = form.watch("licenseExpiresAt");
+  // Saving a driver whose licence has run out is allowed (it may be renewed on paper already), but said.
+  const expired = /^\d{4}-\d{2}-\d{2}$/.test(expiry ?? "") && daysUntil(expiry) < 0;
 
   return (
     <Form
       id="driver-form"
       form={form}
+      className="gap-4.5"
       onSubmit={async ({ kind: chosen, officeId: office, nationalId, notes, ...values }) => {
         const json = {
           ...values,
@@ -173,8 +178,28 @@ function DriverFields({
           />
         </FormField>
       </div>
+      <AnimatePresence initial={false}>
+        {expired && (
+          <motion.div
+            key="expired"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={fade.transition}
+            className="-mt-4.5 overflow-hidden"
+          >
+            <div className="pt-3">
+              <Alert tone="warning" title={t("licenceExpired")} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <FormField name="nationalId" label={fields("nationalId")} optional>
-        <WholeNumberInput dir="ltr" {...form.register("nationalId", { setValueAs: blank })} />
+        <WholeNumberInput
+          dir="ltr"
+          maxLength={14}
+          {...form.register("nationalId", { setValueAs: blank })}
+        />
       </FormField>
       <RadioGroup legend={t("kind")}>
         {(["internal", "external", "office"] as const).map((value) => (
@@ -196,9 +221,9 @@ function DriverFields({
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={fade.transition}
-            className="-mt-4 overflow-hidden"
+            className="-mt-4.5 overflow-hidden"
           >
-            <div className="pt-4">
+            <div className="pt-4.5">
               <FormField name="officeId" label={fields("office")}>
                 {offices.data ? (
                   <Select placeholder={t("chooseOffice")} {...form.register("officeId")}>

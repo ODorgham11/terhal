@@ -65,7 +65,7 @@ export function Balance({ amountOwed, className }: { amountOwed: string; classNa
 }
 
 // Days from today (Cairo) to a YYYY-MM-DD date; negative once it's past.
-const daysUntil = (date: string) => {
+export const daysUntil = (date: string) => {
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date());
   return Math.round((Date.parse(date) - Date.parse(today)) / 86_400_000);
 };
