@@ -20,7 +20,6 @@ import {
 } from "@tabler/icons-react";
 import type { DriverTrip } from "@terhal/contracts";
 import logo from "@/assets/logo.png";
-import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { ConfirmDialog } from "@/components/staff/ConfirmDialog";
 import { TripStatusBadge } from "@/components/staff/trips/TripStatusBadge";
 import { useLocalName, useRoute, useTripDates } from "@/components/staff/trips/format";
@@ -55,9 +54,8 @@ export function DriverReport() {
     // White, and light whatever the phone's setting (data-theme="light" opts out of the dark theme in globals.css).
     <div data-theme="light" className="flex min-h-dvh flex-col bg-white">
       <header className="sticky top-0 z-30 border-b border-border bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-xl items-center justify-between gap-4 px-4">
+        <div className="mx-auto flex h-14 w-full max-w-xl items-center gap-4 px-4">
           <Image src={logo} alt="" className="h-7 w-auto" priority />
-          <LocaleSwitcher />
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-4 px-4 py-6">
