@@ -13,6 +13,7 @@ import {
   IconPlus,
   IconRoute,
 } from "@tabler/icons-react";
+import type { z } from "zod";
 import type { CustomerDetail, CustomerTrip } from "@terhal/contracts";
 import { DirectionalIcon } from "@/components/DirectionalIcon";
 import { RequireStaff } from "@/components/session/RequireSession";
@@ -204,7 +205,7 @@ function CustomerTrips({ customerId }: { customerId: string }) {
   );
 }
 
-function TripRow({ trip }: { trip: CustomerTrip }) {
+function TripRow({ trip }: { trip: z.infer<typeof CustomerTrip> }) {
   const t = useTranslations("staff.customers.detail");
   const router = useRouter();
   const { dateTime, price } = useTripDates();
