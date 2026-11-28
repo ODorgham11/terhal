@@ -3,17 +3,17 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
-import { IconCash } from "@tabler/icons-react";
+import { AnimatePresence, motion } from "motion/react";
 import type { Driver } from "@terhal/contracts";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogClose, DialogContent, DialogFooter } from "@/components/ui/Dialog";
 import { Field } from "@/components/ui/Field";
-import { Input } from "@/components/ui/Input";
+import { MoneyInput } from "@/components/ui/MoneyInput";
+import { FadeText, fade } from "@/components/ui/Motion";
 import { Textarea } from "@/components/ui/Textarea";
 import { toast } from "@/components/ui/Toast";
 import { call, staffApi, useErrorMessage } from "@/lib/api";
-import { toLatinDigits } from "@/lib/digits";
 import { Segmented } from "../Segmented";
 import { useBalance } from "./format";
 
@@ -98,7 +98,22 @@ function PaymentForm({ driver, onDone }: { driver: Driver; onDone: () => void })
 
   return (
     <div className="flex flex-col gap-4">
-      {error && <Alert tone="danger" title={error} />}
+      <AnimatePresence initial={false}>
+        {error && (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={fade.transition}
+            className="-mb-4 overflow-hidden"
+          >
+            <div className="pb-4">
+              <Alert tone="danger" title={error} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <Field label={t("kind")}>
         <Segmented
           label={t("kind")}
@@ -130,20 +145,21 @@ function PaymentForm({ driver, onDone }: { driver: Driver; onDone: () => void })
       </Field>
       <Field
         label={fields("amount")}
-        hint={after !== null ? t("after", { balance: balance(after).text }) : undefined}
+        hint={
+          after !== null ? (
+            <FadeText value={t("after", { balance: balance(after).text })} />
+          ) : undefined
+        }
       >
-        <Input
-          inputMode="decimal"
-          autoComplete="off"
+        <MoneyInput
           value={amount}
-          onChange={(event) => setAmount(toLatinDigits(event.target.value).replace(/,/g, ""))}
-          startAdornment={<IconCash aria-hidden className="size-4.5" stroke={1.75} />}
+          onChange={(event) => setAmount(event.target.value.replace(/,/g, ""))}
         />
       </Field>
       <Field
         label={fields("note")}
         optional={kind === "payment"}
-        hint={kind === "adjustment" ? t("noteRequired") : undefined}
+        hint={kind === "adjustment" ? <FadeText value={t("noteRequired")} /> : undefined}
       >
         <Textarea
           rows={3}
