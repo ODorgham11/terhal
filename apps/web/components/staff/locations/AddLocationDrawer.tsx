@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_RADIUS, type Location } from "@terhal/contracts";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { Dialog, DialogClose, DialogContent, DialogFooter } from "@/components/ui/Dialog";
+import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { toast } from "@/components/ui/Toast";
 import { call, staffApi, useErrorMessage } from "@/lib/api";
 import type { PickedLocation } from "../LocationPicker";
@@ -15,7 +15,7 @@ import { LocationFields, useDraftErrors, type LocationDraft } from "./LocationFi
 import { locationsKey, parseNumber, toKm, toMeters } from "./shared";
 
 type Props = {
-  // The place selected in the tree, offered as the parent.
+  // Where it goes, when added from a row's menu; the parent field starts on it.
   parent: PickedLocation | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -23,11 +23,25 @@ type Props = {
 };
 
 // A new district (in a governorate) or area (in a district or a governorate). Governorates come from the seed.
-export function AddLocationDialog({ parent, open, onOpenChange, onAdded }: Props) {
+export function AddLocationDrawer({ parent, open, onOpenChange, onAdded }: Props) {
   const t = useTranslations("staff.locations.add");
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title={t("title")} description={t("description")} className="max-w-xl">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent
+        title={t("title")}
+        description={t("description")}
+        className="max-w-xl"
+        footer={
+          <>
+            <DrawerClose asChild>
+              <Button variant="secondary">{t("cancel")}</Button>
+            </DrawerClose>
+            <Button type="submit" form="add-location-form">
+              {t("submit")}
+            </Button>
+          </>
+        }
+      >
         {open && (
           <AddForm
             parent={parent}
@@ -37,8 +51,8 @@ export function AddLocationDialog({ parent, open, onOpenChange, onAdded }: Props
             }}
           />
         )}
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
@@ -66,14 +80,12 @@ function AddForm({
     radiusKm: toKm(DEFAULT_RADIUS),
   });
   const [tried, setTried] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const errors = draftErrors(draft);
 
   const save = async () => {
     setTried(true);
     if (Object.keys(errors).length > 0 || !draft.parent) return;
-    setBusy(true);
     setError(null);
     try {
       const created = await call(
@@ -96,13 +108,19 @@ function AddForm({
       onAdded(created);
     } catch (failure) {
       setError(errorMessage(failure));
-    } finally {
-      setBusy(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <form
+      id="add-location-form"
+      noValidate
+      className="flex flex-col gap-6"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void save();
+      }}
+    >
       {error && <Alert tone="danger" title={error} />}
       <Segmented
         label={t("kind")}
@@ -114,14 +132,6 @@ function AddForm({
         ]}
       />
       <LocationFields draft={draft} onChange={setDraft} errors={tried ? errors : {}} />
-      <DialogFooter>
-        <DialogClose asChild>
-          <Button variant="secondary">{t("cancel")}</Button>
-        </DialogClose>
-        <Button onClick={save} loading={busy}>
-          {t("submit")}
-        </Button>
-      </DialogFooter>
-    </div>
+    </form>
   );
 }

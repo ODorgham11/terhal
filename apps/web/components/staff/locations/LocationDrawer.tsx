@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { IconExternalLink, IconTrash } from "@tabler/icons-react";
-import type { LocationDetail } from "@terhal/contracts";
+import { IconExternalLink } from "@tabler/icons-react";
+import type { Location, LocationDetail } from "@terhal/contracts";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/Drawer";
 import { Swap } from "@/components/ui/Motion";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Switch } from "@/components/ui/Switch";
@@ -18,10 +19,50 @@ import { useLocalName } from "../trips/format";
 import { LocationFields, useDraftErrors, type LocationDraft } from "./LocationFields";
 import { locationsKey, mapLink, parseNumber, toKm, toMeters } from "./shared";
 
-type Props = { id: string; onDeleted: () => void };
+type Props = {
+  // The row that was opened; its details load in the panel.
+  location: Location | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
 
-// The selected place: its names, parent, centre and radius. Governorates are only shown, since they come from the seed.
-export function LocationEditor({ id, onDeleted }: Props) {
+// A place in a side panel: a district's or an area's names, parent, centre and radius to change, or a governorate's
+// details and its whole-governorate switch (governorates come from the seed, so they're otherwise read only).
+export function LocationDrawer({ location, open, onOpenChange }: Props) {
+  const t = useTranslations("staff.locations");
+  const name = useLocalName();
+  const governorate = location?.locality === "GOVERNORATE";
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent
+        title={location ? name(location) : ""}
+        description={location ? t(`localities.${location.locality}`) : undefined}
+        className="max-w-xl"
+        footer={
+          governorate ? (
+            <DrawerClose asChild>
+              <Button variant="secondary">{t("close")}</Button>
+            </DrawerClose>
+          ) : (
+            <>
+              <DrawerClose asChild>
+                <Button variant="secondary">{t("add.cancel")}</Button>
+              </DrawerClose>
+              <Button type="submit" form="location-form">
+                {t("save")}
+              </Button>
+            </>
+          )
+        }
+      >
+        {open && location && <Details id={location.id} onDone={() => onOpenChange(false)} />}
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+function Details({ id, onDone }: { id: string; onDone: () => void }) {
   const t = useTranslations("staff.locations");
   const detail = useQuery({
     queryKey: [...locationsKey, "detail", id],
@@ -30,31 +71,27 @@ export function LocationEditor({ id, onDeleted }: Props) {
   return (
     <Swap state={detail.isPending ? "loading" : detail.isError ? "error" : "ready"}>
       {detail.isPending ? (
-        <EditorLoading />
+        <DetailsLoading />
       ) : detail.isError ? (
         <Alert tone="danger" title={t("loadFailed")} />
+      ) : detail.data.locality === "GOVERNORATE" ? (
+        <Governorate location={detail.data} />
       ) : (
-        <Editor key={detail.dataUpdatedAt} location={detail.data} onDeleted={onDeleted} />
+        <Editor key={detail.dataUpdatedAt} location={detail.data} onDone={onDone} />
       )}
     </Swap>
   );
 }
 
-// The editor's own shape in gray: its header, then its fields.
-function EditorLoading() {
+// The fields in gray, so the panel doesn't jump when they arrive.
+function DetailsLoading() {
   const t = useTranslations("common.ui");
   return (
-    <div role="status" className="flex flex-col gap-5">
+    <div role="status" className="flex flex-col gap-6">
       <span className="sr-only">{t("loading")}</span>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-2">
-          <Skeleton className="h-5.5 w-40" />
-          <Skeleton className="h-3 w-56" />
-        </div>
-        <Skeleton className="h-8 w-20 rounded-lg" />
-      </div>
+      <Skeleton className="h-3.5 w-56" />
       <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
-        {[0, 1, 2, 3].map((field) => (
+        {[0, 1, 2, 3, 4, 5].map((field) => (
           <div key={field} className="flex flex-col gap-2">
             <Skeleton className="h-3.5 w-24" />
             <Skeleton className="h-10 w-full rounded-lg" />
@@ -62,25 +99,31 @@ function EditorLoading() {
         ))}
       </div>
       <Skeleton className="h-3 w-64 max-w-full" />
-      <div className="flex justify-end gap-2 border-t border-border pt-4">
-        <Skeleton className="h-10 w-20 rounded-lg" />
-        <Skeleton className="h-10 w-20 rounded-lg" />
-      </div>
     </div>
   );
 }
 
-const draftOf = (location: LocationDetail): LocationDraft => {
-  const parent = location.ancestors.at(-1) ?? null;
-  return {
-    nameEn: location.nameEn,
-    nameAr: location.nameAr,
-    parent,
-    latitude: location.center ? String(location.center.latitude) : "",
-    longitude: location.center ? String(location.center.longitude) : "",
-    radiusKm: location.center ? toKm(location.center.radius) : "",
-  };
-};
+// Where it sits: "Cairo › Nasr City".
+function useTrail(location: LocationDetail) {
+  const name = useLocalName();
+  return location.ancestors.map((ancestor) => name(ancestor)).join(" › ");
+}
+
+function Governorate({ location }: { location: LocationDetail }) {
+  const t = useTranslations("staff.locations");
+  return (
+    <div className="flex flex-col gap-6">
+      <p className="text-sm text-muted">{t("governorateReadOnly")}</p>
+      <InfoList>
+        <InfoRow label={t("englishName")}>{location.nameEn}</InfoRow>
+        <InfoRow label={t("arabicName")}>{location.nameAr}</InfoRow>
+        <InfoRow label={t("outline")}>{location.hasBoundary ? t("yes") : t("no")}</InfoRow>
+        <InfoRow label={t("inside")}>{t("places", { count: location.subtreeSize - 1 })}</InfoRow>
+      </InfoList>
+      <FlexibleSwitch location={location} />
+    </div>
+  );
+}
 
 // Whether trips can go to the governorate as a whole. Applies at once, like the other switches.
 function FlexibleSwitch({ location }: { location: LocationDetail }) {
@@ -110,7 +153,7 @@ function FlexibleSwitch({ location }: { location: LocationDetail }) {
   };
 
   return (
-    <div className="border-t border-border pt-4">
+    <div className="border-t border-border pt-5">
       <Switch
         label={t("flexible")}
         description={
@@ -126,27 +169,31 @@ function FlexibleSwitch({ location }: { location: LocationDetail }) {
   );
 }
 
-function Editor({ location, onDeleted }: { location: LocationDetail; onDeleted: () => void }) {
+const draftOf = (location: LocationDetail): LocationDraft => ({
+  nameEn: location.nameEn,
+  nameAr: location.nameAr,
+  parent: location.ancestors.at(-1) ?? null,
+  latitude: location.center ? String(location.center.latitude) : "",
+  longitude: location.center ? String(location.center.longitude) : "",
+  radiusKm: location.center ? toKm(location.center.radius) : "",
+});
+
+function Editor({ location, onDone }: { location: LocationDetail; onDone: () => void }) {
   const t = useTranslations("staff.locations");
   const name = useLocalName();
   const errorMessage = useErrorMessage();
   const draftErrors = useDraftErrors();
   const client = useQueryClient();
+  const trail = useTrail(location);
   const [draft, setDraft] = useState(() => draftOf(location));
   const [tried, setTried] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const governorate = location.locality === "GOVERNORATE";
   const errors = draftErrors(draft);
-  const trail = [...location.ancestors.map((ancestor) => name(ancestor)), name(location)].join(
-    " › ",
-  );
 
   const save = async () => {
     setTried(true);
     if (Object.keys(errors).length > 0 || !draft.parent) return;
-    setBusy(true);
     setError(null);
     try {
       await call(
@@ -166,10 +213,9 @@ function Editor({ location, onDeleted }: { location: LocationDetail; onDeleted: 
       );
       await client.invalidateQueries({ queryKey: locationsKey });
       toast.success(t("saved"));
+      onDone();
     } catch (failure) {
       setError(errorMessage(failure));
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -182,67 +228,46 @@ function Editor({ location, onDeleted }: { location: LocationDetail; onDeleted: 
     );
     await client.invalidateQueries({ queryKey: locationsKey });
     toast.success(t("deleted", { count: location.subtreeSize }));
-    onDeleted();
+    onDone();
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h2 className="text-lg font-semibold text-foreground">{name(location)}</h2>
-          <p className="text-xs text-muted">
-            {trail} · {t(`localities.${location.locality}`)}
-          </p>
-        </div>
-        {!governorate && (
-          <Button variant="ghost" size="sm" onClick={() => setDeleting(true)}>
-            <IconTrash aria-hidden className="size-4" stroke={1.75} />
-            {t("delete")}
-          </Button>
+    <form
+      id="location-form"
+      noValidate
+      className="flex flex-col gap-6"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void save();
+      }}
+    >
+      {trail && <p className="-mt-2 text-xs text-muted">{trail}</p>}
+      {error && <Alert tone="danger" title={error} />}
+      <LocationFields draft={draft} onChange={setDraft} errors={tried ? errors : {}} />
+      <div className="flex flex-col gap-2">
+        {location.center && (
+          <a
+            href={mapLink(location.center.latitude, location.center.longitude)}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-primary transition-colors duration-200 hover:text-primary-hover"
+          >
+            <IconExternalLink aria-hidden className="size-4" stroke={1.75} />
+            {t("viewOnMap")}
+          </a>
         )}
-      </header>
+        <p className="text-xs text-muted">
+          {t("usage", { offices: location.usage.offices, trips: location.usage.upcomingTrips })}
+        </p>
+      </div>
 
-      {governorate ? (
-        <>
-          <p className="text-sm text-muted">{t("governorateReadOnly")}</p>
-          <InfoList>
-            <InfoRow label={t("englishName")}>{location.nameEn}</InfoRow>
-            <InfoRow label={t("arabicName")}>{location.nameAr}</InfoRow>
-            <InfoRow label={t("outline")}>{location.hasBoundary ? t("yes") : t("no")}</InfoRow>
-            <InfoRow label={t("inside")}>
-              {t("places", { count: location.subtreeSize - 1 })}
-            </InfoRow>
-          </InfoList>
-          <FlexibleSwitch location={location} />
-        </>
-      ) : (
-        <>
-          {error && <Alert tone="danger" title={error} />}
-          <LocationFields draft={draft} onChange={setDraft} errors={tried ? errors : {}} />
-          {location.center && (
-            <a
-              href={mapLink(location.center.latitude, location.center.longitude)}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 self-start text-sm text-primary hover:underline"
-            >
-              <IconExternalLink aria-hidden className="size-4" stroke={1.75} />
-              {t("viewOnMap")}
-            </a>
-          )}
-          <p className="text-xs text-muted">
-            {t("usage", { offices: location.usage.offices, trips: location.usage.upcomingTrips })}
-          </p>
-          <div className="flex justify-end gap-2 border-t border-border pt-4">
-            <Button variant="ghost" onClick={() => setDraft(draftOf(location))}>
-              {t("discard")}
-            </Button>
-            <Button onClick={save} loading={busy}>
-              {t("save")}
-            </Button>
-          </div>
-        </>
-      )}
+      <section className="flex flex-col items-start gap-2 rounded-xl border border-border p-4">
+        <h3 className="text-sm font-semibold text-foreground">{t("deleteSection")}</h3>
+        <p className="text-sm text-muted">{t("deleteSectionHint")}</p>
+        <Button type="button" variant="secondary" size="sm" onClick={() => setDeleting(true)}>
+          {t("delete")}
+        </Button>
+      </section>
 
       <ConfirmDialog
         open={deleting}
@@ -257,6 +282,6 @@ function Editor({ location, onDeleted }: { location: LocationDetail; onDeleted: 
         tone="danger"
         onConfirm={remove}
       />
-    </div>
+    </form>
   );
 }

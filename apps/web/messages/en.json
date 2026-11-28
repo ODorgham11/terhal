@@ -872,7 +872,6 @@
       "live": "Live",
       "deletedTab": "Deleted",
       "search": "Search locations",
-      "pick": "Pick a place on the left to see or change it.",
       "noResults": "No places match.",
       "noneDeleted": "Nothing has been deleted.",
       "loadFailed": "Couldn't load this.",
@@ -909,7 +908,6 @@
       "wholeGovernorate": "Whole governorate",
       "viewOnMap": "See the centre on a map",
       "usage": "Used by {offices, plural, =0 {no offices} one {# office} other {# offices}} and {trips, plural, =0 {no upcoming trips} one {# upcoming trip} other {# upcoming trips}}.",
-      "discard": "Discard",
       "save": "Save location",
       "saved": "Location saved",
       "delete": "Delete",
@@ -925,7 +923,20 @@
         "cancel": "Cancel",
         "submit": "Add location",
         "added": "Location added"
-      }
+      },
+      "columns": {
+        "place": "Place",
+        "type": "Type",
+        "radius": "Radius"
+      },
+      "radiusValue": "{km} km",
+      "menu": "Actions for {name}",
+      "open": "Open",
+      "edit": "Edit",
+      "addInside": "Add a place inside",
+      "close": "Close",
+      "deleteSection": "Delete this place",
+      "deleteSectionHint": "It and everything inside it stop matching quotes. It can be restored from Deleted."
     },
     "fleet": {
       "loadingTrips": "Loading trips…",
