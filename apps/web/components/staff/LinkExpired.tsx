@@ -22,7 +22,7 @@ export function LinkExpired({ message }: { message?: string }) {
       description={message ?? t("description")}
     >
       <div className="flex flex-col gap-3">
-        <Button asChild size="lg" className="w-full">
+        <Button asChild className="w-full">
           <Link href={staffRoutes.forgotPassword}>{t("newResetLink")}</Link>
         </Button>
         <Button asChild variant="ghost" className="w-full">

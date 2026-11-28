@@ -364,7 +364,7 @@
     },
     "auth": {
       "logo": "Terhal",
-      "footer": "© {year} Terhal · Staff dashboard",
+      "footer": "© {year} Terhal",
       "signIn": {
         "title": "Sign in",
         "description": "Use your staff email and password.",

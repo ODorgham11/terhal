@@ -67,7 +67,7 @@ function Expired({ message }: { message?: string }) {
         </AuthIcon>
       }
     >
-      <Button asChild variant="secondary" size="lg" className="w-full">
+      <Button asChild variant="secondary" className="w-full">
         <Link href={adminRoutes.signIn}>{t("toSignIn")}</Link>
       </Button>
     </AuthCard>
@@ -142,7 +142,7 @@ function Steps({ token, email }: { token: string; email: string }) {
         <FormField name="confirmPassword" label={fields("confirmPassword")}>
           <PasswordInput autoComplete="new-password" {...form.register("confirmPassword")} />
         </FormField>
-        <Button type="submit" size="lg" className="w-full">
+        <Button type="submit" className="w-full">
           {t("next")}
         </Button>
       </Form>

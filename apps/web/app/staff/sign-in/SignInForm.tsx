@@ -66,7 +66,7 @@ export function SignInForm() {
         >
           <PasswordInput autoComplete="current-password" {...form.register("password")} />
         </FormField>
-        <Button type="submit" size="lg" className="w-full" loading={form.formState.isSubmitting}>
+        <Button type="submit" className="w-full" loading={form.formState.isSubmitting}>
           {t("submit")}
         </Button>
       </Form>

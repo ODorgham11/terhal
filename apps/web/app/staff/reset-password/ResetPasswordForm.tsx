@@ -61,7 +61,7 @@ export function ResetPasswordForm() {
         <FormField name="confirmPassword" label={fields("confirmPassword")}>
           <PasswordInput autoComplete="new-password" {...form.register("confirmPassword")} />
         </FormField>
-        <Button type="submit" size="lg" className="w-full" loading={form.formState.isSubmitting}>
+        <Button type="submit" className="w-full" loading={form.formState.isSubmitting}>
           {t("submit")}
         </Button>
       </Form>

@@ -37,7 +37,7 @@ export function ForgotPasswordForm() {
           ),
         })}
       >
-        <Button asChild size="lg" className="w-full">
+        <Button asChild className="w-full">
           <Link href={staffRoutes.signIn}>{t("backToSignIn")}</Link>
         </Button>
       </AuthCard>
@@ -64,7 +64,7 @@ export function ForgotPasswordForm() {
           />
         </FormField>
         <div className="flex flex-col gap-3">
-          <Button type="submit" size="lg" className="w-full" loading={form.formState.isSubmitting}>
+          <Button type="submit" className="w-full" loading={form.formState.isSubmitting}>
             {t("submit")}
           </Button>
           <Button asChild variant="ghost" className="w-full">

@@ -45,7 +45,6 @@ export function CodeStep({ submitLabel, onSubmit }: Props) {
         />
       </Field>
       <Button
-        size="lg"
         className="w-full"
         loading={busy}
         disabled={code.length !== 6}
