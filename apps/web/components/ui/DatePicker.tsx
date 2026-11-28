@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { Popover } from "radix-ui";
 import { DayPicker, type ChevronProps, type DateRange } from "react-day-picker";
 import { arEG, enGB } from "react-day-picker/locale";
-import { IconCalendar, IconChevronLeft, IconChevronRight, IconX } from "@tabler/icons-react";
+import {
+  IconCalendar,
+  IconChevronLeft,
+  IconChevronRight,
+  IconClock,
+  IconX,
+} from "@tabler/icons-react";
 import { directionOf } from "@/i18n/locales";
 import { cn } from "@/lib/cn";
 import { controlClasses, useFieldControl } from "./Field";
@@ -70,6 +76,7 @@ function Calendar(props: React.ComponentProps<typeof DayPicker>) {
 }
 
 type TriggerProps = {
+  icon?: typeof IconCalendar;
   label: ReactNode;
   placeholder: string;
   empty: boolean;
@@ -79,8 +86,9 @@ type TriggerProps = {
   field: ReturnType<typeof useFieldControl>;
 };
 
-// Looks like the text inputs, so it lines up in a form; opens the calendar.
+// Looks like the text inputs, so it lines up in a form; opens the calendar or the time list.
 function Trigger({
+  icon: Icon = IconCalendar,
   label,
   placeholder,
   empty,
@@ -101,7 +109,7 @@ function Trigger({
           onClear && !empty && "pe-9",
         )}
       >
-        <IconCalendar aria-hidden className="size-4.5 shrink-0 text-muted" stroke={1.75} />
+        <Icon aria-hidden className="size-4.5 shrink-0 text-muted" stroke={1.75} />
         <span className={cn("min-w-0 flex-1 truncate", empty && "text-muted")}>
           {empty ? placeholder : label}
         </span>
@@ -268,5 +276,139 @@ export function DateRangePicker({
         />
       </Content>
     </Popover.Root>
+  );
+}
+
+type TimePickerProps = {
+  // "08:30", 24-hour; "" while none is picked.
+  value: string;
+  onChange: (value: string) => void;
+  // Minutes between the choices: 15 for pickups (they're on the quarter hour), 5 for what a driver reports.
+  step?: number;
+  placeholder?: string;
+  className?: string;
+  id?: string;
+  "aria-label"?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
+};
+
+const pad = (value: number) => String(value).padStart(2, "0");
+const local = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// A time of day: hours and minutes side by side in the calendar's look, so a date and a time read as one control.
+// Picking a minute closes it.
+export function TimePicker({
+  value,
+  onChange,
+  step = 5,
+  placeholder,
+  className,
+  ...props
+}: TimePickerProps) {
+  const t = useTranslations("common.ui");
+  const format = useFormatter();
+  const field = useFieldControl(props);
+  const [open, setOpen] = useState(false);
+  const match = /^(\d{2}):(\d{2})$/.exec(value);
+  const hour = match ? Number(match[1]) : null;
+  const minute = match ? Number(match[2]) : null;
+  const at = (h: number, m: number) => new Date(2000, 0, 1, h, m);
+  const label =
+    hour !== null && minute !== null
+      ? format.dateTime(at(hour, minute), { hour: "numeric", minute: "2-digit", timeZone: local() })
+      : "";
+  const minutes = Array.from({ length: Math.ceil(60 / step) }, (_, index) => index * step);
+  // A stored time off the grid (09:07 with a 5-minute step) still shows, chosen.
+  if (minute !== null && !minutes.includes(minute)) minutes.push(minute);
+  minutes.sort((a, b) => a - b);
+
+  const set = (h: number, m: number, close: boolean) => {
+    onChange(`${pad(h)}:${pad(m)}`);
+    if (close) setOpen(false);
+  };
+
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Trigger
+        icon={IconClock}
+        field={{ ...field, "aria-invalid": props["aria-invalid"] ?? field["aria-invalid"] }}
+        ariaLabel={props["aria-label"]}
+        className={className}
+        empty={!label}
+        label={label}
+        placeholder={placeholder ?? t("pickTime")}
+      />
+      <Content>
+        <div className="flex h-64 gap-1 p-2" dir="ltr">
+          <Column label={t("hours")}>
+            {Array.from({ length: 24 }, (_, h) => (
+              <Choice
+                key={h}
+                selected={h === hour}
+                onClick={() => set(h, minute ?? 0, minute !== null)}
+              >
+                {format.dateTime(at(h, 0), { hour: "numeric", timeZone: local() })}
+              </Choice>
+            ))}
+          </Column>
+          <div aria-hidden className="w-px bg-border" />
+          <Column label={t("minutes")}>
+            {minutes.map((m) => (
+              <Choice key={m} selected={m === minute} onClick={() => set(hour ?? 8, m, true)}>
+                {format.number(m, { minimumIntegerDigits: 2 })}
+              </Choice>
+            ))}
+          </Column>
+        </div>
+      </Content>
+    </Popover.Root>
+  );
+}
+
+// One scrolling list of choices, opened with the chosen one in view.
+function Column({ label, children }: { label: string; children: ReactNode }) {
+  const list = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    list.current
+      ?.querySelector<HTMLElement>("[aria-selected=true]")
+      ?.scrollIntoView({ block: "center" });
+  }, []);
+  return (
+    <div
+      ref={list}
+      role="listbox"
+      aria-label={label}
+      className="flex w-20 flex-col gap-0.5 overflow-y-auto overscroll-contain scroll-smooth pe-1"
+    >
+      {children}
+    </div>
+  );
+}
+
+function Choice({
+  selected,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="option"
+      aria-selected={selected}
+      onClick={onClick}
+      className={cn(
+        "h-9 shrink-0 rounded-lg px-2 text-sm tabular-nums transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        selected
+          ? "bg-primary font-medium text-primary-foreground"
+          : "text-foreground hover:bg-surface-muted",
+      )}
+    >
+      {children}
+    </button>
   );
 }

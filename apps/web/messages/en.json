@@ -21,7 +21,10 @@
       "pickDate": "Pick a date",
       "pickDates": "Any date",
       "country": "Country: {country}",
-      "searchCountries": "Search countries"
+      "searchCountries": "Search countries",
+      "pickTime": "Pick a time",
+      "hours": "Hours",
+      "minutes": "Minutes"
     },
     "fields": {
       "firstName": "First name",

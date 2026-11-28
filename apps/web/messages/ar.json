@@ -21,7 +21,10 @@
       "pickDate": "اختر تاريخًا",
       "pickDates": "أي تاريخ",
       "country": "الدولة: {country}",
-      "searchCountries": "ابحث عن دولة"
+      "searchCountries": "ابحث عن دولة",
+      "pickTime": "اختر وقتًا",
+      "hours": "الساعات",
+      "minutes": "الدقائق"
     },
     "fields": {
       "firstName": "الاسم الأول",
