@@ -156,7 +156,7 @@ function EditForm({ trip, onDone }: { trip: Trip; onDone: () => void }) {
   return (
     <form
       id="edit-trip-form"
-      className="flex flex-col gap-5"
+      className="flex flex-col gap-6"
       onSubmit={(event) => {
         event.preventDefault();
         void save();
@@ -167,7 +167,7 @@ function EditForm({ trip, onDone }: { trip: Trip; onDone: () => void }) {
 
       {details && (
         <>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
             <Field label={t("pickup")}>
               <PlaceField value={pickup} onChange={setPickup} />
             </Field>
@@ -202,7 +202,7 @@ function EditForm({ trip, onDone }: { trip: Trip; onDone: () => void }) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-4">
             <Stepper
               label={t("passengers")}
               min={1}
@@ -226,7 +226,7 @@ function EditForm({ trip, onDone }: { trip: Trip; onDone: () => void }) {
             />
           </div>
           {!fitsCar(car, load) && <p className="text-xs text-danger">{t("tooMuch")}</p>}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
             <Field label={t("passengerName")}>
               <Input
                 autoComplete="off"
@@ -250,7 +250,7 @@ function EditForm({ trip, onDone }: { trip: Trip; onDone: () => void }) {
         </>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
         <Field label={t("price")} hint={trip.totalPrice ? undefined : t("priceHint")}>
           <MoneyInput value={price} onChange={(event) => setPrice(event.target.value)} />
         </Field>

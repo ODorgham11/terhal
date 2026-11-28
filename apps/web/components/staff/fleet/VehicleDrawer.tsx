@@ -108,6 +108,7 @@ function VehicleFields({
   return (
     <Form
       id="vehicle-form"
+      className="gap-6"
       form={form}
       onSubmit={async ({ kind: chosen, officeId: office, year, ...values }) => {
         const json = {
@@ -129,7 +130,7 @@ function VehicleFields({
       }}
     >
       <FormError />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
         <FormField name="make" label={fields("make")}>
           <Input autoComplete="off" placeholder="Toyota" {...form.register("make")} />
         </FormField>
@@ -137,7 +138,7 @@ function VehicleFields({
           <Input autoComplete="off" placeholder="Corolla" {...form.register("model")} />
         </FormField>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-x-4 gap-y-6 sm:grid-cols-3">
         <FormField name="year" label={fields("year")} optional>
           <WholeNumberInput
             {...form.register("year", {

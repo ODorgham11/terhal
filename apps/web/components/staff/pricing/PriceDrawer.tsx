@@ -74,7 +74,7 @@ function PriceFields({ onDone }: { onDone: () => void }) {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {error && <Alert tone="danger" title={error} />}
       <Field label={t("from")}>
         <LocationPicker value={from} onChange={setFrom} />
@@ -82,7 +82,7 @@ function PriceFields({ onDone }: { onDone: () => void }) {
       <Field label={t("to")}>
         <LocationPicker value={to} onChange={setTo} />
       </Field>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
         <Field label={t("class")}>
           <Select
             value={classId}

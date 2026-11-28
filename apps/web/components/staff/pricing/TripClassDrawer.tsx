@@ -83,6 +83,7 @@ function ClassFields({ tripClass, onDone }: { tripClass?: StaffTripClass; onDone
   return (
     <Form
       id="trip-class-form"
+      className="gap-6"
       form={form}
       onSubmit={async (values) => {
         const json = {
@@ -99,7 +100,7 @@ function ClassFields({ tripClass, onDone }: { tripClass?: StaffTripClass; onDone
       }}
     >
       <FormError />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
         <FormField name="nameEn" label={fields("nameEn")}>
           <Input autoComplete="off" dir="ltr" {...form.register("nameEn")} />
         </FormField>

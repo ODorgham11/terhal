@@ -83,6 +83,7 @@ function BrandFields({ brand, onDone }: { brand?: Brand; onDone: () => void }) {
   return (
     <Form
       id="brand-form"
+      className="gap-6"
       form={form}
       onSubmit={async (submitted: BrandForm) => {
         const json = {
@@ -99,7 +100,7 @@ function BrandFields({ brand, onDone }: { brand?: Brand; onDone: () => void }) {
       }}
     >
       <FormError />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2">
         <FormField name="nameEn" label={t("nameEn")}>
           <Input dir="ltr" autoComplete="off" {...form.register("nameEn")} />
         </FormField>
