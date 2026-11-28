@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { motion } from "motion/react";
 import { Dialog } from "radix-ui";
@@ -16,6 +17,8 @@ import { TopBar } from "./TopBar";
 export function StaffShell({ staff, children }: { staff: Staff; children: ReactNode }) {
   const t = useTranslations("staff.nav");
   const [menuOpen, setMenuOpen] = useState(false);
+  // Landing on the overview, the page is simply there: it fills in without fading (see Overview.tsx).
+  const [landedOnOverview] = useState(usePathname() === "/");
 
   return (
     <div className="flex min-h-dvh">
@@ -46,9 +49,10 @@ export function StaffShell({ staff, children }: { staff: Staff; children: ReactN
 
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar staff={staff} onOpenMenu={() => setMenuOpen(true)} />
-        {/* Fades in over the skeleton's spot once, when the shell first mounts; page changes don't replay it. */}
+        {/* Fades in over the skeleton's spot once, when the shell first mounts (except on the overview); page changes
+            don't replay it. */}
         <motion.main
-          initial={{ opacity: 0 }}
+          initial={landedOnOverview ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={ease}
           className="flex flex-1 flex-col gap-6 p-4 md:p-6 xl:p-8"

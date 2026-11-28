@@ -97,7 +97,7 @@ function TripsOverview({ staff }: { staff: Staff }) {
           label={t("kpi.today")}
           value={counts?.today ?? "–"}
           note={counts && t("kpi.tomorrow", { count: counts.tomorrow })}
-          noteLoading={!counts}
+          loading={!counts}
         />
         <StatCard
           icon={IconSteeringWheel}
@@ -105,20 +105,21 @@ function TripsOverview({ staff }: { staff: Staff }) {
           value={counts?.unassigned ?? "–"}
           note={counts && t("kpi.overdue", { count: counts.overdue })}
           noteTone={counts && counts.overdue > 0 ? "danger" : "muted"}
-          noteLoading={!counts}
+          loading={!counts}
         />
         <StatCard
           icon={IconTag}
           label={t("kpi.priceRequests")}
           value={counts?.priceRequests ?? "–"}
           note={t("kpi.priceRequestsNote")}
+          loading={!counts}
         />
         <StatCard
           icon={IconFileText}
           label={t("kpi.awaitingReport")}
           value={counts?.awaitingReport ?? "–"}
           note={counts && t("kpi.inProgress", { count: counts.inProgress })}
-          noteLoading={!counts}
+          loading={!counts}
         />
       </div>
 
@@ -188,7 +189,7 @@ function NeedsAction() {
           </Button>
         }
       />
-      <Swap state={loading ? "loading" : rows.length === 0 ? "empty" : "rows"}>
+      <Swap instant state={loading ? "loading" : rows.length === 0 ? "empty" : "rows"}>
         {loading ? (
           <RowsLoading />
         ) : rows.length === 0 ? (
@@ -261,16 +262,14 @@ function TodaysPickups() {
       <SectionHeader
         title={t("title")}
         action={
-          <AnimatePresence initial={false}>
-            {today.data && (
-              <motion.span {...fade} className="text-sm text-muted">
-                <FadeText value={t("count", { count: trips.length })} />
-              </motion.span>
-            )}
-          </AnimatePresence>
+          today.data && (
+            <span className="text-sm text-muted">
+              <FadeText value={t("count", { count: trips.length })} />
+            </span>
+          )
         }
       />
-      <Swap state={today.isPending ? "loading" : trips.length === 0 ? "empty" : "rows"}>
+      <Swap instant state={today.isPending ? "loading" : trips.length === 0 ? "empty" : "rows"}>
         {today.isPending ? (
           <RowsLoading />
         ) : trips.length === 0 ? (
@@ -333,7 +332,10 @@ function OnTheRoad() {
   return (
     <Card className="p-5">
       <SectionHeader title={t("title")} />
-      <Swap state={trips.isPending ? "loading" : trips.data?.data.length ? "rows" : "empty"}>
+      <Swap
+        instant
+        state={trips.isPending ? "loading" : trips.data?.data.length ? "rows" : "empty"}
+      >
         {trips.isPending ? (
           <RowsLoading />
         ) : trips.data?.data.length ? (
