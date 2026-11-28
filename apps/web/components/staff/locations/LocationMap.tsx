@@ -18,7 +18,7 @@ import {
 // map is left out and the coordinates are typed in.
 const KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
 // Advanced markers need a map ID; Google's demo one works until the company makes its own.
-const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID";
+const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || "DEMO_MAP_ID";
 // Where the map opens for a place with no centre yet: all of Egypt, around Cairo.
 const EGYPT = { lat: 30.0444, lng: 31.2357 };
 
