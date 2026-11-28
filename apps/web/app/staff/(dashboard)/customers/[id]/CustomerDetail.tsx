@@ -1,20 +1,32 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { IconChevronRight, IconPlus } from "@tabler/icons-react";
-import type { CustomerDetail } from "@terhal/contracts";
+import { motion } from "motion/react";
+import {
+  IconCash,
+  IconChevronRight,
+  IconCircleCheck,
+  IconCircleX,
+  IconPlus,
+  IconRoute,
+} from "@tabler/icons-react";
+import type { CustomerDetail, CustomerTrip } from "@terhal/contracts";
 import { DirectionalIcon } from "@/components/DirectionalIcon";
 import { RequireStaff } from "@/components/session/RequireSession";
 import { ListPagination, useCursorList } from "@/components/staff/CursorList";
+import { DetailLoading } from "@/components/staff/DetailLoading";
 import { InfoList, InfoRow, SectionCard } from "@/components/staff/SectionCard";
+import { StatCard } from "@/components/staff/StatCard";
 import { SystemState } from "@/components/staff/SystemState";
 import { CustomerStatusBadge } from "@/components/staff/customers/CustomerStatusBadge";
 import { Phone } from "@/components/staff/fleet/format";
 import { useTripDates } from "@/components/staff/trips/format";
 import { TripStatusBadge } from "@/components/staff/trips/TripStatusBadge";
 import { Button } from "@/components/ui/Button";
+import { AutoHeight, fade } from "@/components/ui/Motion";
 import { Skeleton } from "@/components/ui/Skeleton";
 import {
   Table,
@@ -23,10 +35,11 @@ import {
   TableEmpty,
   TableHead,
   TableHeader,
-  TableLoading,
+  MotionTableRow,
   TableRow,
 } from "@/components/ui/Table";
 import { call, isApiError, staffApi, useErrorMessage } from "@/lib/api";
+import { cn } from "@/lib/cn";
 
 export function CustomerDetailPage({ id }: { id: string }) {
   return (
@@ -42,7 +55,9 @@ function Detail({ id, canBook }: { id: string; canBook: boolean }) {
     queryFn: () => call(staffApi.customers[":id"].$get({ param: { id } })),
     retry: (count, error) => !(isApiError(error) && error.status === 404) && count < 1,
   });
-  if (customer.isPending) return <Skeleton className="h-64 w-full" />;
+  if (customer.isPending) {
+    return <DetailLoading title="w-52" buttons={["w-44"]} main={[2, 5]} side={[4, 1]} />;
+  }
   if (customer.isError) {
     return isApiError(customer.error) && customer.error.status === 404 ? (
       <SystemState kind="notFound" />
@@ -64,14 +79,14 @@ function Loaded({ customer, canBook }: { customer: CustomerDetail; canBook: bool
   const bookable = canBook && customer.status === "ACTIVE";
 
   const stats = [
-    { label: t("trips"), value: customer.tripCount },
-    { label: t("completed"), value: customer.completedCount },
-    { label: t("cancelled"), value: customer.cancelledCount },
-    { label: t("spent"), value: price(customer.totalSpent) },
+    { icon: IconRoute, label: t("trips"), value: format.number(customer.tripCount) },
+    { icon: IconCircleCheck, label: t("completed"), value: format.number(customer.completedCount) },
+    { icon: IconCircleX, label: t("cancelled"), value: format.number(customer.cancelledCount) },
+    { icon: IconCash, label: t("spent"), value: price(customer.totalSpent) },
   ];
 
   return (
-    <>
+    <motion.div {...fade} className="flex flex-col gap-6">
       <nav aria-label={t("breadcrumb")} className="flex items-center gap-2 text-xs">
         <Link href="/customers" className="text-primary hover:underline">
           {nav("customers")}
@@ -86,7 +101,7 @@ function Loaded({ customer, canBook }: { customer: CustomerDetail; canBook: bool
             <h1 className="text-2xl font-semibold text-foreground">{name}</h1>
             <CustomerStatusBadge status={customer.status} />
           </div>
-          <p className="text-base text-muted">
+          <p className="text-sm text-muted">
             {t("since", {
               date: format.dateTime(new Date(customer.createdAt), {
                 month: "short",
@@ -107,17 +122,11 @@ function Loaded({ customer, canBook }: { customer: CustomerDetail; canBook: bool
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex min-w-0 flex-col gap-5">
-          <dl className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="flex flex-col gap-1 rounded-2xl border border-border bg-surface p-4"
-              >
-                <dt className="text-sm text-muted">{stat.label}</dt>
-                <dd className="text-xl font-semibold text-foreground tabular-nums">{stat.value}</dd>
-              </div>
+              <StatCard key={stat.label} icon={stat.icon} label={stat.label} value={stat.value} />
             ))}
-          </dl>
+          </div>
           <CustomerTrips customerId={customer.id} />
         </div>
 
@@ -143,7 +152,7 @@ function Loaded({ customer, canBook }: { customer: CustomerDetail; canBook: bool
           </SectionCard>
         </div>
       </div>
-    </>
+    </motion.div>
   );
 }
 
@@ -152,9 +161,6 @@ const COLUMNS = 5;
 function CustomerTrips({ customerId }: { customerId: string }) {
   const t = useTranslations("staff.customers.detail");
   const errorMessage = useErrorMessage();
-  const { dateTime, price } = useTripDates();
-  // Arrows aren't mirrored in right-to-left text, so Arabic gets the one pointing left.
-  const arrow = useLocale() === "ar" ? "←" : "→";
   const trips = useCursorList(
     ["staff", "customer", customerId, "trips"],
     {},
@@ -162,56 +168,108 @@ function CustomerTrips({ customerId }: { customerId: string }) {
     10,
   );
   const { rows, result } = trips;
+  const stale = result.isPlaceholderData;
 
   return (
-    <div className="flex flex-col gap-3">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("columns.trip")}</TableHead>
-            <TableHead>{t("columns.route")}</TableHead>
-            <TableHead>{t("columns.pickup")}</TableHead>
-            <TableHead>{t("columns.price")}</TableHead>
-            <TableHead>{t("columns.status")}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {result.isPending ? (
-            <TableLoading columns={COLUMNS} />
-          ) : result.isError ? (
-            <TableEmpty columns={COLUMNS} title={errorMessage(result.error)} />
-          ) : rows.length === 0 ? (
-            <TableEmpty columns={COLUMNS} title={t("noTrips")} />
-          ) : (
-            rows.map((trip) => (
-              <TableRow key={trip.id}>
-                <TableCell>
-                  <Link
-                    href={`/trips/${trip.id}`}
-                    dir="ltr"
-                    className="text-sm font-medium text-primary hover:underline"
-                  >
-                    {trip.code}
-                  </Link>
-                </TableCell>
-                <TableCell className="max-w-64 truncate text-sm">
-                  {trip.pickup} {arrow} {trip.dropoff}
-                </TableCell>
-                <TableCell className="text-sm whitespace-nowrap">
-                  {dateTime(trip.pickupDate)}
-                </TableCell>
-                <TableCell className="text-sm whitespace-nowrap tabular-nums">
-                  {trip.totalPrice ? price(trip.totalPrice) : t("priceRequested")}
-                </TableCell>
-                <TableCell>
-                  <TripStatusBadge status={trip.status} />
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+    <SectionCard title={t("trips")}>
+      <AutoHeight>
+        <Table
+          aria-busy={result.isFetching || undefined}
+          className={cn("transition-opacity", stale && "opacity-60")}
+        >
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("columns.trip")}</TableHead>
+              <TableHead>{t("columns.route")}</TableHead>
+              <TableHead>{t("columns.pickup")}</TableHead>
+              <TableHead>{t("columns.price")}</TableHead>
+              <TableHead>{t("columns.status")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {result.isPending ? (
+              <TripRowsLoading />
+            ) : result.isError ? (
+              <TableEmpty columns={COLUMNS} title={errorMessage(result.error)} />
+            ) : rows.length === 0 ? (
+              <TableEmpty columns={COLUMNS} title={t("noTrips")} />
+            ) : (
+              rows.map((trip) => <TripRow key={trip.id} trip={trip} />)
+            )}
+          </TableBody>
+        </Table>
+      </AutoHeight>
       <ListPagination list={trips} />
-    </div>
+    </SectionCard>
+  );
+}
+
+function TripRow({ trip }: { trip: CustomerTrip }) {
+  const t = useTranslations("staff.customers.detail");
+  const router = useRouter();
+  const { dateTime, price } = useTripDates();
+  // Arrows aren't mirrored in right-to-left text, so Arabic gets the one pointing left.
+  const arrow = useLocale() === "ar" ? "←" : "→";
+  const href = `/trips/${trip.id}`;
+  return (
+    <MotionTableRow
+      {...fade}
+      className="cursor-pointer hover:bg-surface-muted/50"
+      onClick={() => router.push(href)}
+    >
+      <TableCell>
+        <Link
+          href={href}
+          dir="ltr"
+          onClick={(event) => event.stopPropagation()}
+          className="font-medium text-primary hover:underline"
+        >
+          {trip.code}
+        </Link>
+      </TableCell>
+      <TableCell className="max-w-64 truncate">
+        {trip.pickup} {arrow} {trip.dropoff}
+      </TableCell>
+      <TableCell className="whitespace-nowrap text-muted">{dateTime(trip.pickupDate)}</TableCell>
+      <TableCell className="whitespace-nowrap tabular-nums">
+        {trip.totalPrice ? price(trip.totalPrice) : t("priceRequested")}
+      </TableCell>
+      <TableCell>
+        <TripStatusBadge status={trip.status} />
+      </TableCell>
+    </MotionTableRow>
+  );
+}
+
+function TripRowsLoading() {
+  const t = useTranslations("common.ui");
+  return (
+    <>
+      {[0, 1, 2, 3].map((row) => (
+        <motion.tr
+          key={row}
+          {...fade}
+          className="border-b border-border"
+          aria-hidden={row > 0 || undefined}
+        >
+          <TableCell>
+            {row === 0 && <span className="sr-only">{t("loading")}</span>}
+            <Skeleton className="h-3.5 w-22" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className={cn("h-3.5", row % 2 ? "w-40" : "w-52")} />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-3.5 w-28" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-3.5 w-20" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-5.5 w-24 rounded-full" />
+          </TableCell>
+        </motion.tr>
+      ))}
+    </>
   );
 }
