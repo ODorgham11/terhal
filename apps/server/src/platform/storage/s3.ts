@@ -1,12 +1,14 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   NoSuchKey,
+  NotFound,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { SIGNED_URL_LIFETIME, assertSafeKey, type Storage } from "./storage";
+import { SIGNED_URL_LIFETIME, assertSafeKey, type SignedUpload, type Storage } from "./storage";
 
 export interface S3StorageOptions {
   // For Cloudflare R2: https://<account id>.r2.cloudflarestorage.com
@@ -79,6 +81,20 @@ export class S3Storage implements Storage {
     }
   }
 
+  async stat(key: string) {
+    assertSafeKey(key);
+    try {
+      const head = await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key }));
+      return {
+        size: head.ContentLength ?? 0,
+        contentType: head.ContentType ?? "application/octet-stream",
+      };
+    } catch (error) {
+      if (error instanceof NotFound || error instanceof NoSuchKey) return null;
+      throw error;
+    }
+  }
+
   async delete(key: string) {
     assertSafeKey(key);
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
@@ -89,5 +105,17 @@ export class S3Storage implements Storage {
     return getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: key }), {
       expiresIn: expiresInSeconds,
     });
+  }
+
+  // A presigned PUT with the content type signed in, so the bucket refuses any other. The size isn't signed (not every
+  // S3-compatible store checks a signed Content-Length); the API checks it, with the bytes, before using the file.
+  async signedUpload(key: string, contentType: string, expiresInSeconds = SIGNED_URL_LIFETIME) {
+    assertSafeKey(key);
+    const url = await getSignedUrl(
+      this.client,
+      new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType }),
+      { expiresIn: expiresInSeconds, signableHeaders: new Set(["content-type"]) },
+    );
+    return { url, headers: { "Content-Type": contentType } } satisfies SignedUpload;
   }
 }

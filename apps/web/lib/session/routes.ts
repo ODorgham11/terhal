@@ -9,6 +9,10 @@ export const adminRoutes = {
 export const staffRoutes = {
   home: "/",
   signIn: "/sign-in",
+  forgotPassword: "/forgot-password",
+  // The emailed links: the API builds them as /reset-password?token= and /invite?token=.
+  resetPassword: "/reset-password",
+  invite: "/invite",
 } as const;
 
 export const siteRoutes = {

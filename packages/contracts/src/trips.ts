@@ -2,7 +2,7 @@ import { z } from "zod";
 import { TripBrand } from "./brands";
 import { CarBody } from "./cars";
 import { Phone } from "./fields";
-import { Pin } from "./locations";
+import { TripPin } from "./locations";
 import { Price } from "./pricing";
 import { TripEventAction } from "./trip-events";
 
@@ -125,8 +125,8 @@ export const IdempotencyHeader = z.object({
 const bookingFields = {
   classId: Id("Class"),
   car: CarBody,
-  pickup: Pin,
-  dropoff: Pin,
+  pickup: TripPin,
+  dropoff: TripPin,
   pickupDate: PickupDate,
   ...Load,
   clientName: PassengerName.optional().meta({
@@ -140,8 +140,8 @@ const bookingFields = {
 
 const ReturnLeg = {
   pickupDate: PickupDate,
-  pickup: Pin.optional().meta({ description: "Defaults to the outbound's drop-off." }),
-  dropoff: Pin.optional().meta({ description: "Defaults to the outbound's pickup." }),
+  pickup: TripPin.optional().meta({ description: "Defaults to the outbound's drop-off." }),
+  dropoff: TripPin.optional().meta({ description: "Defaults to the outbound's pickup." }),
 };
 
 // A customer or a verified guest booking on the site (B1). `expectedPrice` is the price the quote showed: required for a
@@ -443,8 +443,8 @@ export type TripOverview = z.infer<typeof TripOverview>;
 export const UpdateTrip = z
   .object({
     pickupDate: PickupDate.optional(),
-    pickup: Pin.optional(),
-    dropoff: Pin.optional(),
+    pickup: TripPin.optional(),
+    dropoff: TripPin.optional(),
     classId: Id("Class").optional(),
     car: CarBody.optional(),
     passengers: Count("Passengers", 1).optional(),

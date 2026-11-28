@@ -16,7 +16,15 @@
       "notifications": "Notifications",
       "codeDigit": "Digit {position} of {length}",
       "showPassword": "Show password",
-      "hidePassword": "Hide password"
+      "hidePassword": "Hide password",
+      "clear": "Clear",
+      "pickDate": "Pick a date",
+      "pickDates": "Any date",
+      "country": "Country: {country}",
+      "searchCountries": "Search countries",
+      "pickTime": "Pick a time",
+      "hours": "Hours",
+      "minutes": "Minutes"
     },
     "fields": {
       "firstName": "First name",
@@ -28,7 +36,32 @@
       "currentPassword": "Current password",
       "newPassword": "New password",
       "code": "Code",
-      "permissions": "Permissions"
+      "permissions": "Permissions",
+      "confirmPassword": "Confirm password",
+      "totalPrice": "Total price",
+      "note": "Note",
+      "licenseNumber": "Licence number",
+      "licenseExpiresAt": "Licence expiry",
+      "nationalId": "National ID",
+      "office": "Office",
+      "notes": "Notes",
+      "amount": "Amount",
+      "make": "Make",
+      "model": "Model",
+      "year": "Year",
+      "plateNumber": "Plate number",
+      "color": "Colour",
+      "body": "Body",
+      "officeName": "Office name",
+      "contact": "Contact person",
+      "address": "Address",
+      "area": "Area",
+      "nameEn": "English name",
+      "nameAr": "Arabic name",
+      "descriptionEn": "English description",
+      "descriptionAr": "Arabic description",
+      "sortOrder": "Sort order",
+      "class": "Class"
     },
     "session": {
       "unreachableTitle": "We couldn't reach the server",
@@ -73,13 +106,17 @@
       "ADMIN_NOT_ACTIVE": "This admin isn't active.",
       "HAS_UPCOMING_TRIPS": "It's on trips that are still live. Reassign or finish them first.",
       "DRIVER_PHONE_TAKEN": "Another driver has this phone number.",
+      "DRIVER_NATIONAL_ID_TAKEN": "Another driver has this national ID.",
+      "DRIVER_LICENSE_TAKEN": "Another driver has this licence number.",
       "PLATE_NUMBER_TAKEN": "Another vehicle has this plate number.",
       "OFFICE_NAME_TAKEN": "Another office has this name.",
       "OFFICE_REQUIRES_EXTERNAL": "Only an external driver or vehicle can come through an office.",
       "OFFICE_NOT_AVAILABLE": "That office doesn't exist or is archived.",
       "LOCATION_NOT_AVAILABLE": "That place doesn't exist or has been deleted.",
+      "LOCATION_NOT_FLEXIBLE": "That place can't be booked as a whole. Pick a district or an area in it.",
       "IMAGE_TYPE_NOT_ALLOWED": "Upload a JPEG, PNG or WebP image.",
       "IMAGE_LIMIT_REACHED": "This vehicle already has 5 images. Delete one first.",
+      "UPLOAD_INCOMPLETE": "The photo didn't finish uploading. Try again.",
       "LAST_TEAM_MANAGER": "Someone active has to keep the team permission.",
       "ACCOUNT_DELETED": "This account was deleted.",
       "LOCATION_NAME_TAKEN": "Another place in the same parent already has this name.",
@@ -143,16 +180,1605 @@
       "passwordNumber": "Password must contain at least one number.",
       "option": "Please choose one of the options.",
       "invalid": "This value isn't valid.",
-      "invalidField": "{field} isn't valid."
+      "invalidField": "{field} isn't valid.",
+      "passwordsMatch": "The passwords don't match."
     }
   },
   "site": {
     "title": "Terhal"
   },
+  "report": {
+    "title": "Trip report",
+    "logo": "Terhal",
+    "loading": "Opening your trip…",
+    "linkExpires": "This link works until {date}.",
+    "help": "Questions? Call the office.",
+    "states": {
+      "missing": {
+        "title": "This link is incomplete",
+        "body": "Open the link exactly as it was sent to you, or ask the office for a new one."
+      },
+      "invalid": {
+        "title": "This link doesn't work any more",
+        "body": "It may have been replaced by a newer one. Ask the office to send you the latest link."
+      },
+      "expired": {
+        "title": "This link has expired",
+        "body": "Report links work for 7 days after the pickup. Call the office to add your report."
+      },
+      "failed": {
+        "title": "We couldn't open your trip",
+        "body": "Check your connection and try again.",
+        "retry": "Try again"
+      },
+      "limited": {
+        "title": "Too many tries",
+        "body": "Wait a minute, then try again."
+      },
+      "cancelled": {
+        "title": "This trip was cancelled",
+        "body": "There's nothing to report. If you think this is a mistake, call the office."
+      },
+      "pending": {
+        "title": "This trip isn't confirmed yet",
+        "body": "You can start it once the office confirms it."
+      },
+      "confirmed": {
+        "title": "Ready when you are",
+        "body": "Start the trip when you set off for the pickup. You'll fill in the report at the end.",
+        "action": "Start trip",
+        "confirmTitle": "Start the trip?",
+        "confirmBody": "The office will see the trip as on the road.",
+        "done": "Trip started"
+      },
+      "inProgress": {
+        "title": "On the road",
+        "body": "Once the passenger is dropped off and the car is back, end the trip and fill in the report below.",
+        "action": "End trip",
+        "confirmTitle": "End the trip?",
+        "confirmBody": "You'll fill in the report next.",
+        "done": "Trip ended"
+      },
+      "sent": {
+        "title": "Report sent",
+        "body": "Thank you. The office will review it and complete the trip."
+      },
+      "completed": {
+        "title": "Trip completed",
+        "body": "The office reviewed your report and closed the trip."
+      }
+    },
+    "trip": {
+      "pickup": "Pickup",
+      "dropoff": "Drop-off",
+      "when": "Pickup time",
+      "passenger": "Passenger",
+      "message": "Message {name} on WhatsApp",
+      "car": "Car",
+      "load": "{passengers, plural, one {# passenger} other {# passengers}} · {luggage, plural, =0 {no luggage} one {# bag} other {# bags}}",
+      "vehicle": "Vehicle",
+      "notes": "Notes from the office",
+      "reportSent": "Report sent"
+    },
+    "form": {
+      "title": "Your report",
+      "description": "Fill in everything below. Your answers stay on this phone until you send them.",
+      "vehicleOut": "Picking up the car",
+      "theTrip": "The trip",
+      "vehicleBack": "Returning the car",
+      "money": "Cash and expenses",
+      "startedAt": "Picked up the car at",
+      "vehiclePickup": "Where you picked it up",
+      "startMileage": "Odometer at pickup",
+      "pickupAt": "Picked up the passenger at",
+      "dropoffAt": "Dropped them off at",
+      "endedAt": "Returned the car at",
+      "vehicleDropoff": "Where you returned it",
+      "endMileage": "Odometer at return",
+      "km": "km",
+      "cashCollected": "Cash collected from the passenger",
+      "stops": "Stops on the way",
+      "addStop": "Add a stop",
+      "stop": "Stop {number}",
+      "stopAddress": "Where",
+      "stopFrom": "From",
+      "stopTo": "Until",
+      "expenses": "Expenses you paid",
+      "addExpense": "Add an expense",
+      "expense": "Expense {number}",
+      "expenseType": "Type",
+      "amount": "Amount",
+      "notes": "Notes",
+      "addNote": "Add a note",
+      "cancelNote": "Cancel",
+      "remove": "Remove",
+      "date": "Date",
+      "time": "Time",
+      "submit": "Send report",
+      "confirmTitle": "Send your report?",
+      "confirmBody": "Once it's sent you can't change it. The office can still correct it.",
+      "fix": "Some answers need fixing. Check the fields marked in red.",
+      "saved": "Saved on this phone",
+      "errors": {
+        "required": "Fill this in.",
+        "number": "Enter a whole number of kilometres.",
+        "amount": "Enter an amount in pounds, with up to 2 decimals.",
+        "mileage": "This can't be less than the odometer at pickup.",
+        "afterCarTaken": "Can't be before you took the car.",
+        "afterPickup": "Has to be after the pickup and any stops.",
+        "afterDropoff": "Has to be after you dropped the passenger off.",
+        "stopWithinTrip": "A stop has to be between the pickup and the drop-off.",
+        "stopSequence": "Can't start before the stop above it ends.",
+        "stopEnd": "Can't end before the stop starts.",
+        "invalid": "Check this answer."
+      }
+    },
+    "summary": {
+      "title": "What you sent",
+      "sentAt": "Sent {date}",
+      "car": "The car",
+      "out": "Out {time} · {place}",
+      "back": "Back {time} · {place}",
+      "distance": "Distance",
+      "passenger": "With the passenger",
+      "passengerTimes": "{from} – {to}",
+      "cash": "Cash collected",
+      "stops": "{count, plural, =0 {No stops} one {# stop} other {# stops}}",
+      "expenses": "Expenses",
+      "noExpenses": "None"
+    }
+  },
   "staff": {
-    "title": "Staff dashboard"
+    "title": "Staff dashboard",
+    "nav": {
+      "label": "Main navigation",
+      "home": "Terhal, go to the overview",
+      "overview": "Overview",
+      "trips": "Trips",
+      "drivers": "Drivers",
+      "vehicles": "Vehicles",
+      "offices": "Offices",
+      "prices": "Prices",
+      "tripClasses": "Trip classes",
+      "locations": "Locations",
+      "customers": "Customers",
+      "team": "Team",
+      "analytics": "Analytics",
+      "brands": "Brands",
+      "groups": {
+        "fleet": "Fleet",
+        "pricing": "Pricing",
+        "management": "Management"
+      },
+      "unassignedCount": "unassigned",
+      "account": "Your account",
+      "signOut": "Sign out",
+      "notifications": "Notifications"
+    },
+    "topBar": {
+      "openMenu": "Open the menu",
+      "search": "Search trips",
+      "searchPlaceholder": "Search by trip code…",
+      "notifications": "Notifications",
+      "notificationsUnread": "Notifications, {count} unread"
+    },
+    "auth": {
+      "logo": "Terhal",
+      "footer": "© {year} Terhal",
+      "signIn": {
+        "title": "Sign in",
+        "description": "Use your staff email and password.",
+        "forgotPassword": "Forgot password?",
+        "submit": "Sign in"
+      },
+      "forgotPassword": {
+        "title": "Reset your password",
+        "description": "Enter your staff email. If it has an account, we'll send a link to set a new password.",
+        "submit": "Send reset link",
+        "backToSignIn": "Back to sign in",
+        "sentTitle": "Check your email",
+        "sentDescription": "If <email></email> has a staff account, a reset link is on its way. The link works for 1 hour."
+      },
+      "resetPassword": {
+        "title": "Set a new password",
+        "description": "You'll be signed out of your other devices.",
+        "passwordHint": "At least 8 characters, with an uppercase letter, a lowercase letter and a number.",
+        "submit": "Set password",
+        "done": "Password changed. Sign in with your new password."
+      },
+      "invite": {
+        "title": "Join Terhal",
+        "description": "You've been invited to the staff dashboard. Set up your account to continue.",
+        "passwordHint": "At least 8 characters, with an uppercase letter, a lowercase letter and a number.",
+        "submit": "Create account"
+      },
+      "linkExpired": {
+        "title": "This link has expired",
+        "description": "Invitation and reset links only work once and for a limited time. Ask a colleague for a new invitation, or request a new reset link.",
+        "newResetLink": "Request a new reset link",
+        "backToSignIn": "Back to sign in"
+      },
+      "panel": {
+        "title": "Every trip, from booking to the last kilometre.",
+        "body": "Bookings, drivers, prices and payments for Terhal, in one place."
+      }
+    },
+    "overview": {
+      "greeting": {
+        "morning": "Good morning, {name}",
+        "afternoon": "Good afternoon, {name}",
+        "evening": "Good evening, {name}"
+      },
+      "subtitle": "{date} · Here's what needs you today.",
+      "newTrip": "New trip",
+      "kpi": {
+        "today": "Trips today",
+        "tomorrow": "{count, plural, =0 {None booked for tomorrow yet} one {# tomorrow} other {# tomorrow}}",
+        "unassigned": "No driver yet",
+        "overdue": "{count, plural, =0 {None past their pickup time} one {# past its pickup time} other {# past their pickup time}}",
+        "priceRequests": "Need a price",
+        "priceRequestsNote": "Customers waiting on a quote",
+        "awaitingReport": "Awaiting report",
+        "inProgress": "{count, plural, =0 {None on the road right now} one {# trip on the road} other {# trips on the road}}"
+      },
+      "needsAction": {
+        "title": "Needs action",
+        "allTrips": "All trips",
+        "empty": "Nothing needs you right now.",
+        "reasons": {
+          "price": "Needs a price",
+          "confirm": "Waiting for confirmation",
+          "assign": "No driver yet",
+          "report": "Report due"
+        },
+        "actions": {
+          "price": "Propose price",
+          "confirm": "Confirm",
+          "assign": "Assign",
+          "report": "Review"
+        }
+      },
+      "today": {
+        "title": "Today's pickups",
+        "count": "{count, plural, one {# trip} other {# trips}}",
+        "empty": "No pickups today.",
+        "code": "Trip code",
+        "unassigned": "Unassigned"
+      },
+      "onTheRoad": {
+        "title": "On the road now",
+        "detail": "{route} · Pickup {time}",
+        "empty": "No trips on the road."
+      }
+    },
+    "trips": {
+      "status": {
+        "PENDING": "Pending",
+        "CONFIRMED": "Confirmed",
+        "IN_PROGRESS": "In progress",
+        "AWAITING_REPORT": "Awaiting report",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled"
+      },
+      "list": {
+        "title": "Trips",
+        "description": "Every trip, from booking to the driver's completed report.",
+        "export": "Export CSV",
+        "newTrip": "New trip",
+        "statusFilter": "Filter by status",
+        "all": "All",
+        "search": "Search trips",
+        "searchPlaceholder": "Search by code, passenger or phone",
+        "from": "Pickups from",
+        "to": "Pickups until",
+        "office": "Partner office",
+        "allOffices": "All offices",
+        "unassignedOnly": "Unassigned only",
+        "dates": "Pickup dates",
+        "anyDate": "Any pickup date",
+        "loading": "Loading trips…",
+        "empty": "No trips match.",
+        "emptyHint": "Try another status or clear the filters.",
+        "showing": "Showing {first}–{last}",
+        "rowActions": "Actions for {code}",
+        "open": "Open trip",
+        "copyCode": "Copy code",
+        "copied": "Copied {code}.",
+        "routeDetail": "{class} · {car} · {passengers, plural, one {# passenger} other {# passengers}}",
+        "columns": {
+          "code": "Code",
+          "status": "Status",
+          "route": "Route",
+          "pickup": "Pickup time",
+          "booker": "Booker",
+          "price": "Price",
+          "assignment": "Assignment",
+          "actions": "Actions"
+        }
+      },
+      "car": {
+        "SEDAN": "Sedan",
+        "SUV": "SUV",
+        "MINIVAN": "Minivan",
+        "VAN": "Van"
+      },
+      "booker": {
+        "CUSTOMER": "Customer",
+        "GUEST": "Guest",
+        "STAFF": "Staff"
+      },
+      "assignment": {
+        "partnerOffice": "Partner office",
+        "noDriver": "No driver yet",
+        "unassigned": "Unassigned"
+      },
+      "price": {
+        "needsPrice": "Needs a price",
+        "proposed": "Proposed, waiting"
+      },
+      "detail": {
+        "breadcrumb": "Breadcrumb",
+        "notFound": "We couldn't find that trip.",
+        "backToTrips": "Back to trips",
+        "brandHint": "The brand the customer's messages are sent under",
+        "terhal": "Terhal",
+        "moreActions": "More actions",
+        "copied": "Code copied",
+        "cancel": "Cancel",
+        "loading": "Loading…",
+        "returnTripUnlink": "Unlink",
+        "actions": {
+          "proposePrice": "Propose a price",
+          "changePrice": "Change the price",
+          "confirm": "Confirm trip",
+          "assign": "Assign",
+          "changeAssignment": "Change assignment",
+          "start": "Start trip",
+          "end": "End trip",
+          "unstart": "Undo start",
+          "complete": "Review report & complete",
+          "reopen": "Reopen trip",
+          "copyCode": "Copy code",
+          "cancel": "Cancel trip",
+          "reportLink": "Report link",
+          "edit": "Edit trip"
+        },
+        "done": {
+          "confirm": "Trip confirmed",
+          "start": "Trip started",
+          "end": "Trip ended. Waiting for the driver's report.",
+          "unstart": "Start undone",
+          "complete": "Trip completed",
+          "reopen": "Trip reopened"
+        },
+        "banners": {
+          "priceRequested": "The booker asked for a price. Propose one so they can accept it.",
+          "priceProposed": "A price was proposed. Waiting for the booker to accept or decline it.",
+          "unassigned": "This trip is confirmed but has no driver, vehicle or office yet.",
+          "reportSent": "The driver sent their report. Check the cash collected and the expenses, then complete the trip to write it to their ledger.",
+          "reportMissing": "Waiting for the driver's report. Send them the report link if they don't have it.",
+          "officeTrip": "A partner office ran this trip, so it needs no report. Complete it when you're ready.",
+          "cancelled": "This trip was cancelled."
+        },
+        "route": {
+          "title": "Route & details",
+          "pickup": "Pickup",
+          "dropoff": "Drop-off",
+          "pickupTime": "Pickup time",
+          "class": "Class",
+          "passengers": "Passengers",
+          "luggage": "Luggage",
+          "noLuggage": "None",
+          "luggageDetail": "{large} large · {medium} medium · {small} small",
+          "office": "Office",
+          "passenger": "Passenger",
+          "notes": "Booker's notes"
+        },
+        "report": {
+          "title": "Driver report",
+          "sent": "Sent {date}",
+          "cash": "Cash collected",
+          "driverFee": "Driver fee",
+          "netOwedByDriver": "Net owed by driver",
+          "netOwedToDriver": "Net owed to driver",
+          "started": "Started",
+          "ended": "Ended",
+          "distance": "Distance",
+          "km": "{km} km",
+          "stops": "Stops",
+          "expenses": "Expenses",
+          "totalExpenses": "Total expenses",
+          "netFormula": "Net = cash collected − driver fee − expenses the driver paid.",
+          "expenseTypes": {
+            "INTERCITY_TOLL": "Intercity toll",
+            "FUEL": "Fuel",
+            "CAR_MAINTENANCE": "Car maintenance",
+            "DRIVER_FEE": "Driver fee",
+            "OFFICE_FEE": "Office fee",
+            "OTHER": "Other"
+          }
+        },
+        "activity": {
+          "title": "Activity",
+          "system": "System",
+          "viaReportLink": "via the report link",
+          "events": {
+            "created": "Trip booked",
+            "updated": "Trip details changed",
+            "priceProposed": "Price proposed",
+            "priceAccepted": "Price accepted",
+            "priceDeclined": "Price declined",
+            "confirmed": "Trip confirmed",
+            "assigned": "Assigned",
+            "unassigned": "Assignment cleared",
+            "started": "Trip started",
+            "startUndone": "Start undone",
+            "ended": "Trip ended",
+            "completed": "Trip completed",
+            "reopened": "Trip reopened",
+            "cancelled": "Trip cancelled",
+            "reportLinkIssued": "Report link sent",
+            "reportSubmitted": "Report submitted",
+            "reportEdited": "Report edited",
+            "paymentRecorded": "Payment recorded",
+            "linked": "Return trip linked",
+            "unlinked": "Return trip unlinked"
+          }
+        },
+        "booker": {
+          "title": "Booker",
+          "phone": "Phone",
+          "email": "Email"
+        },
+        "price": {
+          "title": "Price",
+          "requested": "Price requested",
+          "paid": "Paid",
+          "states": {
+            "QUOTED": "From the price list",
+            "REQUESTED": "No price yet: the booker asked for one",
+            "PROPOSED": "Proposed, waiting for the booker",
+            "ACCEPTED": "Proposed and accepted"
+          },
+          "payment": {
+            "CASH_TO_DRIVER": "Cash to the driver",
+            "CASH_AT_OFFICE": "Cash at the office",
+            "TRANSFER": "Bank transfer",
+            "CARD": "Card"
+          }
+        },
+        "assignment": {
+          "title": "Assignment",
+          "change": "Change",
+          "assign": "Assign"
+        },
+        "returnTrip": {
+          "title": "Return trip",
+          "outboundTitle": "Outbound trip",
+          "none": "No return trip linked.",
+          "link": "Link a return trip",
+          "unlink": "Unlink"
+        },
+        "proposePrice": {
+          "title": "Propose a price",
+          "description": "For {route}. The booker accepts or declines it, unless staff booked the trip.",
+          "totalPrice": "Total price",
+          "note": "Note",
+          "noteHint": "The booker sees this with the price.",
+          "saveToPricing": "Save it to the price list",
+          "saveToPricingHint": "Later bookings of this route are priced at once.",
+          "submit": "Propose price"
+        },
+        "cancelTrip": {
+          "title": "Cancel {code}?",
+          "description": "The booker is told. A cancelled trip can't be restarted.",
+          "reason": "Reason",
+          "note": "Note",
+          "keep": "Keep trip",
+          "submit": "Cancel trip",
+          "reasons": {
+            "CUSTOMER_REQUEST": "The customer asked",
+            "NO_SHOW": "The passenger didn't show up",
+            "NO_VEHICLE": "No vehicle available",
+            "DUPLICATE": "Duplicate booking",
+            "OTHER": "Something else"
+          }
+        },
+        "assign": {
+          "title": "Assign {code}",
+          "description": "Only drivers who are free and vehicles big enough for the trip are listed.",
+          "who": "Who runs it",
+          "internal": "Our driver and vehicle",
+          "office": "A partner office",
+          "officeHint": "Their driver and vehicle are optional.",
+          "officeLabel": "Office",
+          "chooseOffice": "Choose an office",
+          "driver": "Driver",
+          "chooseDriver": "Choose a driver",
+          "vehicle": "Vehicle",
+          "chooseVehicle": "Choose a vehicle",
+          "vehicleHint": "The trip's car or larger.",
+          "busy": "has a trip close by",
+          "conflictTitle": "Already on a trip within 3 hours",
+          "acknowledge": "Assign anyway",
+          "conflictRefused": "That driver or vehicle has a trip close by. Tick “Assign anyway” to go ahead.",
+          "submit": "Save assignment"
+        },
+        "reportLink": {
+          "title": "Report link",
+          "description": "Send it to {driver}. They fill their report in from it, no sign-in needed.",
+          "link": "Link",
+          "expires": "Works until {date}",
+          "copy": "Copy link",
+          "copied": "Link copied",
+          "whatsapp": "Send on WhatsApp",
+          "regenerate": "New link",
+          "regenerated": "New link made. The old one no longer works."
+        },
+        "linkReturn": {
+          "title": "Link a return trip",
+          "description": "Pick the trip that brings the passengers of {code} back.",
+          "search": "Find the trip",
+          "searchPlaceholder": "Code, passenger or phone",
+          "results": "Trips found",
+          "noResults": "No trips match.",
+          "submit": "Link trip"
+        },
+        "confirmTrip": {
+          "title": "Confirm {code}?",
+          "description": "The booker is told their trip is confirmed."
+        },
+        "startTrip": {
+          "title": "Start this trip?",
+          "description": "Do this when the driver sets off."
+        },
+        "endTrip": {
+          "title": "End this trip?",
+          "description": "The trip then waits for the driver's report."
+        },
+        "unstartTrip": {
+          "title": "Undo the start?",
+          "description": "For a trip started by mistake: it goes back to confirmed."
+        },
+        "completeTrip": {
+          "title": "Complete this trip?",
+          "description": "The driver's fee and the expenses they paid, less the cash they collected, are written to their ledger.",
+          "officeDescription": "The trip is marked completed."
+        },
+        "reopenTrip": {
+          "title": "Reopen this trip?",
+          "description": "It goes back to awaiting report, and what completing wrote to the driver's ledger is reversed."
+        },
+        "unlinkTrip": {
+          "title": "Unlink the return trip?",
+          "description": "Both trips stay as they are, just no longer paired."
+        }
+      },
+      "edit": {
+        "title": "Edit {code}",
+        "description": "Only what you change is saved, and each change is recorded on the trip.",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "saved": "Trip saved",
+        "locked": "The trip has started, so only its price, payment and brand can change now.",
+        "incomplete": "Pick both places and a pickup date and time.",
+        "badPrice": "Enter a price like 1250 or 1250.50.",
+        "pickup": "Pickup",
+        "dropoff": "Drop-off",
+        "date": "Pickup date",
+        "time": "Pickup time",
+        "cairo": "Cairo time.",
+        "car": "Car",
+        "passengers": "Passengers",
+        "large": "Large bags",
+        "medium": "Medium bags",
+        "small": "Small bags",
+        "tooMuch": "That load doesn't fit this car.",
+        "passengerName": "Passenger name",
+        "passengerPhone": "Passenger phone",
+        "noRepricing": "Changing the route, class or car doesn't change the price: set it below if it should.",
+        "price": "Price",
+        "priceHint": "No price yet. Setting one here skips asking the booker.",
+        "payment": "Payment",
+        "noPayment": "Not set",
+        "paid": "Paid",
+        "brand": "Send messages under"
+      }
+    },
+    "list": {
+      "showing": "Showing {first}–{last}",
+      "exportCsv": "Export CSV",
+      "active": "Active",
+      "archived": "Archived",
+      "actions": "Actions",
+      "none": "—"
+    },
+    "common": {
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saved": "Saved",
+      "edit": "Edit",
+      "archive": "Archive",
+      "restore": "Restore",
+      "archivedToast": "Archived",
+      "restoredToast": "Restored",
+      "delete": "Delete",
+      "loading": "Loading…",
+      "allOffices": "All offices",
+      "internal": "Internal",
+      "external": "External",
+      "office": "Office",
+      "yes": "Yes",
+      "no": "No",
+      "copied": "Copied"
+    },
+    "system": {
+      "retry": "Try again",
+      "home": "Go to overview",
+      "trips": "Go to trips",
+      "forbidden": {
+        "eyebrow": "403",
+        "title": "You don't have access to this",
+        "description": "Ask an admin on your team to give you access.",
+        "section": "{section} is turned off for your account. Ask an admin on your team to give you access."
+      },
+      "notFound": {
+        "eyebrow": "404",
+        "title": "We couldn't find that page",
+        "description": "The trip or page may have been removed, or the link has a typo."
+      },
+      "error": {
+        "eyebrow": "Something went wrong",
+        "title": "This page didn't load",
+        "description": "It's on our side, not yours. Try again in a moment; if it keeps happening, tell your admin."
+      }
+    },
+    "permissions": {
+      "trips": {
+        "name": "Trips",
+        "description": "Book, price, assign, cancel and complete trips."
+      },
+      "fleet": {
+        "name": "Fleet",
+        "description": "Drivers, vehicles, offices and driver payments."
+      },
+      "pricing": {
+        "name": "Pricing",
+        "description": "Prices, trip classes and locations."
+      },
+      "customers": {
+        "name": "Customers",
+        "description": "See customer accounts and their trips."
+      },
+      "team": {
+        "name": "Team",
+        "description": "Invite staff, change their access and manage brands."
+      },
+      "analytics": {
+        "name": "Analytics",
+        "description": "Revenue, costs and monthly reports."
+      }
+    },
+    "locationPicker": {
+      "clear": "Clear",
+      "placeholder": "Search an area, district or governorate",
+      "searching": "Searching…",
+      "noResults": "No places match."
+    },
+    "locations": {
+      "localities": {
+        "GOVERNORATE": "Governorate",
+        "DISTRICT": "District",
+        "AREA": "Area"
+      },
+      "title": "Locations",
+      "description": "Governorates, districts and areas. Each has a centre and a radius used to match pickup addresses.",
+      "addLocation": "Add location",
+      "live": "Live",
+      "deletedTab": "Deleted",
+      "search": "Search locations",
+      "noResults": "No places match.",
+      "noneDeleted": "Nothing has been deleted.",
+      "loadFailed": "Couldn't load this.",
+      "noChildren": "Nothing inside yet.",
+      "expand": "Show what's inside",
+      "collapse": "Hide what's inside",
+      "parent": "Parent",
+      "parentHint": "A district goes in a governorate; an area in a district or a governorate.",
+      "radius": "Radius",
+      "radiusHint": "Up to 100 km.",
+      "km": "km",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "errors": {
+        "name": "Use 2 to 80 letters.",
+        "parent": "Pick where it sits.",
+        "latitude": "Enter a latitude between -90 and 90.",
+        "longitude": "Enter a longitude between -180 and 180.",
+        "radius": "Enter 0.1 to 100 km."
+      },
+      "englishName": "English name",
+      "arabicName": "Arabic name",
+      "outline": "Has an outline",
+      "inside": "Inside it",
+      "places": "{count, plural, =0 {No places} one {# place} other {# places}}",
+      "yes": "Yes",
+      "no": "No",
+      "governorateReadOnly": "Governorates and their outlines come from the seed and can't be changed here. Add districts and areas inside them.",
+      "flexible": "Book the whole governorate",
+      "flexibleHint": "Trips can go to {name} as a whole, with the exact spot agreed with the client. It then shows in the trip pickers.",
+      "flexibleNoOutline": "It needs its outline first, to pin its trips on a map.",
+      "flexibleOn": "{name} can be booked as a whole",
+      "flexibleOff": "{name} is booked by its districts and areas only",
+      "wholeGovernorate": "Whole governorate",
+      "viewOnMap": "Open in Google Maps",
+      "usage": "Used by {offices, plural, =0 {no offices} one {# office} other {# offices}} and {trips, plural, =0 {no upcoming trips} one {# upcoming trip} other {# upcoming trips}}.",
+      "save": "Save location",
+      "saved": "Location saved",
+      "delete": "Delete",
+      "restore": "Restore",
+      "deleteTitle": "Delete {name}?",
+      "deleteDescription": "{count, plural, one {Only this place is deleted.} other {This place and # places inside it are deleted.}} {offices, plural, =0 {} one {# office points at it.} other {# offices point at it.}} {trips, plural, =0 {} one {# upcoming trip keeps its pickup or drop-off here.} other {# upcoming trips keep their pickup or drop-off here.}} It stops matching quotes; restoring it brings it all back.",
+      "deleted": "{count, plural, one {Location deleted} other {# locations deleted}}",
+      "restored": "{count, plural, one {Location restored} other {# locations restored}}",
+      "add": {
+        "title": "Add location",
+        "description": "A district or an area inside an existing place.",
+        "kind": "Kind",
+        "cancel": "Cancel",
+        "submit": "Add location",
+        "added": "Location added"
+      },
+      "columns": {
+        "place": "Place",
+        "type": "Type",
+        "radius": "Radius"
+      },
+      "radiusValue": "{km} km",
+      "menu": "Actions for {name}",
+      "open": "Open",
+      "edit": "Edit",
+      "addInside": "Add a place inside",
+      "close": "Close",
+      "deleteSection": "Delete this place",
+      "deleteSectionHint": "It and everything inside it stop matching quotes. It can be restored from Deleted.",
+      "map": {
+        "unavailable": "The map isn't set up yet: type the centre's coordinates below.",
+        "pin": "Drag to move the centre",
+        "hint": "Drag the pin or click the map to move the centre. The circle is the radius.",
+        "hintEmpty": "Click the map to drop the pin at the centre."
+      }
+    },
+    "fleet": {
+      "loadingTrips": "Loading trips…",
+      "noUpcoming": "No trips coming up.",
+      "kinds": {
+        "internal": "Internal",
+        "external": "Freelance",
+        "office": "Office"
+      },
+      "balance": {
+        "settled": "Settled",
+        "owed": "Owed {amount}",
+        "owes": "Owes {amount}"
+      },
+      "licence": {
+        "none": "No licence on file",
+        "expired": "Expired",
+        "expiresIn": "Expires in {days, plural, one {# day} other {# days}}",
+        "valid": "Valid",
+        "until": "Until {date}"
+      },
+      "drivers": {
+        "title": "Drivers",
+        "description": "Internal drivers, freelancers and partner-office drivers.",
+        "add": "Add driver",
+        "search": "Search name, phone or licence",
+        "type": "Type",
+        "allTypes": "All types",
+        "externalOrOffice": "Freelance or office",
+        "licenceExpiring": "Licence expiring",
+        "columns": {
+          "driver": "Driver",
+          "type": "Type",
+          "office": "Office",
+          "licence": "Licence",
+          "balance": "Balance"
+        },
+        "empty": "No drivers here",
+        "emptyHint": "Add a driver, or change the filters.",
+        "menu": "Actions for {name}",
+        "open": "Open driver"
+      },
+      "driverForm": {
+        "licenceExpired": "This licence has expired. You can still save the driver.",
+        "addTitle": "Add driver",
+        "editTitle": "Edit driver",
+        "description": "Drivers get trips assigned and fill in their reports from a link.",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add driver",
+        "saved": "Driver saved",
+        "added": "Driver added",
+        "kind": "Works as",
+        "kindHints": {
+          "internal": "On the company's payroll.",
+          "external": "A freelancer paid per trip.",
+          "office": "Works through a partner office."
+        },
+        "chooseOffice": "Choose an office"
+      },
+      "payment": {
+        "title": "Record a payment",
+        "kind": "Kind",
+        "kinds": {
+          "payment": "Payment",
+          "adjustment": "Adjustment"
+        },
+        "direction": "Direction",
+        "directions": {
+          "driverPaidUs": "Driver paid us",
+          "wePaidDriver": "We paid driver",
+          "raise": "We owe more",
+          "lower": "We owe less"
+        },
+        "after": "Balance after: {balance}",
+        "noteRequired": "Say why the balance is being corrected.",
+        "notePlaceholder": "e.g. Handed in at the Nasr City office.",
+        "cancel": "Cancel",
+        "record": "Record",
+        "recorded": "Recorded"
+      },
+      "driver": {
+        "breadcrumb": "Breadcrumb",
+        "archived": "Archived",
+        "subtitle": "{kind} driver · Joined {date}",
+        "recordPayment": "Record payment",
+        "upcoming": "Upcoming trips",
+        "notes": "Notes",
+        "balance": {
+          "title": "Balance",
+          "settled": "Nothing owed either way",
+          "companyOwes": "The company owes {name}",
+          "driverOwes": "{name} owes the company",
+          "settledHint": "The ledger is even.",
+          "owedHint": "Fees and expenses are more than the cash they collected. Record a payment when they're paid.",
+          "owesHint": "They collected more cash than their fees and expenses. Record a payment when they hand it in.",
+          "cashCollected": "Cash collected",
+          "earned": "Fees + expenses",
+          "payments": "Payments"
+        },
+        "ledger": {
+          "title": "Ledger",
+          "date": "Date",
+          "entry": "Entry",
+          "trip": "Trip",
+          "by": "By",
+          "amount": "Amount",
+          "empty": "No entries yet.",
+          "hint": "Plus means the company owes {name} more; minus means less. Trip entries are added when a trip is completed.",
+          "system": "System",
+          "entries": {
+            "tripFee": "Trip fee",
+            "expenses": "Expenses reimbursed",
+            "cashCollected": "Cash collected",
+            "payout": "Paid to driver",
+            "handedIn": "Cash handed in",
+            "adjustment": "Adjustment"
+          },
+          "viewAll": "View all",
+          "pageTitle": "{name}'s ledger"
+        },
+        "profile": {
+          "title": "Profile",
+          "noOffice": "None"
+        },
+        "month": {
+          "title": "This month",
+          "trips": "Trips completed",
+          "kilometres": "Kilometres",
+          "fees": "Fees earned"
+        }
+      },
+      "vehicles": {
+        "title": "Vehicles",
+        "description": "Company cars, freelancers' cars and partner-office cars.",
+        "add": "Add vehicle",
+        "search": "Search make, model or plate",
+        "body": "Body",
+        "allBodies": "All bodies",
+        "type": "Type",
+        "allTypes": "All types",
+        "externalOrOffice": "Freelance or office",
+        "columns": {
+          "vehicle": "Vehicle",
+          "body": "Body",
+          "type": "Type",
+          "office": "Office",
+          "photos": "Photos"
+        },
+        "empty": "No vehicles here",
+        "emptyHint": "Add a vehicle, or change the filters.",
+        "noPhotos": "No photos yet",
+        "photoCount": "{count, plural, one {# photo} other {# photos}}",
+        "menu": "Actions for {name}",
+        "open": "Open vehicle"
+      },
+      "vehicleForm": {
+        "addTitle": "Add vehicle",
+        "editTitle": "Edit vehicle",
+        "description": "Trips booked for this body or a smaller one can be assigned to it.",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add vehicle",
+        "saved": "Vehicle saved",
+        "added": "Vehicle added",
+        "bodyHint": "Decides how many passengers and bags it takes.",
+        "kind": "Belongs to",
+        "chooseOffice": "Choose an office"
+      },
+      "vehicle": {
+        "breadcrumb": "Breadcrumb",
+        "archived": "Archived",
+        "trips": "Upcoming trips",
+        "details": "Details",
+        "noOffice": "None",
+        "fits": "Fits",
+        "passengers": "Passengers",
+        "largeBags": "Large bags",
+        "mediumBags": "Medium bags",
+        "smallBags": "Small bags",
+        "alsoServes": "It can also take trips booked as {bodies}.",
+        "photos": {
+          "title": "Photos",
+          "count": "{count} of {limit}",
+          "photoAlt": "Photo {number}",
+          "cover": "Cover photo",
+          "makeCover": "Make cover",
+          "remove": "Remove photo",
+          "removed": "Photo removed",
+          "none": "No photos yet",
+          "moveEarlier": "Move earlier",
+          "moveLater": "Move later",
+          "uploading": "Uploading…",
+          "add": "Add photos",
+          "hint": "The first photo is the cover. JPEG, PNG or WebP, up to 5 MB each, {limit} photos at most.",
+          "wrongType": "{name} isn't a JPEG, PNG or WebP image.",
+          "tooBig": "{name} is larger than 5 MB.",
+          "added": "{count, plural, one {Photo added} other {# photos added}}",
+          "progress": "Uploading {name}, {percent}%"
+        }
+      },
+      "offices": {
+        "title": "Partner offices",
+        "description": "Companies that take trips we hand to them, with their own drivers and cars.",
+        "add": "Add office",
+        "search": "Search offices",
+        "columns": {
+          "office": "Office",
+          "contact": "Contact",
+          "area": "Area",
+          "address": "Address"
+        },
+        "empty": "No offices here",
+        "emptyHint": "Add a partner office to hand trips to.",
+        "menu": "Actions for {name}",
+        "open": "Open office"
+      },
+      "officeForm": {
+        "addTitle": "Add office",
+        "editTitle": "Edit office",
+        "description": "Trips can be handed to a partner office, with or without one of its drivers.",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add office",
+        "saved": "Office saved",
+        "added": "Office added",
+        "areaHint": "Used to suggest the nearest office for a pickup."
+      },
+      "office": {
+        "breadcrumb": "Breadcrumb",
+        "archived": "Archived",
+        "since": "Partner since {date}",
+        "liveTrips": "Live trips",
+        "noTrips": "No live trips with this office.",
+        "noDriver": "Driver not picked yet",
+        "drivers": "Drivers",
+        "addDriver": "Add driver",
+        "noDrivers": "No drivers yet.",
+        "vehicles": "Vehicles",
+        "addVehicle": "Add vehicle",
+        "noVehicles": "No vehicles yet.",
+        "contactTitle": "Contact",
+        "notes": "Notes"
+      }
+    },
+    "pricing": {
+      "title": "Prices",
+      "description": "Fixed prices per route, class and car. A quote uses the most specific row: an area beats its district, a district beats its governorate.",
+      "importCsv": "Import CSV",
+      "addPrice": "Add price",
+      "search": "Search a place",
+      "fromAnywhere": "From",
+      "toAnywhere": "To",
+      "allClasses": "All classes",
+      "allCars": "All cars",
+      "selected": "{count} selected",
+      "clearSelection": "Clear",
+      "changePrice": "Change price",
+      "delete": "Delete",
+      "selectPage": "Select every price on this page",
+      "selectRow": "Select {from} to {to}",
+      "columns": {
+        "from": "From",
+        "to": "To",
+        "class": "Class",
+        "car": "Car",
+        "price": "Price",
+        "updated": "Updated"
+      },
+      "empty": "No prices here",
+      "emptyHint": "Add a price, import a CSV, or change the filters.",
+      "deletedPlace": "deleted",
+      "inactive": "Inactive",
+      "rowMenu": "Price actions",
+      "deleted": "{count, plural, one {Price deleted} other {# prices deleted}}",
+      "deleteTitle": "{count, plural, one {Delete this price?} other {Delete # prices?}}",
+      "deleteDescription": "Quotes for these routes will fall back to a less specific price, or need one set by hand.",
+      "add": {
+        "title": "Add price",
+        "description": "A fixed price for one route, class and car.",
+        "from": "From",
+        "to": "To",
+        "class": "Class",
+        "chooseClass": "Choose a class",
+        "car": "Car",
+        "price": "Price",
+        "bothWays": "Same price the other way",
+        "bothWaysHint": "Also adds {from} to {to}.",
+        "specificity": "If a price already exists for this route, class and car, it's replaced.",
+        "cancel": "Cancel",
+        "submit": "Add price",
+        "added": "{count, plural, one {Price added} other {# prices added}}"
+      },
+      "change": {
+        "title": "{count, plural, one {Change price} other {Change # prices}}",
+        "description": "The new price applies to quotes from now on; booked trips keep theirs.",
+        "price": "New price",
+        "cancel": "Cancel",
+        "submit": "Save price",
+        "saved": "{count, plural, one {Price saved} other {# prices saved}}"
+      },
+      "import": {
+        "title": "Import prices",
+        "description": "Rows matching an existing route, class and car change its price; the rest are added.",
+        "choose": "Choose a CSV file",
+        "format": "Needs the fromId, toId, classId, car and price columns, as in the export.",
+        "template": "Download the current list to edit",
+        "missingColumns": "The file is missing these columns: {columns}.",
+        "ready": "{count, plural, =0 {No rows to import.} one {# row ready to import.} other {# rows ready to import.}}",
+        "skipped": "{count, plural, one {# row is skipped} other {# rows are skipped}} for a missing id, unknown car or bad price (lines {lines}).",
+        "cancel": "Cancel",
+        "submit": "Import",
+        "done": "{created} added, {updated} changed, {unchanged} unchanged"
+      }
+    },
+    "tripClasses": {
+      "title": "Trip classes",
+      "description": "What's included in a ride. Customers pick one when they book; each has its own prices.",
+      "add": "Add class",
+      "edit": "Edit class",
+      "menu": "Actions for {name}",
+      "columns": {
+        "order": "Order",
+        "class": "Class",
+        "description": "Description",
+        "prices": "Prices",
+        "trips": "Trips ({month})"
+      },
+      "empty": "No classes yet",
+      "emptyHint": "Add a class so customers can book and prices can be set.",
+      "emptyArchived": "No archived classes",
+      "form": {
+        "addTitle": "Add class",
+        "editTitle": "Edit class",
+        "description": "Customers see the name and description in their language.",
+        "cancel": "Cancel",
+        "save": "Save changes",
+        "add": "Add class",
+        "saved": "Class saved",
+        "added": "Class added",
+        "sortHint": "Lower comes first on the site.",
+        "archiveTitle": "Archive this class",
+        "archiveHint": "It stops appearing in quotes and bookings. Its {count, plural, one {# price is} other {# prices are}} kept and come back if you restore it.",
+        "archive": "Archive class",
+        "archived": "Class archived",
+        "restoreTitle": "Restore this class",
+        "restoreHint": "It appears in quotes and bookings again, with its prices.",
+        "restore": "Restore class",
+        "restored": "Class restored"
+      }
+    },
+    "customers": {
+      "title": "Customers",
+      "description": "People who signed up on the site. Staff can book for them from New trip.",
+      "search": "Search name, email or phone",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "statuses": {
+        "ACTIVE": "Active",
+        "UNVERIFIED": "Unverified",
+        "SUSPENDED": "Suspended",
+        "DELETED": "Deleted"
+      },
+      "columns": {
+        "customer": "Customer",
+        "phone": "Phone",
+        "trips": "Trips",
+        "spent": "Spent",
+        "lastTrip": "Last trip",
+        "joined": "Joined",
+        "status": "Status"
+      },
+      "empty": "No customers here",
+      "emptyHint": "Customers appear once they sign up on the site.",
+      "detail": {
+        "breadcrumb": "Breadcrumb",
+        "since": "Customer since {date}",
+        "book": "Book a trip for {name}",
+        "trips": "Trips",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "spent": "Spent",
+        "contact": "Contact",
+        "language": "Language",
+        "languages": {
+          "en": "English",
+          "ar": "Arabic"
+        },
+        "verified": "Email verified",
+        "account": "Account",
+        "accountHint": "Only an admin can suspend a customer account.",
+        "columns": {
+          "trip": "Trip",
+          "route": "Route",
+          "pickup": "Pickup",
+          "price": "Price",
+          "status": "Status"
+        },
+        "noTrips": "No trips yet.",
+        "priceRequested": "Price requested"
+      }
+    },
+    "team": {
+      "title": "Team",
+      "description": "Staff who use this dashboard and what each can do.",
+      "inviteMember": "Invite member",
+      "members": "Members",
+      "invitations": "Invitations",
+      "fullAccess": "Full access",
+      "noAccess": "No access",
+      "you": "(you)",
+      "never": "Never",
+      "menu": "Actions for {name}",
+      "editAccess": "Edit access",
+      "remove": "Remove from team",
+      "statuses": {
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "DELETED": "Removed"
+      },
+      "columns": {
+        "member": "Member",
+        "access": "Access",
+        "lastActive": "Last active",
+        "status": "Status",
+        "email": "Email",
+        "invitedBy": "Invited by",
+        "expires": "Expires"
+      },
+      "removeTitle": "Remove {name} from the team?",
+      "removeDescription": "They're signed out everywhere and can't sign in again. Their trips and history stay, and their email can be invited again.",
+      "removed": "Removed from the team",
+      "noInvitations": "No open invitations",
+      "noInvitationsHint": "Invitations waiting to be accepted show here.",
+      "resend": "Resend",
+      "resent": "Sent again to {email}",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke this invitation?",
+      "revokeDescription": "The link sent to {email} stops working.",
+      "revoked": "Invitation revoked",
+      "invite": {
+        "title": "Invite a team member",
+        "description": "They get an email with a link to set a password. The link works for 7 days.",
+        "access": "Access",
+        "pickOne": "Give them at least one kind of access.",
+        "cancel": "Cancel",
+        "submit": "Send invitation",
+        "sent": "Invitation sent to {email}"
+      },
+      "member": {
+        "since": "Member since {date}",
+        "suspendTitle": "Suspend access",
+        "suspendHint": "Signs them out everywhere. You can restore access later.",
+        "suspend": "Suspend",
+        "suspended": "Access suspended",
+        "reactivateTitle": "Restore access",
+        "reactivateHint": "They can sign in again with the access below.",
+        "reactivate": "Restore",
+        "reactivated": "Access restored",
+        "cancel": "Cancel",
+        "save": "Save access",
+        "saved": "Access saved"
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Bookings, price answers, cancellations and reports that need a look.",
+      "markAllRead": "Mark all read",
+      "allRead": "All marked read",
+      "seeAll": "See all notifications",
+      "all": "All",
+      "unread": "Unread",
+      "empty": "No notifications yet",
+      "noUnread": "You're all caught up",
+      "emptyHint": "New bookings, price answers and driver reports show up here.",
+      "loadFailed": "Couldn't load notifications.",
+      "showMore": "Show more"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "subtitle": "{range} · compared with {previous}",
+      "range": "Range",
+      "groupBy": "Group by",
+      "monthlyReports": "Monthly reports",
+      "ranges": {
+        "thisMonth": "This month",
+        "lastMonth": "Last month",
+        "last30": "Last 30 days",
+        "thisYear": "This year"
+      },
+      "previous": {
+        "last30": "the 30 days before",
+        "thisYear": "last year"
+      },
+      "groupings": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month"
+      },
+      "versus": "{change} vs {versus}",
+      "versusPoints": "{points} pts vs {versus}",
+      "ofRevenue": "{share} of revenue",
+      "includesUpcoming": "Includes upcoming trips",
+      "costsNote": "Fees, expenses, office fees",
+      "unpaidTrips": "{count, plural, =0 {All paid} one {# completed trip} other {# completed trips}}",
+      "kpis": {
+        "revenue": "Revenue",
+        "margin": "Margin",
+        "trips": "Trips",
+        "cancellationRate": "Cancellation rate",
+        "bookedValue": "Booked value",
+        "averageFare": "Average fare",
+        "costs": "Driver and office costs",
+        "unpaid": "Unpaid"
+      },
+      "trend": {
+        "title": {
+          "day": "Day by day",
+          "week": "Week by week",
+          "month": "Month by month"
+        },
+        "revenue": "Revenue",
+        "costs": "Costs",
+        "period": "Period",
+        "caption": "Revenue, costs and trips for each period",
+        "weeksNote": "Weeks start on Sunday. The first and last weeks may be partial.",
+        "metric": "Show",
+        "metrics": {
+          "money": "Revenue and costs",
+          "trips": "Trips"
+        },
+        "margin": "Margin",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "allTrips": "All trips",
+        "weekOf": "Week of {date}",
+        "empty": "Nothing in this range yet"
+      },
+      "byClass": "Trips by class",
+      "byCar": "Trips by car",
+      "bySource": "Booked by",
+      "sources": {
+        "CUSTOMER": "Customers on the site",
+        "STAFF": "Staff"
+      },
+      "noData": "Nothing in this range.",
+      "topRoutes": {
+        "title": "Top routes",
+        "route": "Route",
+        "trips": "Trips",
+        "revenue": "Revenue"
+      },
+      "balances": {
+        "title": "Driver balances",
+        "held": "Cash drivers hold",
+        "owed": "Owed to drivers",
+        "net": "Net, {count, plural, one {# driver} other {# drivers}}",
+        "settled": "Settled",
+        "driversOwe": "Drivers owe {amount}",
+        "weOwe": "We owe {amount}",
+        "seeDrivers": "See each driver"
+      },
+      "costsByType": "Costs by type",
+      "total": "Total",
+      "reports": {
+        "title": "Monthly reports",
+        "breadcrumb": "Breadcrumb",
+        "description": "An Excel file for each finished month: every trip, its money, driver balances and costs. Made on the 1st of the next month.",
+        "month": "Month",
+        "size": "Size",
+        "generated": "Generated",
+        "download": "Download",
+        "kb": "KB",
+        "empty": "No reports yet",
+        "emptyHint": "The first one is made on the 1st of next month.",
+        "next": "{month} will be ready on {date}."
+      }
+    },
+    "account": {
+      "title": "Your account",
+      "profile": {
+        "title": "Profile",
+        "emailHint": "Your email can't be changed here: it's how you sign in.",
+        "save": "Save profile",
+        "saved": "Profile saved",
+        "description": "How your colleagues see you across the dashboard."
+      },
+      "password": {
+        "title": "Password",
+        "hint": "8 to 72 characters, with an uppercase letter, a lowercase letter and a number.",
+        "submit": "Change password",
+        "changed": "Password changed. Your other devices were signed out.",
+        "description": "Changing it signs your other devices out."
+      },
+      "devices": {
+        "title": "Signed-in devices",
+        "signOutOthers": "Sign out others",
+        "signOut": "Sign out",
+        "thisDevice": "This device",
+        "on": "{browser} on {system}",
+        "unknown": "Unknown device",
+        "signedIn": "Signed in {when}",
+        "ended": "Signed out that device",
+        "othersEnded": "Signed out your other devices",
+        "description": "Sign out of any device you don't recognise.",
+        "signOutOthersTitle": "Sign out of other devices?",
+        "signOutOthersBody": "You'll stay signed in here. The other {count, plural, one {device} other {# devices}} will need your password to get back in."
+      },
+      "access": {
+        "title": "Your access",
+        "hint": "A colleague with team access can change it."
+      },
+      "language": {
+        "title": "Language",
+        "hint": "The dashboard's language on this browser, and the one your emails come in."
+      },
+      "subtitle": "Your profile, how you sign in, and where you are signed in.",
+      "tabs": {
+        "profile": "Profile",
+        "security": "Security",
+        "devices": "Devices"
+      },
+      "session": {
+        "title": "This session",
+        "since": "You've been signed in since {when}.",
+        "othersStay": "Your other devices stay signed in."
+      }
+    },
+    "brands": {
+      "title": "Brands",
+      "description": "The names customers and drivers see in emails and WhatsApp messages. Each trip is sent under one brand: staff pick it when booking and can change it on the trip page until it's completed.",
+      "add": "Add brand",
+      "builtIn": "Built in",
+      "default": "Default",
+      "archived": "Archived",
+      "noArchived": "No archived brands.",
+      "appSender": "Terhal (the app's sender address)",
+      "sameAsSender": "Same as the sender",
+      "notShown": "Not shown",
+      "rows": {
+        "from": "Emails come from",
+        "replyTo": "Replies go to",
+        "phone": "Phone in messages",
+        "website": "Website"
+      },
+      "builtInNote": "Built in, so it can't be edited or archived. Site bookings always use Terhal, and so do staff bookings when no other brand is the default.",
+      "defaultNote": "Pre-selected when staff book a trip. Its sender domain must be verified with the email provider.",
+      "note": "Its sender domain must be verified with the email provider before emails can go out.",
+      "form": {
+        "addTitle": "Add brand",
+        "editTitle": "Edit brand",
+        "description": "Customers and drivers see it in the messages for trips sent under it.",
+        "cancel": "Cancel",
+        "save": "Save brand",
+        "add": "Add brand",
+        "saved": "Brand saved",
+        "added": "Brand added",
+        "nameEn": "Name in English",
+        "nameAr": "Name in Arabic",
+        "senderEmail": "Sender address",
+        "senderHint": "The domain must be verified before emails can go out.",
+        "replyTo": "Reply-to address",
+        "replyToHint": "Left empty, replies go to the sender.",
+        "phone": "Phone in messages",
+        "website": "Website",
+        "isDefault": "Default for staff bookings",
+        "isDefaultHint": "Pre-selected on New trip; only one brand can be the default. Site bookings always use Terhal.",
+        "from": "From",
+        "namePlaceholder": "Brand name",
+        "previewTitle": "Your trip is confirmed",
+        "previewBody": "Hi Omar, your trip TRH-2BW7RN on Thu, Nov 26 at 8:00 AM is confirmed.",
+        "previewWhatsApp": "Hi Mostafa, this is {name}. Please fill in the report for trip TRH-2BW7RN after you finish: terhal.co/r/…",
+        "archiveTitle": "Archive this brand",
+        "archiveHint": "It can't be picked for new trips. Trips already sent under it keep it.",
+        "archive": "Archive brand",
+        "archived": "Brand archived",
+        "restoreTitle": "Restore this brand",
+        "restoreHint": "It can be picked for trips again.",
+        "restore": "Restore brand",
+        "restored": "Brand restored",
+        "showPreview": "Preview messages",
+        "previewDialogTitle": "Message preview",
+        "previewDialogDescription": "The confirmation email and the driver's WhatsApp message as they'll go out under this brand.",
+        "previewEmail": "Confirmation email",
+        "previewDriver": "Driver WhatsApp",
+        "closePreview": "Close"
+      }
+    },
+    "booking": {
+      "title": "New trip",
+      "breadcrumb": "Breadcrumb",
+      "description": "Book a trip on behalf of a customer or a guest.",
+      "cancel": "Cancel",
+      "submit": "Book trip",
+      "booked": "Booked {code}",
+      "less": "Fewer {what}",
+      "more": "More {what}",
+      "brand": {
+        "title": "Book under",
+        "label": "Brand",
+        "appSender": "the app's sender address",
+        "hint": "Every email to the booker and every WhatsApp message to the driver about this trip uses this brand's name and contact details. You can change it later from the trip page."
+      },
+      "booker": {
+        "title": "Booker",
+        "customer": "Customer",
+        "guest": "Guest",
+        "searchHint": "Search by name, phone or email.",
+        "tripsSoFar": "{count, plural, =0 {No trips so far.} one {# trip so far.} other {# trips so far.}}",
+        "guestHint": "You're the booker: the trip needs a price now, since there's no one to accept one later.",
+        "passengerName": "Passenger name",
+        "passengerPhone": "Passenger phone",
+        "passengerHint": "Defaults to the customer. Change it if someone else rides."
+      },
+      "customer": {
+        "placeholder": "Search a customer",
+        "clear": "Clear",
+        "searching": "Searching…",
+        "noResults": "No active customers match."
+      },
+      "place": {
+        "needsCentre": "Pick a district or an area: a governorate has no single point.",
+        "exact": "Set exact coordinates",
+        "useCentre": "Use the centre",
+        "coordinates": "Latitude, longitude"
+      },
+      "route": {
+        "title": "Route",
+        "pickup": "Pickup",
+        "dropoff": "Drop-off",
+        "swap": "Swap pickup and drop-off",
+        "hint": "The pin is the place's centre unless you set exact coordinates, e.g. copied from a map. Places outside the covered areas can't be booked."
+      },
+      "when": {
+        "title": "When and what",
+        "date": "Pickup date",
+        "time": "Pickup time",
+        "cairo": "Cairo time.",
+        "backdated": "This trip already happened",
+        "backdatedHint": "Record it with a past pickup time.",
+        "car": "Car"
+      },
+      "load": {
+        "passengers": "Passengers",
+        "large": "Large bags",
+        "medium": "Medium bags",
+        "small": "Small bags",
+        "fits": "A {car} seats {passengers} with {large} large bags. The load above fits.",
+        "tooMuch": "A {car} seats {passengers} with {large} large bags. Pick a bigger car or lighten the load."
+      },
+      "extras": {
+        "title": "Notes and return",
+        "notes": "Notes for the driver",
+        "notesPlaceholder": "e.g. A child seat. Please call 15 minutes before arriving.",
+        "return": "Book a return trip",
+        "returnHint": "Same route, reversed. It's priced and assigned separately.",
+        "returnDate": "Return date",
+        "returnTime": "Return time"
+      },
+      "quote": {
+        "title": "Quote",
+        "pickRoute": "Pick a pickup and a drop-off to see the price.",
+        "outbound": "Outbound",
+        "return": "Return",
+        "total": "Total",
+        "onRequest": "Price on request",
+        "price": "Price",
+        "priceHint": "Left empty, the price list's is used.",
+        "returnPrice": "Return price"
+      },
+      "onRequest": {
+        "title": "If a route has no price",
+        "body": "The quote shows \"Price on request\". A customer's trip can still be booked: it waits as pending until you propose a price and they accept it."
+      },
+      "errors": {
+        "customer": "Pick a customer, or switch to guest.",
+        "clientName": "Enter the passenger's name.",
+        "clientPhone": "Enter the passenger's phone.",
+        "place": "Pick a place.",
+        "when": "Enter a date and time.",
+        "past": "That's in the past. Tick \"This trip already happened\" to record it.",
+        "returnWhen": "The return must be after the pickup.",
+        "price": "Enter a price like 1250 or 1250.50.",
+        "guestPrice": "This route has no price: enter one.",
+        "fixAbove": "Fix the highlighted fields first."
+      }
+    }
   },
   "admin": {
-    "title": "Admin panel"
+    "title": "Admin panel",
+    "signOut": "Sign out",
+    "auth": {
+      "code": "Authentication code",
+      "codeHint": "The 6-digit code from your authenticator app.",
+      "signIn": {
+        "title": "Sign in to the admin panel",
+        "description": "Admins set up the company's staff accounts.",
+        "submit": "Continue",
+        "codeTitle": "Enter your code",
+        "codeDescription": "Open your authenticator app and enter the code it shows for Terhal.",
+        "verify": "Sign in",
+        "back": "Use a different account"
+      },
+      "invite": {
+        "title": "Create your admin account",
+        "description": "You were invited to run Terhal's admin panel.",
+        "passwordHint": "At least 8 characters, with an uppercase letter, a lowercase letter and a number.",
+        "next": "Continue",
+        "authenticatorTitle": "Set up your authenticator",
+        "authenticatorDescription": "Every sign-in asks for a code from an authenticator app, such as Google Authenticator or 1Password. Scan this code with it, then enter the 6 digits it shows.",
+        "qrLabel": "QR code for your authenticator app",
+        "manual": "Can't scan? Enter this key in the app instead:",
+        "finish": "Create account",
+        "back": "Back",
+        "expiredTitle": "This invitation can't be used",
+        "expiredDescription": "It was already used, revoked, or it expired. Ask an admin for a new one.",
+        "toSignIn": "Go to sign in"
+      }
+    },
+    "staff": {
+      "title": "Staff",
+      "description": "Who can use the staff dashboard, and what each can do.",
+      "firstTitle": "No staff yet",
+      "firstBody": "Invite the first staff member with team access. They can then invite everyone else from the dashboard's Team page."
+    },
+    "nav": {
+      "label": "Admin menu",
+      "home": "Terhal admin home",
+      "openMenu": "Open the menu",
+      "staff": "Staff",
+      "badge": "Admin panel"
+    }
   }
 }

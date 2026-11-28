@@ -8,9 +8,17 @@ type InputProps = ComponentProps<"input"> & {
   // Inside the box at the inline start or end: an icon, a unit, a show-password toggle.
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
+  // With an adornment, className sizes the box around it; this one reaches the <input> itself.
+  inputClassName?: string;
 };
 
-export function Input({ startAdornment, endAdornment, className, ...props }: InputProps) {
+export function Input({
+  startAdornment,
+  endAdornment,
+  className,
+  inputClassName,
+  ...props
+}: InputProps) {
   const field = useFieldControl(props);
   const adorned = Boolean(startAdornment) || Boolean(endAdornment);
   const input = (
@@ -23,6 +31,7 @@ export function Input({ startAdornment, endAdornment, className, ...props }: Inp
         Boolean(startAdornment) && "ps-9",
         Boolean(endAdornment) && "pe-10",
         !adorned && className,
+        inputClassName,
       )}
     />
   );

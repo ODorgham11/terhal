@@ -1,0 +1,8 @@
+[
+  {
+    "AllowedOrigins": ["https://dashboard.staging.terhal.co", "https://dashboard.terhal.co"],
+    "AllowedMethods": ["PUT", "GET"],
+    "AllowedHeaders": ["Content-Type"],
+    "MaxAgeSeconds": 3600
+  }
+]

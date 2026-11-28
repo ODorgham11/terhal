@@ -169,7 +169,12 @@ const propose = createRoute({
   },
 });
 
-const action = (path: string, summary: string, description: string, conflicts = statusConflict) =>
+const action = <Path extends string>(
+  path: Path,
+  summary: string,
+  description: string,
+  conflicts = statusConflict,
+) =>
   createRoute({
     method: "post",
     path: `/staff/trips/{id}/${path}`,

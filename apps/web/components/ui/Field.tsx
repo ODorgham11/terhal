@@ -22,6 +22,8 @@ type FieldProps = {
   required?: boolean;
   // Marks the label "(optional)". Most fields are required, so it's the optional ones that say so.
   optional?: boolean;
+  // At the label's inline end: a "Forgot password?" link, say.
+  labelAction?: ReactNode;
   id?: string;
   className?: string;
   children: ReactNode;
@@ -37,6 +39,7 @@ export function Field({
   error,
   required = false,
   optional = false,
+  labelAction,
   id,
   className,
   children,
@@ -53,10 +56,13 @@ export function Field({
       value={{ id: controlId, describedBy, invalid: Boolean(error), required }}
     >
       <div className={cn("flex flex-col gap-1.5", className)}>
-        <label htmlFor={controlId} className="text-sm font-medium text-foreground">
-          {label}
-          {optional && <span className="ms-1 font-normal text-muted">({t("optional")})</span>}
-        </label>
+        <div className="flex items-center justify-between gap-2">
+          <label htmlFor={controlId} className="text-sm font-medium text-foreground">
+            {label}
+            {optional && <span className="ms-1 font-normal text-muted">({t("optional")})</span>}
+          </label>
+          {labelAction}
+        </div>
         {children}
         {error ? (
           <p id={errorId} className="text-sm text-danger">

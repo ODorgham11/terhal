@@ -2,6 +2,7 @@ import { createRoute } from "@hono/zod-openapi";
 import {
   CreateDriver,
   Driver,
+  DriverSummary,
   DriverTransaction,
   DriverTransactionRecorded,
   FleetTrip,
@@ -23,7 +24,11 @@ import {
   restoreDriver,
   updateDriver,
 } from "../application/drivers";
-import { listDriverTransactions, recordDriverTransaction } from "../application/ledger";
+import {
+  getDriverSummary,
+  listDriverTransactions,
+  recordDriverTransaction,
+} from "../application/ledger";
 import { actorOf, canRead, canWrite, security, staffProblems } from "./shared";
 
 const tags = ["Drivers"];
@@ -62,7 +67,9 @@ const create = createRoute({
     201: { description: "Added", ...json(Driver) },
     400: invalid,
     ...staffProblems,
-    409: problemResponse("DRIVER_PHONE_TAKEN"),
+    409: problemResponse(
+      "DRIVER_PHONE_TAKEN, DRIVER_NATIONAL_ID_TAKEN or DRIVER_LICENSE_TAKEN: another driver has it.",
+    ),
     422: officeProblems,
   },
 });
@@ -96,7 +103,9 @@ const update = createRoute({
     400: invalid,
     ...staffProblems,
     404: notFound,
-    409: problemResponse("DRIVER_PHONE_TAKEN"),
+    409: problemResponse(
+      "DRIVER_PHONE_TAKEN, DRIVER_NATIONAL_ID_TAKEN or DRIVER_LICENSE_TAKEN: another driver has it.",
+    ),
     422: officeProblems,
   },
 });
@@ -173,15 +182,32 @@ const record = createRoute({
   method: "post",
   path: "/staff/drivers/{id}/transactions",
   tags,
-  summary: "Record a payout or an adjustment",
+  summary: "Record a payment or an adjustment",
   description:
-    "A payout's `amount` is what was paid to the driver and lowers the balance by that much. An adjustment's is signed (positive when the company owes the driver more) and needs a note. Entries can't be changed or deleted: correct a mistake with another adjustment.",
+    "A payout's `amount` is what was paid to the driver and lowers the balance by that much; cash handed in is company cash the driver gave back and raises it by that much. An adjustment's is signed (positive when the company owes the driver more) and needs a note. Entries can't be changed or deleted: correct a mistake with another adjustment.",
   middleware: canWrite,
   security,
   request: { params: IdParam, ...body(RecordDriverTransaction) },
   responses: {
     201: { description: "Recorded", ...json(DriverTransactionRecorded) },
     400: invalid,
+    ...staffProblems,
+    404: notFound,
+  },
+});
+
+const summary = createRoute({
+  method: "get",
+  path: "/staff/drivers/{id}/summary",
+  tags,
+  summary: "Sum up a driver's ledger and month",
+  description:
+    "The ledger's totals by kind (all time), and this month's completed trips, kilometres and fees (Cairo time).",
+  middleware: canWrite,
+  security,
+  request: { params: IdParam },
+  responses: {
+    200: { description: "The summary", ...json(DriverSummary) },
     ...staffProblems,
     404: notFound,
   },
@@ -203,6 +229,7 @@ export const driverRoutes = createRouter()
   .openapi(trips, async (c) =>
     c.json(await listDriverTrips(c.req.valid("param").id, c.req.valid("query")), 200),
   )
+  .openapi(summary, async (c) => c.json(await getDriverSummary(c.req.valid("param").id), 200))
   .openapi(transactions, async (c) =>
     c.json(await listDriverTransactions(c.req.valid("param").id, c.req.valid("query")), 200),
   )

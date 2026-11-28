@@ -96,6 +96,8 @@
               "ADMIN_NOT_ACTIVE",
               "HAS_UPCOMING_TRIPS",
               "DRIVER_PHONE_TAKEN",
+              "DRIVER_NATIONAL_ID_TAKEN",
+              "DRIVER_LICENSE_TAKEN",
               "PLATE_NUMBER_TAKEN",
               "OFFICE_NAME_TAKEN",
               "OFFICE_REQUIRES_EXTERNAL",
@@ -103,6 +105,7 @@
               "LOCATION_NOT_AVAILABLE",
               "IMAGE_TYPE_NOT_ALLOWED",
               "IMAGE_LIMIT_REACHED",
+              "UPLOAD_INCOMPLETE",
               "LAST_TEAM_MANAGER",
               "ACCOUNT_DELETED",
               "LOCATION_NAME_TAKEN",
@@ -111,6 +114,7 @@
               "LOCATION_NOT_RESTORABLE",
               "LOCATION_COUNT_MISMATCH",
               "GOVERNORATE_READ_ONLY",
+              "LOCATION_NOT_FLEXIBLE",
               "OUT_OF_COVERAGE",
               "TRIP_CLASS_NAME_TAKEN",
               "BRAND_NAME_TAKEN",
@@ -834,6 +838,29 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "tripCount": {
+            "type": "integer",
+            "description": "Every trip they booked, in any status."
+          },
+          "completedCount": {
+            "type": "integer"
+          },
+          "cancelledCount": {
+            "type": "integer"
+          },
+          "totalSpent": {
+            "type": "string",
+            "description": "The total price of their completed trips, in EGP with two decimals.",
+            "example": "1250.00"
+          },
+          "lastTripAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Their latest completed trip's pickup."
           }
         },
         "required": [
@@ -845,7 +872,12 @@
           "status",
           "locale",
           "verifiedAt",
-          "createdAt"
+          "createdAt",
+          "tripCount",
+          "completedCount",
+          "cancelledCount",
+          "totalSpent",
+          "lastTripAt"
         ]
       },
       "CustomerDetail": {
@@ -893,10 +925,24 @@
             "type": "integer",
             "description": "Every trip they booked, in any status."
           },
+          "completedCount": {
+            "type": "integer"
+          },
+          "cancelledCount": {
+            "type": "integer"
+          },
           "totalSpent": {
             "type": "string",
             "description": "The total price of their completed trips, in EGP with two decimals.",
             "example": "1250.00"
+          },
+          "lastTripAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Their latest completed trip's pickup."
           }
         },
         "required": [
@@ -910,7 +956,10 @@
           "verifiedAt",
           "createdAt",
           "tripCount",
-          "totalSpent"
+          "completedCount",
+          "cancelledCount",
+          "totalSpent",
+          "lastTripAt"
         ]
       },
       "CustomerTrip": {
@@ -1906,8 +1955,7 @@
               "string",
               "null"
             ],
-            "minLength": 1,
-            "maxLength": 30
+            "pattern": "^\\d{14}$"
           },
           "isExternal": {
             "type": "boolean",
@@ -1968,8 +2016,7 @@
               "string",
               "null"
             ],
-            "minLength": 1,
-            "maxLength": 30
+            "pattern": "^\\d{14}$"
           },
           "isExternal": {
             "type": "boolean"
@@ -2083,6 +2130,75 @@
           "office"
         ]
       },
+      "DriverSummary": {
+        "type": "object",
+        "properties": {
+          "totals": {
+            "type": "object",
+            "properties": {
+              "cashCollected": {
+                "type": "string",
+                "description": "Cash collected from customers, all time.",
+                "example": "14200.00"
+              },
+              "earned": {
+                "type": "string",
+                "description": "Trip fees and reimbursed expenses, all time.",
+                "example": "6870.00"
+              },
+              "paidOut": {
+                "type": "string",
+                "description": "Paid to the driver, all time.",
+                "example": "3000.00"
+              },
+              "handedIn": {
+                "type": "string",
+                "description": "Company cash the driver handed in, all time.",
+                "example": "3200.00"
+              },
+              "adjustments": {
+                "type": "string",
+                "description": "The sum of the adjustments, signed.",
+                "example": "-100.00"
+              }
+            },
+            "required": [
+              "cashCollected",
+              "earned",
+              "paidOut",
+              "handedIn",
+              "adjustments"
+            ]
+          },
+          "thisMonth": {
+            "type": "object",
+            "properties": {
+              "tripsCompleted": {
+                "type": "integer",
+                "description": "Completed trips whose report ended this month."
+              },
+              "kilometres": {
+                "type": "integer",
+                "description": "Driven on those trips, from their reports' odometers."
+              },
+              "fees": {
+                "type": "string",
+                "description": "Trip fees written to the ledger this month.",
+                "example": "8400.00"
+              }
+            },
+            "required": [
+              "tripsCompleted",
+              "kilometres",
+              "fees"
+            ]
+          }
+        },
+        "required": [
+          "totals",
+          "thisMonth"
+        ]
+      },
       "DriverTransaction": {
         "type": "object",
         "properties": {
@@ -2096,6 +2212,7 @@
               "EXPENSE_REIMBURSEMENT",
               "CASH_COLLECTED",
               "PAYOUT",
+              "CASH_HANDED_IN",
               "ADJUSTMENT"
             ]
           },
@@ -2191,6 +2308,30 @@
                 "type": "string",
                 "enum": [
                   "PAYOUT"
+                ]
+              },
+              "amount": {
+                "type": "string",
+                "pattern": "^-?\\d{1,9}(\\.\\d{1,2})?$",
+                "example": "500.00"
+              },
+              "note": {
+                "type": "string",
+                "maxLength": 500
+              }
+            },
+            "required": [
+              "type",
+              "amount"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "CASH_HANDED_IN"
                 ]
               },
               "amount": {
@@ -2434,6 +2575,76 @@
             "maxLength": 100
           }
         }
+      },
+      "VehicleImageUpload": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "PUT"
+            ]
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "uploadId",
+          "url",
+          "method",
+          "headers",
+          "expiresAt"
+        ]
+      },
+      "RequestVehicleImageUpload": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ]
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5242880
+          }
+        },
+        "required": [
+          "contentType",
+          "size"
+        ]
+      },
+      "ConfirmVehicleImageUpload": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "uploadId"
+        ]
       },
       "ReorderVehicleImages": {
         "type": "object",
@@ -2991,6 +3202,37 @@
             "type": "boolean",
             "description": "Whether a governorate has its outline."
           },
+          "flexible": {
+            "type": "boolean",
+            "description": "A governorate that can be booked as a whole (the spot agreed with the client). Always false for districts and areas."
+          },
+          "pin": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "longitude": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              }
+            },
+            "required": [
+              "latitude",
+              "longitude"
+            ],
+            "example": {
+              "latitude": 29.9602,
+              "longitude": 31.2569
+            },
+            "description": "Where a trip to the whole of a flexible governorate is pinned: its outline's centre. Null otherwise."
+          },
           "deletedAt": {
             "type": [
               "string",
@@ -3014,6 +3256,8 @@
           "nameAr",
           "center",
           "hasBoundary",
+          "flexible",
+          "pin",
           "deletedAt",
           "deletedWithId"
         ]
@@ -3073,6 +3317,37 @@
             "type": "boolean",
             "description": "Whether a governorate has its outline."
           },
+          "flexible": {
+            "type": "boolean",
+            "description": "A governorate that can be booked as a whole (the spot agreed with the client). Always false for districts and areas."
+          },
+          "pin": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "latitude": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "longitude": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              }
+            },
+            "required": [
+              "latitude",
+              "longitude"
+            ],
+            "example": {
+              "latitude": 29.9602,
+              "longitude": 31.2569
+            },
+            "description": "Where a trip to the whole of a flexible governorate is pinned: its outline's centre. Null otherwise."
+          },
           "deletedAt": {
             "type": [
               "string",
@@ -3131,6 +3406,8 @@
           "nameAr",
           "center",
           "hasBoundary",
+          "flexible",
+          "pin",
           "deletedAt",
           "deletedWithId",
           "boundary",
@@ -3256,6 +3533,10 @@
             "type": "string",
             "minLength": 2,
             "maxLength": 80
+          },
+          "flexible": {
+            "type": "boolean",
+            "description": "Governorates with an outline only: book it as a whole."
           },
           "center": {
             "type": "object",
@@ -3402,6 +3683,61 @@
           "center"
         ]
       },
+      "StaffTripClass": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "descriptionEn": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "descriptionAr": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sortOrder": {
+            "type": "integer"
+          },
+          "archivedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "prices": {
+            "type": "integer",
+            "description": "Price rows for this class."
+          },
+          "tripsThisMonth": {
+            "type": "integer",
+            "description": "Trips picked up this Cairo month in this class, cancelled ones left out."
+          }
+        },
+        "required": [
+          "id",
+          "nameEn",
+          "nameAr",
+          "descriptionEn",
+          "descriptionAr",
+          "sortOrder",
+          "archivedAt",
+          "prices",
+          "tripsThisMonth"
+        ]
+      },
       "TripClass": {
         "type": "object",
         "properties": {
@@ -3476,7 +3812,7 @@
           },
           "sortOrder": {
             "type": "integer",
-            "minimum": -1000,
+            "minimum": 0,
             "maximum": 1000,
             "default": 0,
             "description": "Lower comes first on the site."
@@ -3516,7 +3852,7 @@
           },
           "sortOrder": {
             "type": "integer",
-            "minimum": -1000,
+            "minimum": 0,
             "maximum": 1000,
             "description": "Lower comes first on the site."
           }
@@ -4108,10 +4444,10 @@
         "type": "object",
         "properties": {
           "pickup": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "dropoff": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "passengers": {
             "type": "integer",
@@ -4140,10 +4476,10 @@
             "type": "object",
             "properties": {
               "pickup": {
-                "$ref": "#/components/schemas/Pin"
+                "$ref": "#/components/schemas/TripPin"
               },
               "dropoff": {
-                "$ref": "#/components/schemas/Pin"
+                "$ref": "#/components/schemas/TripPin"
               }
             },
             "description": "Also price a return leg. Its pins default to the outbound's, reversed; give them when the return starts or ends elsewhere."
@@ -4155,7 +4491,7 @@
           "passengers"
         ]
       },
-      "Pin": {
+      "TripPin": {
         "type": "object",
         "properties": {
           "latitude": {
@@ -4167,16 +4503,18 @@
             "type": "number",
             "minimum": -180,
             "maximum": 180
+          },
+          "locationId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "A flexible governorate to book as this end, the exact spot agreed with the client. Its `pin` from the location list is the usual pin."
           }
         },
         "required": [
           "latitude",
           "longitude"
-        ],
-        "example": {
-          "latitude": 29.9602,
-          "longitude": 31.2569
-        }
+        ]
       },
       "SiteBooking": {
         "type": "object",
@@ -4453,10 +4791,10 @@
             "$ref": "#/components/schemas/CarBody"
           },
           "pickup": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "dropoff": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "pickupDate": {
             "type": "string",
@@ -4526,16 +4864,18 @@
                     "type": "number",
                     "minimum": -180,
                     "maximum": 180
+                  },
+                  "locationId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "A flexible governorate to book as this end, the exact spot agreed with the client. Its `pin` from the location list is the usual pin."
                   }
                 },
                 "required": [
                   "latitude",
                   "longitude"
                 ],
-                "example": {
-                  "latitude": 29.9602,
-                  "longitude": 31.2569
-                },
                 "description": "Defaults to the outbound's drop-off."
               },
               "dropoff": {
@@ -4550,16 +4890,18 @@
                     "type": "number",
                     "minimum": -180,
                     "maximum": 180
+                  },
+                  "locationId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "A flexible governorate to book as this end, the exact spot agreed with the client. Its `pin` from the location list is the usual pin."
                   }
                 },
                 "required": [
                   "latitude",
                   "longitude"
                 ],
-                "example": {
-                  "latitude": 29.9602,
-                  "longitude": 31.2569
-                },
                 "description": "Defaults to the outbound's pickup."
               },
               "expectedPrice": {
@@ -4963,10 +5305,10 @@
             "$ref": "#/components/schemas/CarBody"
           },
           "pickup": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "dropoff": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "pickupDate": {
             "type": "string",
@@ -5056,16 +5398,18 @@
                     "type": "number",
                     "minimum": -180,
                     "maximum": 180
+                  },
+                  "locationId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "A flexible governorate to book as this end, the exact spot agreed with the client. Its `pin` from the location list is the usual pin."
                   }
                 },
                 "required": [
                   "latitude",
                   "longitude"
                 ],
-                "example": {
-                  "latitude": 29.9602,
-                  "longitude": 31.2569
-                },
                 "description": "Defaults to the outbound's drop-off."
               },
               "dropoff": {
@@ -5080,16 +5424,18 @@
                     "type": "number",
                     "minimum": -180,
                     "maximum": 180
+                  },
+                  "locationId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "A flexible governorate to book as this end, the exact spot agreed with the client. Its `pin` from the location list is the usual pin."
                   }
                 },
                 "required": [
                   "latitude",
                   "longitude"
                 ],
-                "example": {
-                  "latitude": 29.9602,
-                  "longitude": 31.2569
-                },
                 "description": "Defaults to the outbound's pickup."
               },
               "totalPrice": {
@@ -5600,10 +5946,10 @@
             "example": "2026-12-01T08:00:00Z"
           },
           "pickup": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "dropoff": {
-            "$ref": "#/components/schemas/Pin"
+            "$ref": "#/components/schemas/TripPin"
           },
           "classId": {
             "type": "string",
@@ -14219,7 +14565,7 @@
             }
           },
           "409": {
-            "description": "DRIVER_PHONE_TAKEN",
+            "description": "DRIVER_PHONE_TAKEN, DRIVER_NATIONAL_ID_TAKEN or DRIVER_LICENSE_TAKEN: another driver has it.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14390,7 +14736,7 @@
             }
           },
           "409": {
-            "description": "DRIVER_PHONE_TAKEN",
+            "description": "DRIVER_PHONE_TAKEN, DRIVER_NATIONAL_ID_TAKEN or DRIVER_LICENSE_TAKEN: another driver has it.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -14687,6 +15033,73 @@
         }
       }
     },
+    "/v1/staff/drivers/{id}/summary": {
+      "get": {
+        "tags": [
+          "Drivers"
+        ],
+        "summary": "Sum up a driver's ledger and month",
+        "description": "The ledger's totals by kind (all time), and this month's completed trips, kilometres and fees (Cairo time).",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such driver.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/staff/drivers/{id}/transactions": {
       "get": {
         "tags": [
@@ -14806,8 +15219,8 @@
         "tags": [
           "Drivers"
         ],
-        "summary": "Record a payout or an adjustment",
-        "description": "A payout's `amount` is what was paid to the driver and lowers the balance by that much. An adjustment's is signed (positive when the company owes the driver more) and needs a note. Entries can't be changed or deleted: correct a mistake with another adjustment.",
+        "summary": "Record a payment or an adjustment",
+        "description": "A payout's `amount` is what was paid to the driver and lowers the balance by that much; cash handed in is company cash the driver gave back and raises it by that much. An adjustment's is signed (positive when the company owes the driver more) and needs a note. Entries can't be changed or deleted: correct a mistake with another adjustment.",
         "security": [
           {
             "staffCookie": []
@@ -15434,13 +15847,13 @@
         }
       }
     },
-    "/v1/staff/vehicles/{id}/images": {
+    "/v1/staff/vehicles/{id}/images/uploads": {
       "post": {
         "tags": [
           "Vehicles"
         ],
-        "summary": "Add an image",
-        "description": "A multipart upload with the image as `file`: JPEG, PNG or WebP (judged from the bytes), 5 MB at most, 5 images per vehicle. It goes after the others; the first image is the cover.",
+        "summary": "Ask to upload an image",
+        "description": "Step one of adding an image: a link signed for one JPEG, PNG or WebP of up to 5 MB. PUT the file to `url` with `headers` (the file never passes through the API), then confirm it with POST /staff/vehicles/{id}/images. Refused when the vehicle has 5 images already.",
         "security": [
           {
             "staffCookie": []
@@ -15460,30 +15873,20 @@
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "JPEG, PNG or WebP, 5 MB at most."
-                  }
-                },
-                "required": [
-                  "file"
-                ]
+                "$ref": "#/components/schemas/RequestVehicleImageUpload"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Added; the vehicle with its images",
+            "description": "Where to put the file",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Vehicle"
+                  "$ref": "#/components/schemas/VehicleImageUpload"
                 }
               }
             }
@@ -15538,6 +15941,113 @@
               }
             }
           },
+          "429": {
+            "description": "RATE_LIMITED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/staff/vehicles/{id}/images": {
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Add an uploaded image",
+        "description": "Step two: once the file is at its link, this checks it (5 MB at most, a JPEG, PNG or WebP judged from the bytes) and adds it after the others; the first image is the cover. A file that fails a check is deleted, and its upload with it.",
+        "security": [
+          {
+            "staffCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmVehicleImageUpload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Added; the vehicle with its images",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "VALIDATION_FAILED",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHENTICATED or ACCESS_TOKEN_EXPIRED: refresh, or sign in.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ACCOUNT_NOT_ACTIVE, or FORBIDDEN: missing the permission.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: there's no such vehicle, or no such upload of yours for it.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IMAGE_LIMIT_REACHED: delete an image first. UPLOAD_INCOMPLETE: the file isn't at its link yet.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "413": {
             "description": "PAYLOAD_TOO_LARGE: 5 MB at most.",
             "content": {
@@ -15550,16 +16060,6 @@
           },
           "422": {
             "description": "IMAGE_TYPE_NOT_ALLOWED: only JPEG, PNG or WebP.",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "RATE_LIMITED",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -16472,6 +16972,21 @@
           },
           {
             "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": false,
+              "description": "true lists only places a trip can go to by name: districts, areas and flexible governorates."
+            },
+            "required": false,
+            "description": "true lists only places a trip can go to by name: districts, areas and flexible governorates.",
+            "name": "bookable",
+            "in": "query"
+          },
+          {
+            "schema": {
               "type": "integer",
               "minimum": 1,
               "maximum": 200,
@@ -17136,6 +17651,21 @@
             "required": false,
             "description": "true lists only deleted locations.",
             "name": "deleted",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": false,
+              "description": "true lists only places a trip can go to by name: districts, areas and flexible governorates."
+            },
+            "required": false,
+            "description": "true lists only places a trip can go to by name: districts, areas and flexible governorates.",
+            "name": "bookable",
             "in": "query"
           },
           {
@@ -17820,7 +18350,7 @@
           "Trip classes"
         ],
         "summary": "List trip classes",
-        "description": "Active classes in the site's order, or only archived ones with `archived=true`. Needs `pricing` or `trips`.",
+        "description": "Active classes in the site's order, or only archived ones with `archived=true`, each with its price rows and this month's trips. Needs `pricing` or `trips`.",
         "security": [
           {
             "staffCookie": []
@@ -17854,7 +18384,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/TripClass"
+                        "$ref": "#/components/schemas/StaffTripClass"
                       }
                     },
                     "nextCursor": {

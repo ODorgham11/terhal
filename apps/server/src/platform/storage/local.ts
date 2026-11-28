@@ -1,7 +1,13 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { SIGNED_URL_LIFETIME, assertSafeKey, isSafeKey, type Storage } from "./storage";
+import {
+  SIGNED_URL_LIFETIME,
+  assertSafeKey,
+  isSafeKey,
+  type SignedUpload,
+  type Storage,
+} from "./storage";
 
 // Where the API serves the local driver's files (src/http/router.ts mounts it with the local driver only).
 export const LOCAL_FILES_PATH = "/v1/files";
@@ -62,13 +68,34 @@ export class LocalStorage implements Storage {
     }
   }
 
+  async stat(key: string) {
+    const { file, type } = this.#paths(key);
+    try {
+      const [info, contentType] = await Promise.all([stat(file), readFile(type, "utf8")]);
+      return { size: info.size, contentType };
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+      throw error;
+    }
+  }
+
   async delete(key: string) {
     const { file, type } = this.#paths(key);
     await Promise.all([rm(file, { force: true }), rm(type, { force: true })]);
   }
 
-  #sign(key: string, expires: number) {
-    return createHmac("sha256", this.#secret).update(`${key}\n${expires}`).digest("base64url");
+  // A read link signs the key and expiry; an upload link signs the content type too, and says it's for writing, so
+  // neither can stand in for the other.
+  #sign(key: string, expires: number, upload?: string) {
+    const message =
+      upload === undefined ? `${key}\n${expires}` : `put\n${key}\n${expires}\n${upload}`;
+    return createHmac("sha256", this.#secret).update(message).digest("base64url");
+  }
+
+  #matches(expected: string, given: string) {
+    const a = Buffer.from(expected);
+    const b = Buffer.from(given);
+    return a.length === b.length && timingSafeEqual(a, b);
   }
 
   signedUrl(key: string, expiresInSeconds = SIGNED_URL_LIFETIME) {
@@ -90,8 +117,34 @@ export class LocalStorage implements Storage {
     const expiresAt = Number(expires);
     if (expiresAt * 1000 <= this.#now()) return false;
 
-    const expected = Buffer.from(this.#sign(key, expiresAt));
-    const given = Buffer.from(signature);
-    return expected.length === given.length && timingSafeEqual(expected, given);
+    return this.#matches(this.#sign(key, expiresAt), signature);
+  }
+
+  // Points at the API's own PUT route, which checks this signature and the request's content type, then writes the file.
+  signedUpload(key: string, contentType: string, expiresInSeconds = SIGNED_URL_LIFETIME) {
+    assertSafeKey(key);
+    const expires = Math.floor(this.#now() / 1000) + expiresInSeconds;
+    const query = new URLSearchParams({
+      key,
+      expires: String(expires),
+      signature: this.#sign(key, expires, contentType),
+    });
+    return Promise.resolve<SignedUpload>({
+      url: `${this.#baseUrl}${LOCAL_FILES_PATH}?${query.toString()}`,
+      headers: { "Content-Type": contentType },
+    });
+  }
+
+  // Whether an upload's query and content type are what this storage signed, and the link hasn't expired.
+  verifyUpload(
+    { key, expires, signature }: { key?: string; expires?: string; signature?: string },
+    contentType: string,
+  ) {
+    if (!key || !expires || !signature || !isSafeKey(key) || !/^\d{1,12}$/.test(expires)) {
+      return false;
+    }
+    const expiresAt = Number(expires);
+    if (expiresAt * 1000 <= this.#now()) return false;
+    return this.#matches(this.#sign(key, expiresAt, contentType), signature);
   }
 }

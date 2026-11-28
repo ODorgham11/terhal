@@ -1,7 +1,7 @@
 import type { Redis } from "ioredis";
 import { prisma } from "../db/prisma";
 import { logger } from "../logger/logger";
-import { cache } from "../redis/connections";
+import { cache, signals } from "../redis/connections";
 import { isShuttingDown, markShuttingDown } from "./state";
 
 const closeRedis = async (client: Redis) => {
@@ -26,7 +26,7 @@ export const handleShutdown = (stopIntake: () => Promise<void>, graceMs: number)
 
     try {
       await stopIntake();
-      await Promise.all([prisma.$disconnect(), closeRedis(cache)]);
+      await Promise.all([prisma.$disconnect(), closeRedis(cache), closeRedis(signals)]);
       logger.info("shutdown complete");
       process.exit(0);
     } catch (err) {

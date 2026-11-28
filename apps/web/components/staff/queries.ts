@@ -1,0 +1,32 @@
+import { queryOptions } from "@tanstack/react-query";
+import { call, staffApi } from "@/lib/api";
+
+// Queries the shell and several pages share, so they hit one cache entry.
+
+// The front page's counts; the sidebar shows the unassigned one on Trips.
+export const overviewQuery = queryOptions({
+  queryKey: ["staff", "overview"],
+  queryFn: () => call(staffApi.overview.$get()),
+  refetchInterval: 60_000,
+});
+
+// The bell's dot.
+export const unreadCountQuery = queryOptions({
+  queryKey: ["staff", "notifications", "unread-count"],
+  queryFn: () => call(staffApi.notifications["unread-count"].$get()),
+  refetchInterval: 30_000,
+});
+
+// Live offices, for the office pickers (a business has a handful).
+export const officesQuery = queryOptions({
+  queryKey: ["staff", "offices", "all"],
+  queryFn: () => call(staffApi.offices.$get({ query: { limit: "100" } })),
+  staleTime: 5 * 60_000,
+});
+
+// Live trip classes, for the class pickers.
+export const tripClassesQuery = queryOptions({
+  queryKey: ["staff", "trip-classes", "live"],
+  queryFn: () => call(staffApi["trip-classes"].$get({ query: {} })),
+  staleTime: 5 * 60_000,
+});

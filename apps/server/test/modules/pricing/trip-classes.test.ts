@@ -2,6 +2,7 @@ import { auditActions } from "@terhal/contracts";
 import { beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "../../../src/platform/db/prisma";
 import { resetDatabase } from "../../support/database";
+import { createTrip, governorate } from "../../support/fleet";
 import { DASHBOARD_ORIGIN, SITE_ORIGIN, createAgent } from "../../support/http";
 import { resetRedis } from "../../support/redis";
 import { signedInStaff } from "../../support/staff-agents";
@@ -143,5 +144,29 @@ describe("trip classes", () => {
     const { data } = (await response.json()) as { data: { nameEn: string }[] };
     expect(data.map((row) => row.nameEn)).toEqual(["Economy", "VIP"]);
     expect(data[0]).not.toHaveProperty("archivedAt");
+  });
+
+  it("are listed for staff with their price rows and this month's trips", async () => {
+    const { agent } = await signedInStaff(["pricing"]);
+    const tripClass = await prisma.tripClass.create({ data: economy });
+    const [cairo, giza] = await Promise.all([governorate("Cairo"), governorate("Giza")]);
+    await prisma.pricing.create({
+      data: {
+        fromId: cairo.id,
+        toId: giza.id,
+        classId: tripClass.id,
+        car: "SEDAN",
+        price: "900.00",
+      },
+    });
+    const now = new Date();
+    await createTrip({ pickupDate: now });
+    await createTrip({ pickupDate: now, status: "CANCELLED" });
+
+    const response = await agent.request("/v1/staff/trip-classes");
+    const { data } = (await response.json()) as {
+      data: { prices: number; tripsThisMonth: number }[];
+    };
+    expect(data).toMatchObject([{ prices: 1, tripsThisMonth: 1 }]);
   });
 });

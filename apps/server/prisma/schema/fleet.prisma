@@ -17,6 +17,8 @@ enum DriverTransactionType {
   CASH_COLLECTED
   // Money paid to the driver: negative.
   PAYOUT
+  // Company cash the driver handed in: positive.
+  CASH_HANDED_IN
   // A manual correction, either way.
   ADJUSTMENT
 }
@@ -62,9 +64,11 @@ model Driver {
   // ledger, kept by a trigger and never written directly (Driver_amount_owed_from_ledger).
   amountOwed Decimal @default(0) @db.Decimal(12, 2)
 
+  // Unique whatever its case (Driver_licenseNumber_key, an index on lower(licenseNumber) in the migration).
   licenseNumber    String?
   licenseExpiresAt DateTime? @db.Date
-  nationalId       String?
+  // 14 digits (Driver_national_id_format), one driver each.
+  nationalId       String?   @unique
   // An external driver may work through an office. Only external drivers can (the Driver_office_is_external check).
   isExternal       Boolean   @default(false)
   office           Office?   @relation(fields: [officeId], references: [id], onDelete: Restrict)
@@ -115,10 +119,11 @@ model DriverTransaction {
 model Vehicle {
   id String @id @default(cuid())
 
-  make   String
-  model  String
-  year   Int?
-  images VehicleImage[]
+  make         String
+  model        String
+  year         Int?
+  images       VehicleImage[]
+  imageUploads VehicleImageUpload[]
 
   plateNumber String  @unique
   color       String
@@ -155,4 +160,32 @@ model VehicleImage {
   createdAt DateTime @default(now())
 
   @@index([vehicleId])
+}
+
+// A photo on its way in. The dashboard asks for an upload and gets a signed link to put the file straight into storage
+// (the bucket, or the local folder in development), then confirms it; only then is the file checked and made a
+// VehicleImage. One never confirmed is swept with its file once its link has long expired (sweep-uploads).
+model VehicleImageUpload {
+  id String @id @default(cuid())
+
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicleId String
+
+  // Who asked for it: only they can confirm it.
+  staff   Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  staffId String
+
+  bucket String
+  key    String @unique
+
+  // What the link was signed for: the storage refuses any other type or size (VehicleImageUpload_size).
+  contentType String
+  size        Int
+
+  // When the link stops working.
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([vehicleId])
+  @@index([expiresAt])
 }

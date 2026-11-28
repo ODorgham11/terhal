@@ -70,9 +70,25 @@ export const lockRow = async (
 
 const taken: Record<
   string,
-  { code: "DRIVER_PHONE_TAKEN" | "PLATE_NUMBER_TAKEN" | "OFFICE_NAME_TAKEN"; detail: string }
+  {
+    code:
+      | "DRIVER_PHONE_TAKEN"
+      | "DRIVER_NATIONAL_ID_TAKEN"
+      | "DRIVER_LICENSE_TAKEN"
+      | "PLATE_NUMBER_TAKEN"
+      | "OFFICE_NAME_TAKEN";
+    detail: string;
+  }
 > = {
   Driver_phone_key: { code: "DRIVER_PHONE_TAKEN", detail: "Another driver has this phone number." },
+  Driver_nationalId_key: {
+    code: "DRIVER_NATIONAL_ID_TAKEN",
+    detail: "Another driver has this national ID.",
+  },
+  Driver_licenseNumber_key: {
+    code: "DRIVER_LICENSE_TAKEN",
+    detail: "Another driver has this licence number.",
+  },
   Vehicle_plateNumber_key: {
     code: "PLATE_NUMBER_TAKEN",
     detail: "Another vehicle has this plate number.",

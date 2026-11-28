@@ -301,6 +301,10 @@ later. The database does not move.
   environment (e.g. `terhal-staging`, `terhal-production`), each with an R2
   API token limited to Object Read & Write on it; `S3_ENDPOINT` is
   `https://<account id>.r2.cloudflarestorage.com`.
+- **Give each R2 bucket its CORS rules** (bucket → Settings → CORS policy,
+  paste `deploy/r2-cors.json`, keeping only that environment's dashboard
+  origin). Vehicle photos upload from the browser straight to the bucket on a
+  presigned link, so without them every upload fails in the browser.
 - **Wipe the staging and production databases before their next deploy.**
   The domain migrations were edited after both had applied them (the schema
   rebuild of 2026-11-21, see `docs/architecture.md`, Migrations), and

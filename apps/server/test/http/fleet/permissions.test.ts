@@ -27,6 +27,7 @@ const routesFor = (ids: { driver: string; vehicle: string; office: string }) =>
     ["PATCH", `/v1/staff/vehicles/${ids.vehicle}`, "write"],
     ["POST", `/v1/staff/vehicles/${ids.vehicle}/archive`, "write"],
     ["POST", `/v1/staff/vehicles/${ids.vehicle}/restore`, "write"],
+    ["POST", `/v1/staff/vehicles/${ids.vehicle}/images/uploads`, "write"],
     ["POST", `/v1/staff/vehicles/${ids.vehicle}/images`, "write"],
     ["DELETE", `/v1/staff/vehicles/${ids.vehicle}/images/any`, "write"],
     ["PUT", `/v1/staff/vehicles/${ids.vehicle}/images/order`, "write"],

@@ -176,15 +176,20 @@ export type ListCustomers = z.output<typeof ListCustomers>;
 export const CustomerSummary = Customer.extend({
   verifiedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
-}).meta({ id: "CustomerSummary" });
-
-export const CustomerDetail = CustomerSummary.extend({
   tripCount: z.int().meta({ description: "Every trip they booked, in any status." }),
+  completedCount: z.int(),
+  cancelledCount: z.int(),
   totalSpent: z.string().meta({
     description: "The total price of their completed trips, in EGP with two decimals.",
     example: "1250.00",
   }),
-}).meta({ id: "CustomerDetail" });
+  lastTripAt: z.iso
+    .datetime()
+    .nullable()
+    .meta({ description: "Their latest completed trip's pickup." }),
+}).meta({ id: "CustomerSummary" });
+
+export const CustomerDetail = CustomerSummary.meta({ id: "CustomerDetail" });
 
 export type CustomerDetail = z.infer<typeof CustomerDetail>;
 

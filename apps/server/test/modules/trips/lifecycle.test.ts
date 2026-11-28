@@ -73,9 +73,9 @@ describe("the staff lifecycle", () => {
         vehiclePickup: "Garage",
         startMileage: 100,
         pickupAt: now,
-        dropoffAt: now,
+        dropoffAt: new Date(now.getTime() + 1 * 60_000),
         vehicleDropoff: "Garage",
-        endedAt: now,
+        endedAt: new Date(now.getTime() + 2 * 60_000),
         endMileage: 300,
       },
     });

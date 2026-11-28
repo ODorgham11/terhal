@@ -1,0 +1,81 @@
+"use client";
+
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "motion/react";
+import { fade } from "@/components/ui/Motion";
+import { Pagination, useCursorPages } from "@/components/ui/Pagination";
+
+type Page<Row> = { data: Row[]; nextCursor: string | null };
+
+// A cursor-paged list from the API, with its filters: changing a filter goes back to the first page.
+//
+//   const list = useCursorList(["staff", "drivers"], { q: "", archived: "false" }, (query) =>
+//     call(staffApi.drivers.$get({ query })));
+//   list.rows … <ListPagination list={list} />
+// What's sent: the filters that are set ("" means unset, so it's left out of the type too).
+export type ListQuery<Filters> = { [K in keyof Filters]?: Exclude<Filters[K], ""> } & {
+  limit: string;
+  cursor?: string;
+};
+
+export function useCursorList<Row, Filters extends Record<string, string>>(
+  key: readonly unknown[],
+  initial: Filters,
+  fetch: (query: ListQuery<Filters>) => Promise<Page<Row>>,
+  pageSize = 20,
+) {
+  const pages = useCursorPages();
+  const [filters, setFilters] = useState(initial);
+
+  // Empty filters are left out of the request.
+  const query = {
+    ...Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== "")),
+    limit: String(pageSize),
+    ...(pages.cursor && { cursor: pages.cursor }),
+  } as ListQuery<Filters>;
+  const result = useQuery({
+    queryKey: [...key, query],
+    queryFn: () => fetch(query),
+    placeholderData: keepPreviousData,
+  });
+
+  return {
+    result,
+    rows: result.data?.data ?? [],
+    filters,
+    setFilter: <K extends keyof Filters>(name: K, value: Filters[K]) => {
+      pages.reset();
+      setFilters((current) => ({ ...current, [name]: value }));
+    },
+    pages,
+    first: (pages.page - 1) * pageSize + 1,
+  };
+}
+
+export function ListPagination({
+  list,
+}: {
+  list: ReturnType<typeof useCursorList<unknown, Record<string, string>>>;
+}) {
+  const t = useTranslations("staff.list");
+  const { pages, result, rows, first } = list;
+  // Fades in and out as a second page appears or goes, rather than popping.
+  return (
+    <AnimatePresence initial={false}>
+      {(pages.hasPrevious || result.data?.nextCursor) && (
+        <motion.div key="pages" {...fade}>
+          <Pagination
+            hasPrevious={pages.hasPrevious}
+            hasNext={Boolean(result.data?.nextCursor)}
+            onPrevious={pages.previous}
+            onNext={() => pages.next(result.data?.nextCursor)}
+            loading={result.isFetching}
+            summary={rows.length > 0 && t("showing", { first, last: first + rows.length - 1 })}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
