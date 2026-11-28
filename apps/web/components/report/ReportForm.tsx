@@ -361,7 +361,7 @@ export function ReportForm({ trip, token }: { trip: DriverTrip; token: string })
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <fieldset className="flex flex-col gap-4 border-t border-border pt-5">
-      <legend className="float-start mb-4 w-full text-sm font-semibold text-foreground">
+      <legend className="float-start mb-4 w-full text-[0.9375rem] font-semibold text-foreground">
         {title}
       </legend>
       {children}
