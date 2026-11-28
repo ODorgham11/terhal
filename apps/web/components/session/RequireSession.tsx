@@ -30,6 +30,8 @@ type GuardProps<User> = {
   allow?: (user: User) => boolean;
   // Shown instead of the generic "no access" when allow() refuses.
   forbidden?: ReactNode;
+  // Shown while the session loads (and on the way to sign in), in place of the spinner: a skeleton of the page.
+  loading?: ReactNode;
 };
 
 // Shows its children only to a signed-in user, and sends anyone else to sign in. Client-side only: the API checks every
@@ -41,6 +43,7 @@ function SessionGuard<User>({
   children,
   allow,
   forbidden,
+  loading,
 }: GuardProps<User>) {
   const t = useTranslations("common.session");
   const router = useRouter();
@@ -88,6 +91,7 @@ function SessionGuard<User>({
   }
 
   // Loading, or on the way to sign in.
+  if (loading) return loading;
   return (
     <div className="flex flex-1 items-center justify-center p-12 text-muted">
       <Spinner className="size-6" />
@@ -109,14 +113,16 @@ export function RequireAdmin({ children }: RequireProps<Admin>) {
 // With `permission`, staff without it see "no access" instead of the page (the API refuses them anyway).
 export function RequireStaff({
   permission,
+  loading,
   children,
-}: RequireProps<Staff> & { permission?: StaffPermission }) {
+}: RequireProps<Staff> & Pick<GuardProps<Staff>, "loading"> & { permission?: StaffPermission }) {
   return (
     <SessionGuard
       session={useStaffSession()}
       signIn={staffRoutes.signIn}
       allow={permission ? (staff) => staff.permissions.includes(permission) : undefined}
       forbidden={permission && <StaffForbidden permission={permission} />}
+      loading={loading}
     >
       {children}
     </SessionGuard>
