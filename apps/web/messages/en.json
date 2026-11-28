@@ -16,7 +16,10 @@
       "notifications": "Notifications",
       "codeDigit": "Digit {position} of {length}",
       "showPassword": "Show password",
-      "hidePassword": "Hide password"
+      "hidePassword": "Hide password",
+      "clear": "Clear",
+      "pickDate": "Pick a date",
+      "pickDates": "Any date"
     },
     "fields": {
       "firstName": "First name",

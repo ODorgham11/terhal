@@ -16,7 +16,10 @@
       "notifications": "الإشعارات",
       "codeDigit": "الرقم {position} من {length}",
       "showPassword": "إظهار كلمة المرور",
-      "hidePassword": "إخفاء كلمة المرور"
+      "hidePassword": "إخفاء كلمة المرور",
+      "clear": "مسح",
+      "pickDate": "اختر تاريخًا",
+      "pickDates": "أي تاريخ"
     },
     "fields": {
       "firstName": "الاسم الأول",
